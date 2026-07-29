@@ -233,39 +233,41 @@ async function renderPhotos(caseNo){
   function drawGallery(){gcount.textContent='アップ済み '+photos.length+' 枚';pgrid.innerHTML='';photos.forEach(p=>{const a=$('a');a.href=p.url;a.target='_blank';a.rel='noopener';const img=$('img');img.src=p.url;img.loading='lazy';a.appendChild(img);pgrid.appendChild(a);});}
   drawGallery();
 
-  upbtn.onclick=()=>fileInput.click();
-  fileInput.onchange=async()=>{
-    const files=[...fileInput.files];fileInput.value='';if(!files.length)return;
-    upbtn.disabled=true;prog.classList.add('on');
-    let done=0,ok=0,fail=0;const total=files.length;const t0=Date.now();
-    const update=()=>{const pct=Math.round(done/total*100);pfill.style.width=pct+'%';ptxt.textContent=done+' / '+total+' 枚';const sec=(Date.now()-t0)/1000;const rate=done?done/sec:0;const eta=rate?Math.max(0,Math.round((total-done)/rate)):0;psub.textContent=(fail?'失敗 '+fail+' 件 / ':'')+'残り約 '+eta+' 秒';};
+  const rebtn=$('button','upbig');rebtn.style.display='none';rebtn.style.marginTop='12px';rebtn.style.background='#c9772e';uw.appendChild(rebtn);
+  let lastFailed=[];
+  const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+  async function uploadOne(f,who){
+    for(let attempt=1;;attempt++){
+      try{
+        const ext=(f.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg';
+        const stamp=new Date().toISOString().replace(/[-:T.]/g,'').slice(0,17);
+        const path=c.kbn+'/'+caseNo+'/'+stamp+'_'+Math.floor(Math.random()*1e9)+'.'+ext;
+        const {error:ue}=await sb.storage.from(BUCKET).upload(path,f,{contentType:f.type||'image/jpeg',upsert:false});
+        if(ue)throw ue;
+        const {data:pub}=sb.storage.from(BUCKET).getPublicUrl(path);
+        const {data:row,error:ie}=await sb.from('cl_photos').insert({case_no:caseNo,kbn:c.kbn,path:path,url:pub.publicUrl,author:who}).select();
+        if(ie)throw ie;
+        return row[0];
+      }catch(e){ if(attempt>=3) throw e; await sleep(500*attempt); }
+    }
+  }
+  async function runUpload(files){
+    if(!files||!files.length)return;
+    upbtn.disabled=true;rebtn.disabled=true;rebtn.style.display='none';prog.classList.add('on');
+    const who=op();const total=files.length;const t0=Date.now();
+    let done=0,ok=0;const failed=[];let idx=0;
+    const update=()=>{const pct=Math.round(done/total*100);pfill.style.width=pct+'%';ptxt.textContent=done+' / '+total+' 枚';const sec=(Date.now()-t0)/1000;const rate=done?done/sec:0;const eta=rate?Math.max(0,Math.round((total-done)/rate)):0;psub.textContent=(failed.length?'失敗 '+failed.length+' 件 / ':'')+'残り約 '+eta+' 秒';};
     update();
-    const who=op();
-    let idx=0;
-    async function uploadOne(f){
-      const ext=(f.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg';
-      const stamp=new Date().toISOString().replace(/[-:T.]/g,'').slice(0,17);
-      const path=c.kbn+'/'+caseNo+'/'+stamp+'_'+Math.floor(Math.random()*1e9)+'.'+ext;
-      const {error:ue}=await sb.storage.from(BUCKET).upload(path,f,{contentType:f.type||'image/jpeg',upsert:false});
-      if(ue)throw ue;
-      const {data:pub}=sb.storage.from(BUCKET).getPublicUrl(path);
-      const {data:row,error:ie}=await sb.from('cl_photos').insert({case_no:caseNo,kbn:c.kbn,path:path,url:pub.publicUrl,author:who}).select();
-      if(ie)throw ie;
-      return row[0];
-    }
-    async function worker(){
-      while(idx<files.length){
-        const my=idx++;
-        try{const rec=await uploadOne(files[my]);photos.unshift(rec);ok++;drawGallery();}
-        catch(e){fail++;}
-        done++;update();
-      }
-    }
+    async function worker(){while(idx<files.length){const my=idx++;try{const rec=await uploadOne(files[my],who);photos.unshift(rec);ok++;drawGallery();}catch(e){failed.push(files[my]);}done++;update();}}
     await Promise.all(Array.from({length:Math.min(UP_CONCURRENCY,files.length)},worker));
-    ptxt.textContent='完了：'+ok+' 枚アップ'+(fail?'（失敗 '+fail+'）':'');
-    psub.textContent='';upbtn.disabled=false;
-    setTimeout(()=>prog.classList.remove('on'),4000);
-  };
+    lastFailed=failed;upbtn.disabled=false;rebtn.disabled=false;
+    ptxt.textContent='完了：'+ok+' 枚アップ'+(failed.length?'（失敗 '+failed.length+'）':'');psub.textContent='';
+    if(failed.length){rebtn.textContent='⟳ 失敗した '+failed.length+' 枚を再アップロード';rebtn.style.display='flex';}
+    else{setTimeout(()=>prog.classList.remove('on'),4000);}
+  }
+  upbtn.onclick=()=>fileInput.click();
+  fileInput.onchange=()=>{const files=[...fileInput.files];fileInput.value='';runUpload(files);};
+  rebtn.onclick=()=>{const f=lastFailed;lastFailed=[];runUpload(f);};
 }
 main();
 </script>
