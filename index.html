@@ -127,7 +127,6 @@ async function renderDashboard(){
 
 function caseHeader(c,eyebrow){
   const hd=$('header','hd2');
-  const back=$('a','back','‹ 一覧');back.href='?';hd.appendChild(back);
   hd.appendChild($('div','eyebrow',eyebrow));
   const h1=$('h1');h1.appendChild(document.createTextNode((c.prop||'')+' '));h1.appendChild($('span','room',c.room||''));hd.appendChild(h1);
   const chips=$('div','chips');
