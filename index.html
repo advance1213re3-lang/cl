@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>作業チェックリスト</title>
+<style>
+:root{--bg:#eef1f5;--surface:#fff;--surface-2:#f3f6f9;--ink:#16202b;--ink-2:#5b6775;--line:#dce2ea;--accent:#0e7490;--accent-ink:#fff;--naiso:#b45309;--seisou:#0e7490;--none:#8794a3;--prog:#2f6fb0;--done:#2f9e5b;--sh:0 1px 2px rgba(16,32,48,.06),0 8px 24px rgba(16,32,48,.07);--r:14px}
+@media(prefers-color-scheme:dark){:root{--bg:#0f1620;--surface:#16202c;--surface-2:#1c2836;--ink:#e9eef4;--ink-2:#94a2b3;--line:#2a3846;--accent:#26aac6;--accent-ink:#042630;--naiso:#d98a2b;--seisou:#26aac6;--none:#7f8d9c;--prog:#5b9bd8;--done:#48c281;--sh:0 1px 2px rgba(0,0,0,.3),0 10px 28px rgba(0,0,0,.4)}}
+*{box-sizing:border-box}html,body{margin:0}body{background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Hiragino Kaku Gothic ProN","Yu Gothic","Noto Sans JP",sans-serif;line-height:1.5;-webkit-text-size-adjust:100%}
+.wrap{max-width:960px;margin:0 auto;padding:20px 16px 48px}.app{max-width:480px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
+.eyebrow{font-size:12px;letter-spacing:.08em;color:var(--accent);font-weight:700;text-transform:uppercase}h1{margin:2px 0 8px;font-size:22px;font-weight:800;line-height:1.25}h1 .room{color:var(--ink-2)}.sub{color:var(--ink-2);font-size:13px}
+.hd2{position:sticky;top:0;z-index:5;background:var(--surface);border-bottom:1px solid var(--line);padding:12px 16px;box-shadow:var(--sh)}.back{color:var(--accent);text-decoration:none;font-weight:700;font-size:14px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.chip{font-size:12px;font-weight:600;color:var(--ink-2);background:var(--surface-2);border:1px solid var(--line);padding:3px 9px;border-radius:999px}
+.badge{font-size:11px;font-weight:800;padding:3px 9px;border-radius:6px;color:#fff}.badge.naiso{background:var(--naiso)}.badge.seisou{background:var(--seisou)}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0}.tile{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;box-shadow:var(--sh)}.tile .n{font-size:26px;font-weight:800;line-height:1}.tile .l{font-size:12px;color:var(--ink-2);margin-top:4px;font-weight:600}.tile.done .n{color:var(--done)}.tile.prog .n{color:var(--prog)}.tile.none .n{color:var(--none)}
+.filters{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}.fb{font:inherit;font-weight:700;font-size:13px;padding:7px 14px;border-radius:999px;cursor:pointer;color:var(--ink-2);background:var(--surface);border:1px solid var(--line)}.fb[aria-pressed=true]{color:var(--accent-ink);background:var(--accent);border-color:transparent}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;box-shadow:var(--sh);display:flex;flex-direction:column;gap:9px}.card .top{display:flex;justify-content:space-between;align-items:center}.card .name{font-size:17px;font-weight:800}.card .name .room{color:var(--ink-2)}.card .meta{display:flex;flex-direction:column;gap:3px;font-size:13px}.card .mline{display:flex;gap:10px}.card .mk{color:var(--ink-2);min-width:46px}.card .mv{font-weight:600}.card .mline.due-over .mv{color:#c9772e;font-weight:800}.card .mline.due-soon .mv{color:#e0a02b}.card .mline.due-over .mv::after{content:"　超過";font-size:11px}.card .mline.due-soon .mv::after{content:"　間近";font-size:11px}
+.pill{font-size:14px;font-weight:800;padding:6px 14px;border-radius:999px;display:inline-flex;align-items:center}.pill::before{content:"";width:10px;height:10px;border-radius:50%;background:currentColor;margin-right:8px}.pill.none{color:var(--none);background:color-mix(in srgb,var(--none) 16%,transparent)}.pill.prog{color:var(--prog);background:color-mix(in srgb,var(--prog) 16%,transparent)}.pill.done{color:var(--done);background:color-mix(in srgb,var(--done) 20%,transparent)}
+.card.st-none{border-left:6px solid var(--none)}.card.st-prog{border-left:6px solid var(--prog)}.card.st-done{border-left:6px solid var(--done)}
+.pbar{display:flex;align-items:center;gap:10px}.bar{flex:1;height:8px;border-radius:999px;background:var(--surface-2);border:1px solid var(--line);overflow:hidden}.bar>span{display:block;height:100%;background:var(--done)}.frac{font-size:13px;font-weight:700;color:var(--ink-2)}
+.acts{display:flex;gap:8px}.btn{flex:1;text-align:center;text-decoration:none;font-weight:700;font-size:13px;padding:9px;border-radius:10px;background:var(--accent);color:var(--accent-ink);border:none;cursor:pointer}
+.progress{display:flex;align-items:center;gap:10px;margin-top:10px}.count{font-size:13px;font-weight:700;color:var(--ink-2);white-space:nowrap}.count b{color:var(--done);font-size:15px}
+.oprow{display:flex;align-items:center;gap:8px;padding:10px 16px 0;font-size:13px;color:var(--ink-2)}.oprow select{font:inherit;font-weight:700;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:8px;min-height:40px}
+main{flex:1;padding:12px}ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}.item{display:flex;align-items:flex-start;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;min-height:58px;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent}.item:active{background:var(--surface-2)}.item.done{background:color-mix(in srgb,var(--done) 9%,var(--surface));border-color:color-mix(in srgb,var(--done) 40%,var(--line))}
+.box{flex:none;width:27px;height:27px;border-radius:7px;border:2px solid var(--line);background:var(--surface);display:grid;place-items:center;margin-top:1px}.item.done .box{background:var(--done);border-color:var(--done)}.box svg{width:16px;height:16px;stroke:#fff;stroke-width:3.4;fill:none;opacity:0}.item.done .box svg{opacity:1}.body{flex:1}.label{font-size:16px;font-weight:600}.item.done .label{color:var(--ink-2);text-decoration:line-through}.meta{font-size:12px;color:var(--ink-2);margin-top:4px;display:none}.item.done .meta{display:block}
+.memobtn{flex:none;align-self:center;border:1px solid var(--line);background:var(--surface-2);color:var(--ink-2);font-size:13px;font-weight:700;padding:10px 13px;border-radius:10px;cursor:pointer;white-space:nowrap}
+.additem{display:flex;gap:8px;margin-top:12px}.additem input{flex:1;font:inherit;padding:12px;border:1px solid var(--line);border-radius:11px;background:var(--surface);color:var(--ink)}.additem button{flex:none;font:inherit;font-weight:700;padding:0 16px;border:none;border-radius:11px;background:var(--accent);color:var(--accent-ink);cursor:pointer}
+.sec{margin:18px 12px 0}.sec h2{font-size:15px;font-weight:800;margin:0 0 10px}
+.photos{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.photos a{display:block;aspect-ratio:1;border-radius:10px;overflow:hidden;border:1px solid var(--line);background:var(--surface-2)}.photos img{width:100%;height:100%;object-fit:cover}
+.uprow{display:flex;gap:8px;margin-top:10px;align-items:center}.upbtn{font:inherit;font-weight:700;padding:12px 16px;border:none;border-radius:11px;background:var(--accent);color:var(--accent-ink);cursor:pointer}.upnote{font-size:12px;color:var(--ink-2)}
+.ov{position:fixed;inset:0;background:rgba(10,18,28,.55);display:none;align-items:flex-end;justify-content:center;z-index:20}.ov.open{display:flex}@media(min-width:600px){.ov{align-items:center;padding:20px}}
+.msheet{background:var(--surface);width:100%;max-width:480px;max-height:80vh;display:flex;flex-direction:column;border-radius:18px 18px 0 0;box-shadow:var(--sh)}@media(min-width:600px){.msheet{border-radius:18px}}
+.mhd{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line)}.mhd b{font-size:16px}.mhd .x{border:none;background:var(--surface-2);color:var(--ink);width:32px;height:32px;border-radius:9px;font-size:19px;cursor:pointer}
+.thread{flex:1;overflow:auto;padding:14px;display:flex;flex-direction:column;gap:10px;min-height:140px;font-size:13px}.thread.empty{color:var(--ink-2);text-align:center;justify-content:center}.mrow{display:flex}.mrow.own{justify-content:flex-end}.mbub{max-width:82%;background:var(--surface-2);border:1px solid var(--line);border-radius:13px;padding:8px 12px}.mrow.own .mbub{background:color-mix(in srgb,var(--accent) 16%,var(--surface))}.mwho{font-size:11px;font-weight:700;color:var(--accent);margin-bottom:3px}.mtx{font-size:14.5px;white-space:pre-wrap;word-break:break-word}.mact{display:flex;gap:12px;margin-top:6px;justify-content:flex-end}.mact button{border:none;background:transparent;color:var(--ink-2);font-size:12px;font-weight:700;cursor:pointer;text-decoration:underline}
+.minput{display:flex;gap:8px;padding:12px 14px;border-top:1px solid var(--line)}.minput input{flex:1;font:inherit;padding:11px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink)}.minput button{flex:none;font:inherit;font-weight:700;padding:0 16px;border:none;border-radius:10px;background:var(--accent);color:var(--accent-ink);cursor:pointer}
+footer{padding:16px;text-align:center;color:var(--ink-2);font-size:12px}
+.load{padding:40px;text-align:center;color:var(--ink-2)}
+</style>
+</head>
+<body>
+<div id="root"><div class="load">読み込み中…</div></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SB_URL='https://vfreehhenmwrbxkhcdvu.supabase.co';
+const SB_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmcmVlaGhlbm13cmJ4a2hjZHZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5NTE5NTAsImV4cCI6MjA5OTUyNzk1MH0.UQKIOeJmn0Yt6gqUC_TF0uoFiRl4poTJyv_tx6BotS8';
+const BUCKET='cl-photos';
+const KBN={naiso:'内装',seisou:'清掃'};
+const STAFF=['北冨','髙橋','鈴村','今野','永井'];
+const sb=supabase.createClient(SB_URL,SB_ANON);
+const root=document.getElementById('root');
+const $=(t,c,x)=>{const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e;};
+const esc=s=>String(s==null?'':s);
+const qp=new URLSearchParams(location.search);
+const opKey='cl_op';
+function op(){return localStorage.getItem(opKey)||STAFF[0];}
+function setOp(v){localStorage.setItem(opKey,v);}
+function splitWork(s){s=String(s||'').trim();if(!s)return[];return s.split(/\s*[\/／、,，\n・]\s*/).map(x=>x.trim()).filter(Boolean);}
+function dtxt(v){if(!v)return'';const d=new Date(v);if(isNaN(d))return String(v);return (d.getMonth()+1)+'/'+d.getDate();}
+function ttxt(v){if(!v)return'';const d=new Date(v);if(isNaN(d))return'';const p=n=>(n<10?'0':'')+n;return (d.getMonth()+1)+'/'+d.getDate()+' '+p(d.getHours())+':'+p(d.getMinutes());}
+function dueState(due){if(!due)return'';const m=String(due).match(/(\d{4})[\/\-.](\d{1,2})[\/\-.](\d{1,2})/g);if(!m)return'';const last=m[m.length-1].split(/[\/\-.]/);const d=new Date(+last[0],+last[1]-1,+last[2]);const now=new Date();const t=new Date(now.getFullYear(),now.getMonth(),now.getDate());const diff=Math.round((d-t)/86400000);if(diff<0)return'over';if(diff<=3)return'soon';return'ok';}
+
+async function main(){
+  const view=qp.get('view')||'dashboard';
+  const c=(qp.get('case')||'').trim();
+  try{
+    if(view==='checklist'&&c) return renderChecklist(c);
+    return renderDashboard();
+  }catch(e){root.innerHTML='';root.appendChild($('div','load','エラー: '+e.message));}
+}
+
+async function renderDashboard(){
+  const {data:cases,error}=await sb.from('cl_cases').select('*').order('work_date',{ascending:false});
+  if(error)throw error;
+  const {data:checks}=await sb.from('cl_checks').select('case_no,done');
+  const stat={};(checks||[]).forEach(r=>{const s=stat[r.case_no]||(stat[r.case_no]={d:0,t:0});s.t++;if(r.done)s.d++;});
+  let filter='all';
+  root.innerHTML='';
+  const wrap=$('div','wrap');
+  const h=$('header');h.appendChild($('div','eyebrow','作業進捗'));h.appendChild($('h1',null,'ダッシュボード'));h.appendChild($('div','sub','案件をタップ → チェックリスト・完了写真へ'));
+  wrap.appendChild(h);
+  const tiles=$('div','tiles');
+  const mk=(cls,id,l)=>{const t=$('div','tile'+(cls?' '+cls:''));const n=$('div','n','0');n.id=id;t.appendChild(n);t.appendChild($('div','l',l));return t;};
+  tiles.appendChild(mk('','t-all','案件'));tiles.appendChild(mk('done','t-done','完了'));tiles.appendChild(mk('prog','t-prog','進行中'));tiles.appendChild(mk('none','t-none','未着手'));
+  wrap.appendChild(tiles);
+  const fil=$('div','filters');
+  [['all','すべて'],['naiso','内装'],['seisou','清掃']].forEach(([k,l])=>{const b=$('button','fb',l);b.dataset.k=k;b.setAttribute('aria-pressed',k==='all');b.onclick=()=>{filter=k;[...fil.children].forEach(x=>x.setAttribute('aria-pressed',x===b));draw();};fil.appendChild(b);});
+  wrap.appendChild(fil);
+  const grid=$('div','grid');wrap.appendChild(grid);
+  wrap.appendChild($('footer',null,'テスト環境。データはテスト用DBに保存されます。'));
+  root.appendChild(wrap);
+  function draw(){
+    grid.innerHTML='';const c={all:0,done:0,prog:0,none:0};
+    (cases||[]).forEach(x=>{
+      const st=stat[x.case_no];const total=st?st.t:splitWork(x.work_content).length;const done=st?st.d:0;
+      const s=done===0?'none':(total>0&&done>=total?'done':'prog');
+      c.all++;c[s]++;if(filter!=='all'&&x.kbn!==filter)return;
+      const pct=total?Math.round(done/total*100):0;
+      const card=$('div','card st-'+s);
+      const top=$('div','top');const bd=$('span','badge '+x.kbn,KBN[x.kbn]||x.kbn);const pl=$('span','pill '+s,{none:'未着手',prog:'進行中',done:'完了'}[s]);top.appendChild(bd);top.appendChild(pl);card.appendChild(top);
+      card.appendChild($('div','name',(x.prop||'')+(x.room?' '+x.room:'')));
+      const meta=$('div','meta');
+      const ml=(k,v,cls)=>{const d=$('div','mline'+(cls?' '+cls:''));d.appendChild($('span','mk',k));d.appendChild($('span','mv',v||'—'));return d;};
+      if(x.vendor)meta.appendChild(ml('業者',x.vendor));
+      meta.appendChild(ml('作業日',dtxt(x.work_date)));
+      if(x.due)meta.appendChild(ml('納期',x.due,s==='done'?'':'due-'+dueState(x.due)));
+      meta.appendChild(ml('担当',x.staff));
+      card.appendChild(meta);
+      const pb=$('div','pbar');const bar=$('div','bar');const sp=$('span');sp.style.width=pct+'%';bar.appendChild(sp);pb.appendChild(bar);pb.appendChild($('span','frac',done+'/'+total));card.appendChild(pb);
+      const acts=$('div','acts');const a=$('a','btn','✅ 開く');a.href='?view=checklist&case='+encodeURIComponent(x.case_no);acts.appendChild(a);card.appendChild(acts);
+      grid.appendChild(card);
+    });
+    document.getElementById('t-all').textContent=c.all;document.getElementById('t-done').textContent=c.done;document.getElementById('t-prog').textContent=c.prog;document.getElementById('t-none').textContent=c.none;
+  }
+  draw();
+}
+
+async function renderChecklist(caseNo){
+  const {data:cs}=await sb.from('cl_cases').select('*').eq('case_no',caseNo).limit(1);
+  const c=cs&&cs[0];
+  if(!c){root.innerHTML='';root.appendChild($('div','load','案件が見つかりません: '+caseNo));return;}
+  let {data:items}=await sb.from('cl_checks').select('*').eq('case_no',caseNo).order('sort').order('created_at');
+  if(!items||!items.length){
+    const base=splitWork(c.work_content);const seed=base.map((t,i)=>({case_no:caseNo,item:t,sort:i}));
+    if(seed.length){await sb.from('cl_checks').insert(seed);}
+    ({data:items}=await sb.from('cl_checks').select('*').eq('case_no',caseNo).order('sort').order('created_at'));
+  }
+  items=items||[];
+  const {data:memos}=await sb.from('cl_memos').select('case_no,item').eq('case_no',caseNo);
+  const mc={};(memos||[]).forEach(m=>{mc[m.item]=(mc[m.item]||0)+1;});
+  const {data:photos}=await sb.from('cl_photos').select('*').eq('case_no',caseNo).order('created_at',{ascending:false});
+
+  root.innerHTML='';
+  const app=$('div','app');
+  const hd=$('header','hd2');
+  const back=$('a','back','‹ 一覧');back.href='?';hd.appendChild(back);
+  hd.appendChild($('div','eyebrow','作業チェックリスト'));
+  const h1=$('h1');h1.appendChild(document.createTextNode((c.prop||'')+' '));const rm=$('span','room',c.room||'');h1.appendChild(rm);hd.appendChild(h1);
+  const chips=$('div','chips');
+  chips.appendChild($('span','badge '+c.kbn,KBN[c.kbn]||c.kbn));
+  if(c.vendor)chips.appendChild($('span','chip','業者 '+c.vendor));
+  chips.appendChild($('span','chip','案件 '+caseNo));
+  chips.appendChild($('span','chip','作業日 '+dtxt(c.work_date)));
+  chips.appendChild($('span','chip','担当 '+(c.staff||'')));
+  hd.appendChild(chips);
+  const prog=$('div','progress');const bar=$('div','bar');const fill=$('span');fill.id='fill';bar.appendChild(fill);const cnt=$('div','count');cnt.innerHTML='<b id="dn">0</b>/<span id="tn">0</span> 完了';prog.appendChild(bar);prog.appendChild(cnt);hd.appendChild(prog);
+  app.appendChild(hd);
+
+  const oprow=$('div','oprow');oprow.appendChild($('label',null,'操作者'));const opsel=$('select');STAFF.forEach(s=>{const o=$('option',null,s);if(s===op())o.selected=true;opsel.appendChild(o);});opsel.onchange=()=>setOp(opsel.value);oprow.appendChild(opsel);app.appendChild(oprow);
+
+  const mainEl=$('main');
+  const list=$('ul');mainEl.appendChild(list);
+  const add=$('div','additem');const ni=$('input');ni.placeholder='＋ 項目を追加';const nb=$('button','','追加');add.appendChild(ni);add.appendChild(nb);mainEl.appendChild(add);
+
+  // photos section
+  const sec=$('div','sec');sec.appendChild($('h2',null,'📷 完了写真'));
+  const pgrid=$('div','photos');sec.appendChild(pgrid);
+  const uprow=$('div','uprow');
+  const fileInput=$('input');fileInput.type='file';fileInput.accept='image/*';fileInput.setAttribute('capture','environment');fileInput.multiple=true;fileInput.style.display='none';
+  const upbtn=$('button','upbtn','写真を撮る / 選ぶ');const upnote=$('span','upnote','');
+  uprow.appendChild(upbtn);uprow.appendChild(upnote);sec.appendChild(uprow);sec.appendChild(fileInput);
+  mainEl.appendChild(sec);
+  app.appendChild(mainEl);
+  const ov=$('div','ov');ov.id='ov';const msheet=$('div','msheet');msheet.id='msheet';ov.appendChild(msheet);app.appendChild(ov);
+  root.appendChild(app);
+
+  function prog_(){const d=items.filter(x=>x.done).length;document.getElementById('dn').textContent=d;document.getElementById('tn').textContent=items.length;fill.style.width=(items.length?Math.round(d/items.length*100):0)+'%';}
+  function renderItems(){
+    list.innerHTML='';
+    items.forEach(it=>{
+      const li=$('li','item'+(it.done?' done':''));
+      const box=$('span','box');box.innerHTML='<svg viewBox="0 0 24 24"><polyline points="4 12 10 18 20 6"></polyline></svg>';
+      const body=$('span','body');body.appendChild($('span','label',it.item));const m=$('span','meta','✔ '+(it.done_by||'')+'・'+ttxt(it.done_at));body.appendChild(m);
+      const mb=$('button','memobtn','メモ'+(mc[it.item]?' '+mc[it.item]:''));
+      box.onclick=()=>toggle(it);body.onclick=()=>toggle(it);mb.onclick=e=>{e.stopPropagation();openThread(it);};
+      li.appendChild(box);li.appendChild(body);li.appendChild(mb);list.appendChild(li);
+    });prog_();
+  }
+  async function toggle(it){
+    const nd=!it.done;it.done=nd;it.done_by=nd?op():null;it.done_at=nd?new Date().toISOString():null;renderItems();
+    const {error}=await sb.from('cl_checks').update({done:nd,done_by:it.done_by,done_at:it.done_at}).eq('id',it.id);
+    if(error){it.done=!nd;renderItems();alert('保存に失敗しました');}
+  }
+  nb.onclick=async()=>{const v=ni.value.trim();if(!v)return;ni.value='';const {data,error}=await sb.from('cl_checks').insert({case_no:caseNo,item:v,sort:items.length}).select();if(error){alert('追加に失敗');return;}items.push(data[0]);renderItems();};
+  ni.onkeydown=e=>{if(e.key==='Enter')nb.onclick();};
+
+  // memo thread
+  let curItem=null,curMsgs=[];
+  function closeThread(){ov.classList.remove('open');curItem=null;}
+  ov.onclick=e=>{if(e.target===ov)closeThread();};
+  async function openThread(it){
+    curItem=it;msheet.innerHTML='';
+    const mhd=$('div','mhd');mhd.appendChild($('b',null,it.item));const x=$('button','x','×');x.onclick=closeThread;mhd.appendChild(x);
+    const thread=$('div','thread empty');thread.id='thread';thread.textContent='読み込み中…';
+    const ir=$('div','minput');const inp=$('input');inp.placeholder='メッセージを入力';const sbtn=$('button','','送信');
+    ir.appendChild(inp);ir.appendChild(sbtn);
+    msheet.appendChild(mhd);msheet.appendChild(thread);msheet.appendChild(ir);ov.classList.add('open');
+    const send=async()=>{const v=inp.value.trim();if(!v)return;inp.value='';const {data,error}=await sb.from('cl_memos').insert({case_no:caseNo,item:it.item,author:op(),body:v}).select();if(error){alert('送信失敗');return;}curMsgs.push(data[0]);mc[it.item]=(mc[it.item]||0)+1;renderItems();drawThread();};
+    sbtn.onclick=send;inp.onkeydown=e=>{if(e.key==='Enter')send();};
+    const {data}=await sb.from('cl_memos').select('*').eq('case_no',caseNo).eq('item',it.item).order('created_at');
+    curMsgs=data||[];drawThread();
+  }
+  function drawThread(){
+    const t=document.getElementById('thread');if(!t)return;t.innerHTML='';
+    if(!curMsgs.length){t.className='thread empty';t.textContent='まだメッセージはありません';return;}
+    t.className='thread';
+    curMsgs.forEach((m,i)=>{
+      const own=m.author===op();const row=$('div','mrow'+(own?' own':''));const b=$('div','mbub');
+      b.appendChild($('div','mwho',(m.author||'')+' · '+ttxt(m.created_at)));b.appendChild($('div','mtx',m.body));
+      if(own){const act=$('div','mact');const e=$('button','','編集');e.onclick=()=>editMsg(i);const d=$('button','','削除');d.onclick=()=>delMsg(i);act.appendChild(e);act.appendChild(d);b.appendChild(act);}
+      row.appendChild(b);t.appendChild(row);
+    });t.scrollTop=t.scrollHeight;
+  }
+  async function editMsg(i){const m=curMsgs[i];const nt=prompt('メッセージを修正',m.body);if(nt==null)return;const v=nt.trim();if(!v||v===m.body)return;const old=m.body;m.body=v;drawThread();const {error}=await sb.from('cl_memos').update({body:v}).eq('id',m.id);if(error){m.body=old;drawThread();alert('編集失敗');}}
+  async function delMsg(i){const m=curMsgs[i];if(!confirm('このメッセージを削除しますか？'))return;curMsgs.splice(i,1);mc[curItem.item]=Math.max(0,(mc[curItem.item]||0)-1);renderItems();drawThread();const {error}=await sb.from('cl_memos').delete().eq('id',m.id);if(error){curMsgs.splice(i,0,m);drawThread();alert('削除失敗');}}
+
+  // photos
+  let plist=photos||[];
+  function drawPhotos(){pgrid.innerHTML='';plist.forEach(p=>{const a=$('a');a.href=p.url;a.target='_blank';a.rel='noopener';const img=$('img');img.src=p.url;img.loading='lazy';a.appendChild(img);pgrid.appendChild(a);});}
+  drawPhotos();
+  upbtn.onclick=()=>fileInput.click();
+  fileInput.onchange=async()=>{
+    const files=[...fileInput.files];fileInput.value='';if(!files.length)return;
+    upbtn.disabled=true;let n=0;
+    for(const f of files){
+      n++;upnote.textContent='アップロード中… '+n+'/'+files.length;
+      const ext=(f.name.split('.').pop()||'jpg').toLowerCase();
+      const stamp=new Date().toISOString().replace(/[-:T.]/g,'').slice(0,14);
+      const path=c.kbn+'/'+caseNo+'/'+stamp+'_'+Math.floor(Math.random()*1e6)+'.'+ext;
+      const {error:ue}=await sb.storage.from(BUCKET).upload(path,f,{contentType:f.type||'image/jpeg',upsert:false});
+      if(ue){upnote.textContent='失敗: '+ue.message;continue;}
+      const {data:pub}=sb.storage.from(BUCKET).getPublicUrl(path);
+      const {data:row,error:ie}=await sb.from('cl_photos').insert({case_no:caseNo,kbn:c.kbn,path:path,url:pub.publicUrl,author:op()}).select();
+      if(!ie&&row){plist.unshift(row[0]);drawPhotos();}
+    }
+    upnote.textContent='完了';upbtn.disabled=false;setTimeout(()=>upnote.textContent='',2000);
+  };
+
+  renderItems();
+}
+main();
+</script>
+</body>
+</html>
