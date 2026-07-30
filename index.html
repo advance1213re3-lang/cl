@@ -160,8 +160,9 @@ async function renderChecklist(caseNo,kbn){
   const hd=caseHeader(c,'作業チェックリスト');
   const prog=$('div','progress');const bar=$('div','bar');const fill=$('span');fill.id='fill';bar.appendChild(fill);const cnt=$('div','count');cnt.innerHTML='<b id="dn">0</b>/<span id="tn">0</span> 完了';prog.appendChild(bar);prog.appendChild(cnt);hd.appendChild(prog);
   app.appendChild(hd);
-  let curOp=STAFF.includes(c.staff)?c.staff:op();
-  const oprow=$('div','oprow');oprow.appendChild($('label',null,'操作者'));const opsel=$('select');STAFF.forEach(s=>{const o=$('option',null,s);if(s===curOp)o.selected=true;opsel.appendChild(o);});opsel.onchange=()=>{curOp=opsel.value;setOp(curOp);};oprow.appendChild(opsel);app.appendChild(oprow);
+  let curOp=(c.staff||'').trim()||op();
+  const opStaff=(curOp&&STAFF.indexOf(curOp)<0)?[curOp].concat(STAFF):STAFF;
+  const oprow=$('div','oprow');oprow.appendChild($('label',null,'操作者'));const opsel=$('select');opStaff.forEach(s=>{const o=$('option',null,s);if(s===curOp)o.selected=true;opsel.appendChild(o);});opsel.onchange=()=>{curOp=opsel.value;setOp(curOp);};oprow.appendChild(opsel);app.appendChild(oprow);
   const mainEl=$('main');
   const list=$('ul');mainEl.appendChild(list);
   const add=$('div','additem');const ni=$('input');ni.placeholder='＋ 項目を追加';const nb=$('button','','追加');add.appendChild(ni);add.appendChild(nb);mainEl.appendChild(add);
