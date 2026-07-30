@@ -54,7 +54,8 @@ const SB_URL='https://vfreehhenmwrbxkhcdvu.supabase.co';
 const SB_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmcmVlaGhlbm13cmJ4a2hjZHZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5NTE5NTAsImV4cCI6MjA5OTUyNzk1MH0.UQKIOeJmn0Yt6gqUC_TF0uoFiRl4poTJyv_tx6BotS8';
 const BUCKET='cl-photos';
 const KBN={naiso:'内装',seisou:'清掃'};
-const STAFF=['北冨','髙橋','鈴村','今野','永井'];
+let STAFF=['北冨','髙橋','鈴村','今野','永井'];
+async function loadStaff(){try{const {data}=await sb.from('cl_staff').select('name').order('sort').order('name');if(data&&data.length)STAFF=data.map(r=>r.name);}catch(e){}}
 const UP_CONCURRENCY=5;
 const sb=supabase.createClient(SB_URL,SB_ANON);
 const root=document.getElementById('root');
@@ -280,7 +281,7 @@ async function renderPhotos(caseNo,kbn){
   fileInput.onchange=()=>{const files=[...fileInput.files];fileInput.value='';runUpload(files);};
   rebtn.onclick=()=>{const f=lastFailed;lastFailed=[];runUpload(f);};
 }
-main();
+loadStaff().then(main);
 </script>
 </body>
 </html>
