@@ -179,7 +179,7 @@ async function renderChecklist(caseNo,kbn){
       const box=$('span','box');box.innerHTML='<svg viewBox="0 0 24 24"><polyline points="4 12 10 18 20 6"></polyline></svg>';
       const body=$('span','body');body.appendChild($('span','label',it.item));const meta=$('span','meta','✔ '+(it.done_by||'')+'・'+ttxt(it.done_at));it._meta=meta;body.appendChild(meta);
       const mb=$('button','memobtn','メモ'+(mc[it.item]?' '+mc[it.item]:''));it._mb=mb;
-      box.onclick=()=>toggle(it);body.onclick=()=>toggle(it);mb.onclick=e=>{e.stopPropagation();openThread(it);};
+      li.onclick=()=>toggle(it);mb.onclick=e=>{e.stopPropagation();openThread(it);};
       li.appendChild(box);li.appendChild(body);li.appendChild(mb);list.appendChild(li);
     });prog_();
   }
