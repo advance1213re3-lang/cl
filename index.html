@@ -175,15 +175,17 @@ async function renderChecklist(caseNo,kbn){
   function renderItems(){
     list.innerHTML='';
     items.forEach(it=>{
-      const li=$('li','item'+(it.done?' done':''));
+      const li=$('li','item'+(it.done?' done':''));it._li=li;
       const box=$('span','box');box.innerHTML='<svg viewBox="0 0 24 24"><polyline points="4 12 10 18 20 6"></polyline></svg>';
-      const body=$('span','body');body.appendChild($('span','label',it.item));body.appendChild($('span','meta','✔ '+(it.done_by||'')+'・'+ttxt(it.done_at)));
-      const mb=$('button','memobtn','メモ'+(mc[it.item]?' '+mc[it.item]:''));
+      const body=$('span','body');body.appendChild($('span','label',it.item));const meta=$('span','meta','✔ '+(it.done_by||'')+'・'+ttxt(it.done_at));it._meta=meta;body.appendChild(meta);
+      const mb=$('button','memobtn','メモ'+(mc[it.item]?' '+mc[it.item]:''));it._mb=mb;
       box.onclick=()=>toggle(it);body.onclick=()=>toggle(it);mb.onclick=e=>{e.stopPropagation();openThread(it);};
       li.appendChild(box);li.appendChild(body);li.appendChild(mb);list.appendChild(li);
     });prog_();
   }
-  async function toggle(it){const nd=!it.done;it.done=nd;it.done_by=nd?curOp:null;it.done_at=nd?new Date().toISOString():null;renderItems();const {error}=await sb.from('cl_checks').update({done:nd,done_by:it.done_by,done_at:it.done_at}).eq('id',it.id);if(error){it.done=!nd;renderItems();alert('保存に失敗しました');}}
+  function paintItem(it){if(!it._li)return;it._li.className='item'+(it.done?' done':'');if(it._meta)it._meta.textContent='✔ '+(it.done_by||'')+'・'+ttxt(it.done_at);
+  }
+  async function toggle(it){const nd=!it.done;it.done=nd;it.done_by=nd?curOp:null;it.done_at=nd?new Date().toISOString():null;paintItem(it);prog_();const {error}=await sb.from('cl_checks').update({done:nd,done_by:it.done_by,done_at:it.done_at}).eq('id',it.id);if(error){it.done=!nd;paintItem(it);prog_();alert('保存に失敗しました');}}
   nb.onclick=async()=>{const v=ni.value.trim();if(!v)return;ni.value='';const {data,error}=await sb.from('cl_checks').insert({case_no:caseNo,kbn:K,item:v,sort:items.length}).select();if(error){alert('追加に失敗');return;}items.push(data[0]);renderItems();};
   ni.onkeydown=e=>{if(e.key==='Enter')nb.onclick();};
 
@@ -223,7 +225,9 @@ async function renderPhotos(caseNo,kbn){
   root.innerHTML='';
   const app=$('div','app');
   app.appendChild(caseHeader(c,'完了写真'));
-  const oprow=$('div','oprow');oprow.appendChild($('label',null,'操作者'));const opsel=$('select');STAFF.forEach(s=>{const o=$('option',null,s);if(s===op())o.selected=true;opsel.appendChild(o);});opsel.onchange=()=>setOp(opsel.value);oprow.appendChild(opsel);app.appendChild(oprow);
+  let curOp=(c.staff||'').trim()||op();
+  const opStaff=(curOp&&STAFF.indexOf(curOp)<0)?[curOp].concat(STAFF):STAFF;
+  const oprow=$('div','oprow');oprow.appendChild($('label',null,'操作者'));const opsel=$('select');opStaff.forEach(s=>{const o=$('option',null,s);if(s===curOp)o.selected=true;opsel.appendChild(o);});opsel.onchange=()=>{curOp=opsel.value;setOp(curOp);};oprow.appendChild(opsel);app.appendChild(oprow);
 
   const uw=$('div','upwrap');
   const fileInput=$('input');fileInput.type='file';fileInput.accept='image/*';fileInput.multiple=true;fileInput.style.display='none';
@@ -259,7 +263,7 @@ async function renderPhotos(caseNo,kbn){
   async function runUpload(files){
     if(!files||!files.length)return;
     upbtn.disabled=true;rebtn.disabled=true;rebtn.style.display='none';prog.classList.add('on');
-    const who=op();const total=files.length;const t0=Date.now();
+    const who=curOp;const total=files.length;const t0=Date.now();
     let done=0,ok=0;const failed=[];let idx=0;
     const update=()=>{const pct=Math.round(done/total*100);pfill.style.width=pct+'%';ptxt.textContent=done+' / '+total+' 枚';const sec=(Date.now()-t0)/1000;const rate=done?done/sec:0;const eta=rate?Math.max(0,Math.round((total-done)/rate)):0;psub.textContent=(failed.length?'失敗 '+failed.length+' 件 / ':'')+'残り約 '+eta+' 秒';};
     update();
