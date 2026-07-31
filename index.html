@@ -111,6 +111,8 @@ function staffColor(name){const n=normName(String(name||'').split(/[,、\/／]/)
 function ymd(d){const p=n=>(n<10?'0':'')+n;return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());}
 // 納期表示：JSのDate文字列(Mon Jul 27 2026 …GMT…)は yyyy/M/d に整形。「即日〜…」等の文章はそのまま。
 function fmtDue(v){if(!v)return'';const s=String(v);if(/GMT|\d{2}:\d{2}:\d{2}|\dT\d/.test(s)){const d=new Date(s);if(!isNaN(d))return d.getFullYear()+'/'+(d.getMonth()+1)+'/'+d.getDate();}return s;}
+// 検索用の正規化：カタカナ→ひらがな＋小文字化（ひらがな/カタカナどちらで検索してもヒット）
+function kana(s){return String(s||'').toLowerCase().replace(/[ァ-ヶ]/g,function(c){return String.fromCharCode(c.charCodeAt(0)-0x60);});}
 let STAFF=['北冨','髙橋','鈴村','今野','永井'];
 async function loadStaff(){try{const {data}=await sb.from('cl_staff').select('name').order('sort').order('name');if(data&&data.length)STAFF=data.map(r=>r.name);}catch(e){}}
 const UP_CONCURRENCY=5;
@@ -145,7 +147,7 @@ async function renderDashboard(){
   const doneOf=x=>{const st=stat[x.case_no+'|'+(x.kbn||'')];const total=st?st.t:splitWork(x.work_content).length;return total>0&&(st?st.d:0)>=total;};
   const byDate={};(cases||[]).forEach(x=>{if(!x.work_date)return;const key=String(x.work_date).slice(0,10);(byDate[key]||(byDate[key]=[])).push(x);});
   let filter='all',query='';
-  const matchQ=c=>{if(filter!=='all'&&c.kbn!==filter)return false;if(!query)return true;const q=query.toLowerCase();return [c.prop,c.room,c.staff,c.vendor].some(v=>String(v||'').toLowerCase().indexOf(q)>=0);};
+  const matchQ=c=>{if(filter!=='all'&&c.kbn!==filter)return false;if(!query)return true;const q=kana(query);return [c.prop,c.room,c.staff,c.vendor].some(v=>kana(v).indexOf(q)>=0);};
   const t0=new Date();let cur=new Date(t0.getFullYear(),t0.getMonth(),1);
   root.innerHTML='';
   const wrap=$('div','calwrap');
