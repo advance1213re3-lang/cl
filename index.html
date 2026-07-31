@@ -13,7 +13,8 @@
 *{box-sizing:border-box}button,a,.item,.box,.memobtn,.fb,.tile,select,.btn,.upbig{touch-action:manipulation}html,body{margin:0}body{background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Hiragino Kaku Gothic ProN","Yu Gothic","Noto Sans JP",sans-serif;line-height:1.5;-webkit-text-size-adjust:100%}
 .wrap{max-width:960px;margin:0 auto;padding:20px 16px 48px}.app{max-width:480px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
 .eyebrow{font-size:12px;letter-spacing:.08em;color:var(--accent);font-weight:700;text-transform:uppercase}h1{margin:2px 0 8px;font-size:22px;font-weight:800;line-height:1.25}h1 .room{color:var(--ink-2)}.sub{color:var(--ink-2);font-size:13px}
-.hd2{position:sticky;top:0;z-index:5;background:var(--surface);border-bottom:1px solid var(--line);padding:12px 16px;box-shadow:var(--sh)}.back{color:var(--accent);text-decoration:none;font-weight:700;font-size:14px}
+.hd2{position:sticky;top:0;z-index:5;background:var(--surface);border-bottom:1px solid var(--line);padding:12px 16px;box-shadow:var(--sh)}.back{display:inline-block;margin-bottom:8px;color:var(--accent);text-decoration:none;font-weight:700;font-size:14px}
+.pstat{margin:12px 12px 0;padding:11px 14px;border-radius:11px;font-weight:800;font-size:15px;text-align:center}.pstat.done{color:var(--done);background:color-mix(in srgb,var(--done) 16%,transparent);border:1px solid color-mix(in srgb,var(--done) 40%,var(--line))}.pstat.prog{color:var(--prog);background:color-mix(in srgb,var(--prog) 14%,transparent);border:1px solid color-mix(in srgb,var(--prog) 35%,var(--line))}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.chip{font-size:12px;font-weight:600;color:var(--ink-2);background:var(--surface-2);border:1px solid var(--line);padding:3px 9px;border-radius:999px}
 .badge{font-size:11px;font-weight:800;padding:3px 9px;border-radius:6px;color:#fff}.badge.naiso{background:var(--naiso)}.badge.seisou{background:var(--seisou)}
 .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0}.tile{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;box-shadow:var(--sh)}.tile .n{font-size:26px;font-weight:800;line-height:1}.tile .l{font-size:12px;color:var(--ink-2);margin-top:4px;font-weight:600}.tile.done .n{color:var(--done)}.tile.prog .n{color:var(--prog)}.tile.none .n{color:var(--none)}
@@ -198,6 +199,7 @@ async function renderDashboard(){
 
 function caseHeader(c,eyebrow){
   const hd=$('header','hd2');
+  const back=$('a','back','← ダッシュボードに戻る');back.href=location.pathname;hd.appendChild(back);
   hd.appendChild($('div','eyebrow',eyebrow));
   const h1=$('h1');h1.appendChild(document.createTextNode((c.prop||'')+' '));h1.appendChild($('span','room',c.room||''));hd.appendChild(h1);
   const chips=$('div','chips');
@@ -299,6 +301,13 @@ async function renderPhotos(caseNo,kbn){
   root.innerHTML='';
   const app=$('div','app');
   app.appendChild(caseHeader(c,'完了写真'));
+  const pstat=$('div','pstat');pstat.style.display='none';app.appendChild(pstat);
+  sb.from('cl_checks').select('done').eq('case_no',caseNo).eq('kbn',c.kbn).then(({data})=>{
+    const items=data||[];if(!items.length){pstat.style.display='none';return;}
+    const done=items.filter(x=>x.done).length,total=items.length,isDone=done>=total;
+    pstat.style.display='block';pstat.className='pstat '+(isDone?'done':'prog');
+    pstat.textContent=(isDone?'✅ 作業完了':'🛠 作業中')+'  '+done+' / '+total;
+  });
   const curOp=(c.staff||'').trim();
 
   const uw=$('div','upwrap');
