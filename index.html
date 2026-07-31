@@ -28,6 +28,7 @@
 main{flex:1;padding:12px}ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}.item{display:flex;align-items:flex-start;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;min-height:58px;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent}.item:active{background:var(--surface-2)}.item.done{background:color-mix(in srgb,var(--done) 9%,var(--surface));border-color:color-mix(in srgb,var(--done) 40%,var(--line))}
 .box{flex:none;width:27px;height:27px;border-radius:7px;border:2px solid var(--line);background:var(--surface);display:grid;place-items:center;margin-top:1px}.item.done .box{background:var(--done);border-color:var(--done)}.box svg{width:16px;height:16px;stroke:#fff;stroke-width:3.4;fill:none;opacity:0}.item.done .box svg{opacity:1}.body{flex:1}.label{font-size:16px;font-weight:600}.item.done .label{color:var(--ink-2);text-decoration:line-through}.meta{font-size:12px;color:var(--ink-2);margin-top:4px;display:none}.item.done .meta{display:block}
 .memobtn{flex:none;align-self:center;border:1px solid var(--line);background:var(--surface-2);color:var(--ink-2);font-size:13px;font-weight:700;padding:10px 13px;border-radius:10px;cursor:pointer;white-space:nowrap}
+.mprev{display:block;font-size:12.5px;color:var(--ink);background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:5px 9px;margin-top:6px;white-space:normal;word-break:break-word;line-height:1.4}
 .additem{display:flex;gap:8px;margin-top:12px}.additem input{flex:1;font:inherit;padding:12px;border:1px solid var(--line);border-radius:11px;background:var(--surface);color:var(--ink)}.additem button{flex:none;font:inherit;font-weight:700;padding:0 16px;border:none;border-radius:11px;background:var(--accent);color:var(--accent-ink);cursor:pointer}
 .tolink{display:block;margin:14px 12px 0;text-align:center;text-decoration:none;font-weight:800;font-size:15px;padding:14px;border-radius:12px;background:var(--surface-2);color:var(--accent);border:1px solid var(--line)}
 /* photos page */
@@ -155,17 +156,15 @@ async function renderChecklist(caseNo,kbn){
     ({data:items}=await sb.from('cl_checks').select('*').eq('case_no',caseNo).eq('kbn',K).order('sort').order('created_at'));
   }
   items=items||[];
-  const {data:memos}=await sb.from('cl_memos').select('case_no,item').eq('case_no',caseNo).eq('kbn',K);
-  const mc={};(memos||[]).forEach(m=>{mc[m.item]=(mc[m.item]||0)+1;});
+  const {data:memos}=await sb.from('cl_memos').select('item,body,author,created_at').eq('case_no',caseNo).eq('kbn',K).order('created_at');
+  const mc={},ml={};(memos||[]).forEach(m=>{mc[m.item]=(mc[m.item]||0)+1;ml[m.item]=m;});
 
   root.innerHTML='';
   const app=$('div','app');
   const hd=caseHeader(c,'作業チェックリスト');
   const prog=$('div','progress');const bar=$('div','bar');const fill=$('span');fill.id='fill';bar.appendChild(fill);const cnt=$('div','count');cnt.innerHTML='<b id="dn">0</b>/<span id="tn">0</span> 完了';prog.appendChild(bar);prog.appendChild(cnt);hd.appendChild(prog);
   app.appendChild(hd);
-  let curOp=(c.staff||'').trim()||op();
-  const opStaff=(curOp&&STAFF.indexOf(curOp)<0)?[curOp].concat(STAFF):STAFF;
-  const oprow=$('div','oprow');oprow.appendChild($('label',null,'操作者'));const opsel=$('select');opStaff.forEach(s=>{const o=$('option',null,s);if(s===curOp)o.selected=true;opsel.appendChild(o);});opsel.onchange=()=>{curOp=opsel.value;setOp(curOp);};oprow.appendChild(opsel);app.appendChild(oprow);
+  const curOp=(c.staff||'').trim();
   const mainEl=$('main');
   const list=$('ul');mainEl.appendChild(list);
   const add=$('div','additem');const ni=$('input');ni.placeholder='＋ 項目を追加';const nb=$('button','','追加');add.appendChild(ni);add.appendChild(nb);mainEl.appendChild(add);
@@ -181,6 +180,7 @@ async function renderChecklist(caseNo,kbn){
       const li=$('li','item'+(it.done?' done':''));it._li=li;
       const box=$('span','box');box.innerHTML='<svg viewBox="0 0 24 24"><polyline points="4 12 10 18 20 6"></polyline></svg>';
       const body=$('span','body');body.appendChild($('span','label',it.item));const meta=$('span','meta','✔ '+(it.done_by||'')+'・'+ttxt(it.done_at));it._meta=meta;body.appendChild(meta);
+      if(ml[it.item]){const mp=$('span','mprev');mp.textContent='💬 '+(ml[it.item].author?ml[it.item].author+'：':'')+String(ml[it.item].body||'').slice(0,50)+(mc[it.item]>1?'（他'+(mc[it.item]-1)+'件）':'');body.appendChild(mp);}
       const mb=$('button','memobtn','メモ'+(mc[it.item]?' '+mc[it.item]:''));it._mb=mb;
       li.onclick=()=>toggle(it);mb.onclick=e=>{e.stopPropagation();openThread(it);};
       li.appendChild(box);li.appendChild(body);li.appendChild(mb);list.appendChild(li);
@@ -201,7 +201,7 @@ async function renderChecklist(caseNo,kbn){
     const thread=$('div','thread empty');thread.id='thread';thread.textContent='読み込み中…';
     const ir=$('div','minput');const inp=$('input');inp.placeholder='メッセージを入力';const sbtn=$('button','','送信');ir.appendChild(inp);ir.appendChild(sbtn);
     msheet.appendChild(mhd);msheet.appendChild(thread);msheet.appendChild(ir);ov.classList.add('open');
-    const send=async()=>{const v=inp.value.trim();if(!v)return;inp.value='';const {data,error}=await sb.from('cl_memos').insert({case_no:caseNo,kbn:K,item:it.item,author:curOp,body:v}).select();if(error){alert('送信失敗');return;}curMsgs.push(data[0]);mc[it.item]=(mc[it.item]||0)+1;renderItems();drawThread();};
+    const send=async()=>{const v=inp.value.trim();if(!v)return;inp.value='';const {data,error}=await sb.from('cl_memos').insert({case_no:caseNo,kbn:K,item:it.item,author:curOp,body:v}).select();if(error){alert('送信失敗');return;}curMsgs.push(data[0]);mc[it.item]=(mc[it.item]||0)+1;ml[it.item]=data[0];renderItems();drawThread();};
     sbtn.onclick=send;inp.onkeydown=e=>{if(e.key==='Enter')send();};
     const {data}=await sb.from('cl_memos').select('*').eq('case_no',caseNo).eq('kbn',K).eq('item',it.item).order('created_at');
     curMsgs=data||[];drawThread();
@@ -214,7 +214,7 @@ async function renderChecklist(caseNo,kbn){
     t.scrollTop=t.scrollHeight;
   }
   async function editMsg(i){const m=curMsgs[i];const nt=prompt('メッセージを修正',m.body);if(nt==null)return;const v=nt.trim();if(!v||v===m.body)return;const old=m.body;m.body=v;drawThread();const {error}=await sb.from('cl_memos').update({body:v}).eq('id',m.id);if(error){m.body=old;drawThread();alert('編集失敗');}}
-  async function delMsg(i){const m=curMsgs[i];if(!confirm('このメッセージを削除しますか？'))return;curMsgs.splice(i,1);mc[curItem.item]=Math.max(0,(mc[curItem.item]||0)-1);renderItems();drawThread();const {error}=await sb.from('cl_memos').delete().eq('id',m.id);if(error){curMsgs.splice(i,0,m);drawThread();alert('削除失敗');}}
+  async function delMsg(i){const m=curMsgs[i];if(!confirm('このメッセージを削除しますか？'))return;curMsgs.splice(i,1);mc[curItem.item]=Math.max(0,(mc[curItem.item]||0)-1);ml[curItem.item]=curMsgs.length?curMsgs[curMsgs.length-1]:null;renderItems();drawThread();const {error}=await sb.from('cl_memos').delete().eq('id',m.id);if(error){curMsgs.splice(i,0,m);drawThread();alert('削除失敗');}}
   renderItems();
 }
 
@@ -228,9 +228,7 @@ async function renderPhotos(caseNo,kbn){
   root.innerHTML='';
   const app=$('div','app');
   app.appendChild(caseHeader(c,'完了写真'));
-  let curOp=(c.staff||'').trim()||op();
-  const opStaff=(curOp&&STAFF.indexOf(curOp)<0)?[curOp].concat(STAFF):STAFF;
-  const oprow=$('div','oprow');oprow.appendChild($('label',null,'操作者'));const opsel=$('select');opStaff.forEach(s=>{const o=$('option',null,s);if(s===curOp)o.selected=true;opsel.appendChild(o);});opsel.onchange=()=>{curOp=opsel.value;setOp(curOp);};oprow.appendChild(opsel);app.appendChild(oprow);
+  const curOp=(c.staff||'').trim();
 
   const uw=$('div','upwrap');
   const fileInput=$('input');fileInput.type='file';fileInput.accept='image/*';fileInput.multiple=true;fileInput.style.display='none';
