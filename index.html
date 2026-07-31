@@ -248,13 +248,26 @@ async function renderPhotos(caseNo,kbn){
   const rebtn=$('button','upbig');rebtn.style.display='none';rebtn.style.marginTop='12px';rebtn.style.background='#c9772e';uw.appendChild(rebtn);
   let lastFailed=[];
   const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+  async function shrinkImage(f){
+    // 画像でなければそのまま。画像は長辺1600px/JPEG80に縮小してサイズ超過を防ぐ
+    const rawExt=(f.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg';
+    if(!/^image\//.test(f.type||''))return{blob:f,ext:rawExt,type:f.type||'application/octet-stream'};
+    try{
+      const bmp=await createImageBitmap(f);const MAX=1600;let w=bmp.width,h=bmp.height;
+      const s=Math.min(1,MAX/Math.max(w,h));w=Math.max(1,Math.round(w*s));h=Math.max(1,Math.round(h*s));
+      const cv=document.createElement('canvas');cv.width=w;cv.height=h;cv.getContext('2d').drawImage(bmp,0,0,w,h);
+      const blob=await new Promise(r=>cv.toBlob(r,'image/jpeg',0.8));
+      if(blob&&blob.size>0)return{blob,ext:'jpg',type:'image/jpeg'};
+    }catch(e){/* HEIC等で縮小不可なら元のまま試す */}
+    return{blob:f,ext:rawExt,type:f.type||'image/jpeg'};
+  }
   async function uploadOne(f,who){
+    const {blob,ext,type}=await shrinkImage(f);
     for(let attempt=1;;attempt++){
       try{
-        const ext=(f.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg';
         const stamp=new Date().toISOString().replace(/[-:T.]/g,'').slice(0,17);
         const path=c.kbn+'/'+caseNo+'/'+stamp+'_'+Math.floor(Math.random()*1e9)+'.'+ext;
-        const {error:ue}=await sb.storage.from(BUCKET).upload(path,f,{contentType:f.type||'image/jpeg',upsert:false});
+        const {error:ue}=await sb.storage.from(BUCKET).upload(path,blob,{contentType:type,upsert:false});
         if(ue)throw ue;
         const {data:pub}=sb.storage.from(BUCKET).getPublicUrl(path);
         const {data:row,error:ie}=await sb.from('cl_photos').insert({case_no:caseNo,kbn:c.kbn,path:path,url:pub.publicUrl,author:who}).select();
@@ -267,13 +280,13 @@ async function renderPhotos(caseNo,kbn){
     if(!files||!files.length)return;
     upbtn.disabled=true;rebtn.disabled=true;rebtn.style.display='none';prog.classList.add('on');
     const who=curOp;const total=files.length;const t0=Date.now();
-    let done=0,ok=0;const failed=[];let idx=0;
+    let done=0,ok=0;const failed=[];let idx=0,lastErr=null;
     const update=()=>{const pct=Math.round(done/total*100);pfill.style.width=pct+'%';ptxt.textContent=done+' / '+total+' 枚';const sec=(Date.now()-t0)/1000;const rate=done?done/sec:0;const eta=rate?Math.max(0,Math.round((total-done)/rate)):0;psub.textContent=(failed.length?'失敗 '+failed.length+' 件 / ':'')+'残り約 '+eta+' 秒';};
     update();
-    async function worker(){while(idx<files.length){const my=idx++;try{const rec=await uploadOne(files[my],who);photos.unshift(rec);ok++;drawGallery();}catch(e){failed.push(files[my]);}done++;update();}}
+    async function worker(){while(idx<files.length){const my=idx++;try{const rec=await uploadOne(files[my],who);photos.unshift(rec);ok++;drawGallery();}catch(e){failed.push(files[my]);lastErr=e;console.error('upload失敗',e);}done++;update();}}
     await Promise.all(Array.from({length:Math.min(UP_CONCURRENCY,files.length)},worker));
     lastFailed=failed;upbtn.disabled=false;rebtn.disabled=false;
-    ptxt.textContent='完了：'+ok+' 枚アップ'+(failed.length?'（失敗 '+failed.length+'）':'');psub.textContent='';
+    ptxt.textContent='完了：'+ok+' 枚アップ'+(failed.length?'（失敗 '+failed.length+'）':'');psub.textContent=(failed.length&&lastErr)?('原因: '+String(lastErr.message||lastErr.error||lastErr.msg||lastErr).slice(0,160)):'';
     if(failed.length){rebtn.textContent='⟳ 失敗した '+failed.length+' 枚を再アップロード';rebtn.style.display='flex';}
     else{setTimeout(()=>prog.classList.remove('on'),4000);}
   }
