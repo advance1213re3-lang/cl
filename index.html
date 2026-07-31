@@ -54,9 +54,18 @@ footer{padding:16px;text-align:center;color:var(--ink-2);font-size:12px}
 .calmonth{font-size:17px;font-weight:800;margin-left:2px}
 .calnav{margin-left:auto;display:flex;gap:6px}
 .calnav button{font:inherit;font-weight:700;font-size:14px;min-width:38px;padding:7px 12px;border-radius:9px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
-.calfil{display:flex;gap:6px;margin-top:8px}
+.calfil{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;align-items:center}
 .calfil .fb{font:inherit;font-weight:700;font-size:12px;padding:5px 13px;border-radius:999px;cursor:pointer;color:var(--ink-2);background:var(--surface-2);border:1px solid var(--line)}
 .calfil .fb[aria-pressed=true]{color:var(--accent-ink);background:var(--accent);border-color:transparent}
+.calsearch{flex:1;min-width:150px;font:inherit;font-size:13px;padding:7px 13px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+.sres{background:var(--surface);border-bottom:1px solid var(--line);max-height:46vh;overflow:auto}
+.sreshd{padding:8px 14px;font-size:12px;font-weight:800;color:var(--ink-2);position:sticky;top:0;background:var(--surface);border-bottom:1px solid var(--line)}
+.sreslist{display:flex;flex-direction:column}
+.sresrow{display:flex;align-items:center;gap:8px;padding:9px 14px;border-bottom:1px solid var(--line);cursor:pointer}
+.sresrow:active{background:var(--surface-2)}
+.sresrow .sc{width:10px;height:10px;border-radius:50%;flex:none}
+.sresrow .sresdate{font-size:12px;font-weight:700;color:var(--ink-2);min-width:44px;flex:none}
+.sresrow .sresnm{font-size:13.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .wkhd{display:grid;grid-template-columns:repeat(7,1fr);background:var(--surface);border-bottom:1px solid var(--line)}
 .wkhd>div{padding:7px 0;text-align:center;font-size:12px;font-weight:700;color:var(--ink-2)}
 .wkhd .sat{color:#3b82f6}.wkhd .sun{color:#ef4444}
@@ -135,7 +144,8 @@ async function renderDashboard(){
   const stat={};(checks||[]).forEach(r=>{const k=r.case_no+'|'+(r.kbn||'');const s=stat[k]||(stat[k]={d:0,t:0});s.t++;if(r.done)s.d++;});
   const doneOf=x=>{const st=stat[x.case_no+'|'+(x.kbn||'')];const total=st?st.t:splitWork(x.work_content).length;return total>0&&(st?st.d:0)>=total;};
   const byDate={};(cases||[]).forEach(x=>{if(!x.work_date)return;const key=String(x.work_date).slice(0,10);(byDate[key]||(byDate[key]=[])).push(x);});
-  let filter='all';
+  let filter='all',query='';
+  const matchQ=c=>{if(filter!=='all'&&c.kbn!==filter)return false;if(!query)return true;const q=query.toLowerCase();return [c.prop,c.room,c.staff,c.vendor].some(v=>String(v||'').toLowerCase().indexOf(q)>=0);};
   const t0=new Date();let cur=new Date(t0.getFullYear(),t0.getMonth(),1);
   root.innerHTML='';
   const wrap=$('div','calwrap');
@@ -148,8 +158,11 @@ async function renderDashboard(){
   nav.appendChild(todayBtn);nav.appendChild(prev);nav.appendChild(next);r1.appendChild(nav);
   hd.appendChild(r1);
   const fil=$('div','calfil');
-  [['all','すべて'],['naiso','内装'],['seisou','清掃']].forEach(([k,l])=>{const b=$('button','fb',l);b.setAttribute('aria-pressed',k==='all');b.onclick=()=>{filter=k;[...fil.children].forEach(x=>x.setAttribute('aria-pressed',x===b));draw();};fil.appendChild(b);});
+  const fbtns=[];
+  [['all','すべて'],['naiso','内装'],['seisou','清掃']].forEach(([k,l])=>{const b=$('button','fb',l);b.setAttribute('aria-pressed',k==='all');b.onclick=()=>{filter=k;fbtns.forEach(x=>x.setAttribute('aria-pressed',x===b));draw();drawResults();};fil.appendChild(b);fbtns.push(b);});
+  const search=$('input');search.className='calsearch';search.type='search';search.placeholder='🔍 物件名・号室・担当者・業者で検索';search.oninput=()=>{query=search.value.trim();draw();drawResults();};fil.appendChild(search);
   hd.appendChild(fil);wrap.appendChild(hd);
+  const sres=$('div','sres');sres.style.display='none';wrap.appendChild(sres);
   const wk=$('div','wkhd');['月','火','水','木','金','土','日'].forEach((w,i)=>{wk.appendChild($('div',i===5?'sat':i===6?'sun':null,w));});wrap.appendChild(wk);
   const grid=$('div','calgrid');wrap.appendChild(grid);
   wrap.appendChild($('footer',null,'テスト環境。作業日のある案件を表示。タップで詳細→チェックリスト/完了写真。'));
@@ -187,14 +200,35 @@ async function renderDashboard(){
       const d=new Date(start);d.setDate(start.getDate()+i);const key=ymd(d);
       const cls='dcell'+(d.getMonth()!==cur.getMonth()?' oth':'')+(key===tkey?' today':'')+(d.getDay()===0?' sun':d.getDay()===6?' sat':'');
       const cell=$('div',cls);cell.appendChild($('div','dn',String(d.getDate())));
-      let list=byDate[key]||[];if(filter!=='all')list=list.filter(x=>x.kbn===filter);
+      let list=(byDate[key]||[]).filter(matchQ);
       list.slice(0,MAX).forEach(c=>{const ev=$('div','ev'+(doneOf(c)?' done':''),(c.prop||'')+(c.room?' '+c.room:''));ev.style.background=staffColor(c.staff)||(c.kbn==='naiso'?'var(--naiso)':'var(--seisou)');ev.onclick=e=>{e.stopPropagation();openDay(key,list);};cell.appendChild(ev);});
       if(list.length>MAX)cell.appendChild($('div','more','+'+(list.length-MAX)+' 件'));
       if(list.length)cell.onclick=()=>openDay(key,list);
       grid.appendChild(cell);
     }
   }
-  draw();
+  function drawResults(){
+    if(!query){sres.style.display='none';sres.innerHTML='';return;}
+    const ms=(cases||[]).filter(matchQ).sort((a,b)=>String(a.work_date||'9999').localeCompare(String(b.work_date||'9999')));
+    sres.style.display='block';sres.innerHTML='';
+    sres.appendChild($('div','sreshd','検索結果 '+ms.length+'件'+(ms.length>60?'（上位60件表示）':'')));
+    const listEl=$('div','sreslist');
+    ms.slice(0,60).forEach(c=>{
+      const row=$('div','sresrow');
+      const dot=$('span','sc');dot.style.background=staffColor(c.staff)||(c.kbn==='naiso'?'var(--naiso)':'var(--seisou)');row.appendChild(dot);
+      const d=c.work_date?String(c.work_date).slice(0,10):'';
+      row.appendChild($('span','sresdate',d?(+d.slice(5,7))+'/'+(+d.slice(8,10)):'未定'));
+      row.appendChild($('span','badge '+c.kbn,KBN[c.kbn]||c.kbn));
+      row.appendChild($('span','sresnm',(c.prop||'')+(c.room?' '+c.room:'')+(c.staff?' ／'+c.staff:'')));
+      row.onclick=()=>{
+        if(c.work_date){const key=String(c.work_date).slice(0,10);const dd=new Date(key+'T00:00:00');cur=new Date(dd.getFullYear(),dd.getMonth(),1);draw();openDay(key,(byDate[key]||[]).filter(matchQ));}
+        else{location.href='?view=checklist&case='+encodeURIComponent(c.case_no)+'&kbn='+encodeURIComponent(c.kbn||'');}
+      };
+      listEl.appendChild(row);
+    });
+    sres.appendChild(listEl);
+  }
+  draw();drawResults();
 }
 
 function caseHeader(c,eyebrow){
