@@ -164,7 +164,7 @@ async function renderDashboard(){
   const {data:checks}=await sb.from('cl_checks').select('case_no,kbn,done');
   const stat={};(checks||[]).forEach(r=>{const k=r.case_no+'|'+(r.kbn||'');const s=stat[k]||(stat[k]={d:0,t:0});s.t++;if(r.done)s.d++;});
   const doneOf=x=>{const st=stat[x.case_no+'|'+(x.kbn||'')];const total=st?st.t:splitWork(x.work_content).length;return total>0&&(st?st.d:0)>=total;};
-  const byDate={};(cases||[]).forEach(x=>{if(!x.work_date)return;const key=String(x.work_date).slice(0,10);(byDate[key]||(byDate[key]=[])).push(x);});
+  const byDate={};(cases||[]).forEach(x=>{if(!x.work_date)return;const s=String(x.work_date).slice(0,10);let e=x.work_end?String(x.work_end).slice(0,10):s;if(e<s)e=s;let t=new Date(s+'T00:00:00');const end=new Date(e+'T00:00:00');let g=0;while(t<=end&&g<62){const key=ymd(t);(byDate[key]||(byDate[key]=[])).push(x);t.setDate(t.getDate()+1);g++;}});
   let filter='all',query='';
   const matchQ=c=>{if(filter!=='all'&&c.kbn!==filter)return false;if(!query)return true;const q=kana(query);return [c.prop,c.room,c.staff,c.vendor].some(v=>kana(v).indexOf(q)>=0);};
   const t0=new Date();let cur=new Date(t0.getFullYear(),t0.getMonth(),1);
@@ -203,6 +203,7 @@ async function renderDashboard(){
       t.appendChild($('span','badge '+c.kbn,KBN[c.kbn]||c.kbn));t.appendChild($('span','nm',(c.prop||'')+(c.room?' '+c.room:'')));row.appendChild(t);
       const info=$('div','dinfo');
       const kv=(k,v)=>{if(!v)return;const d=$('div','kv');d.appendChild($('span','k',k));d.appendChild($('span','v',String(v)));info.appendChild(d);};
+      if(c.work_end)kv('期間',String(c.work_date).slice(0,10)+' 〜 '+String(c.work_end).slice(0,10));
       kv('住所',c.address);kv('鍵',c.key_info);kv('業者',c.vendor);kv('担当',c.staff);kv('納期',fmtDue(c.due));kv('作業',c.work_content);kv('連絡',c.note);
       if(info.children.length)row.appendChild(info);
       if(c.order_url){const od=$('div','dinfo');const a=$('a','olink','📄 発注書を開く');a.href=c.order_url;a.target='_blank';a.rel='noopener';od.appendChild(a);row.appendChild(od);}
@@ -270,6 +271,8 @@ async function renderDashboard(){
     const selInfo=$('div','selinfo','案件を選んでください');bd.appendChild(selInfo);
     bd.appendChild($('div','flabel','作業日'));
     const dinput=$('input');dinput.type='date';dinput.className='finput';if(prefillDate)dinput.value=prefillDate;dinput.onclick=()=>{if(dinput.showPicker){try{dinput.showPicker();}catch(e){}}};bd.appendChild(dinput);
+    bd.appendChild($('div','flabel','作業終了日（数日かかる場合・任意）'));
+    const dend=$('input');dend.type='date';dend.className='finput';dend.onclick=()=>{if(dend.showPicker){try{dend.showPicker();}catch(e){}}};bd.appendChild(dend);
     bd.appendChild($('div','flabel','担当者（複数可）'));
     const staffWrap=$('div','staffwrap');(STAFF||[]).forEach(nm=>{const lb=$('label','staffchk');const cb=$('input');cb.type='checkbox';cb.value=nm;lb.appendChild(cb);lb.appendChild(document.createTextNode(nm));staffWrap.appendChild(lb);});bd.appendChild(staffWrap);
     const lockLb=$('label','lockrow');const lockCb=$('input');lockCb.type='checkbox';lockCb.checked=true;lockLb.appendChild(lockCb);lockLb.appendChild(document.createTextNode(' 🔒 ロックする（ダッシュボードを正に・推奨）'));bd.appendChild(lockLb);
@@ -292,7 +295,7 @@ async function renderDashboard(){
       const staff=[...staffWrap.querySelectorAll('input:checked')].map(y=>y.value).join(', ');
       regBtn.disabled=true;msg.textContent='登録中…（カレンダー予定を作成）';
       try{
-        const res=await postEdit({action:'register',case_no:selected.case_no,kbn:selected.kbn,work_date:dinput.value,staff:staff,lock:lockCb.checked});
+        const res=await postEdit({action:'register',case_no:selected.case_no,kbn:selected.kbn,work_date:dinput.value,work_end:dend.value,staff:staff,lock:lockCb.checked});
         if(res.ok){msg.textContent='✅ 登録しました（CAL2がSSの書式でGoogleカレンダーに作成・数十秒〜1分）';setTimeout(()=>{ov.classList.remove('open');location.reload();},1800);}
         else{msg.textContent='失敗: '+(res.error||'')+' '+(res.calNote||'');regBtn.disabled=false;}
       }catch(e){msg.textContent='通信失敗: '+e;regBtn.disabled=false;}
