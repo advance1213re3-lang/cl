@@ -107,7 +107,7 @@ const KBN={naiso:'内装',seisou:'清掃'};
 const CAL_COLORS={red:'#D50000',blue:'#3F51B5',green:'#0B8043',yellow:'#F6BF26',orange:'#F4511E',cyan:'#039BE5',purple:'#8E24AA',gray:'#616161',lavender:'#7986CB',sage:'#33B679',flamingo:'#E67C73'};
 const STAFF_COLOR={'アイン':'orange','グエン':'green','奈良':'gray','永井':'purple','北冨':'red','今野':'blue','髙橋':'yellow','高橋':'yellow','稲垣':'cyan','鈴村':'green'};
 function normName(s){return String(s||'').trim().replace('北富','北冨').replace('あいん','アイン');}
-function staffColor(name){const n=normName(String(name||'').split(/[,、\/／]/)[0]);const k=STAFF_COLOR[n];return k?CAL_COLORS[k]:'';}
+function staffColor(name){const n=normName(String(name||'').split(/[,、\/／＆&]/)[0]);const k=STAFF_COLOR[n];return k?CAL_COLORS[k]:'';}
 function ymd(d){const p=n=>(n<10?'0':'')+n;return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());}
 // 納期表示：JSのDate文字列(Mon Jul 27 2026 …GMT…)は yyyy/M/d に整形。「即日〜…」等の文章はそのまま。
 function fmtDue(v){if(!v)return'';const s=String(v);if(/GMT|\d{2}:\d{2}:\d{2}|\dT\d/.test(s)){const d=new Date(s);if(!isNaN(d))return d.getFullYear()+'/'+(d.getMonth()+1)+'/'+d.getDate();}return s;}
