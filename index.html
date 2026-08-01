@@ -209,8 +209,16 @@ async function renderDashboard(){
       const a=$('a','btn','✅ チェック');a.href='?view=checklist&case='+encodeURIComponent(c.case_no)+'&kbn='+encodeURIComponent(c.kbn||'');
       const b=$('a','btn ghost','📷 完了写真');b.href='?view=photos&case='+encodeURIComponent(c.case_no)+'&kbn='+encodeURIComponent(c.kbn||'');
       acts.appendChild(a);acts.appendChild(b);row.appendChild(acts);
-      const dch=$('button','btn ghost','📅 日付変更');dch.onclick=async()=>{const nd=prompt('新しい作業日 (YYYY-MM-DD)',key);if(!nd||!/^\d{4}-\d{2}-\d{2}$/.test(nd)){if(nd)alert('YYYY-MM-DD形式で入れてください');return;}dch.textContent='変更中…';const res=await postEdit({action:'setdate',case_no:c.case_no,kbn:c.kbn,work_date:nd});if(res.ok){alert('日付を変更しました（Googleカレンダー反映）');location.reload();}else{dch.textContent='📅 日付変更';alert('失敗: '+(res.error||res.calNote||''));}};
-      const dchRow=$('div','acts');dchRow.appendChild(dch);row.appendChild(dchRow);body.appendChild(row);
+      const dchRow=$('div','acts');
+      const dch=$('button','btn ghost','📅 日付変更');
+      dch.onclick=()=>{
+        const di=$('input');di.type='date';di.value=key;di.className='finput';di.style.margin='0';
+        dchRow.innerHTML='';dchRow.appendChild(di);
+        di.onchange=async()=>{const nd=di.value;if(!/^\d{4}-\d{2}-\d{2}$/.test(nd))return;di.disabled=true;const res=await postEdit({action:'setdate',case_no:c.case_no,kbn:c.kbn,work_date:nd});if(res.ok){alert('日付を変更しました（Googleカレンダー反映）');location.reload();}else{di.disabled=false;alert('失敗: '+(res.error||res.calNote||''));}};
+        di.onclick=()=>{if(di.showPicker){try{di.showPicker();}catch(e){}}};
+        if(di.showPicker){try{di.showPicker();}catch(e){}}di.focus();
+      };
+      dchRow.appendChild(dch);row.appendChild(dchRow);body.appendChild(row);
     });
     sh.appendChild(body);ov.classList.add('open');
   }
@@ -260,7 +268,7 @@ async function renderDashboard(){
     const clist=$('div','reglist');bd.appendChild(clist);
     const selInfo=$('div','selinfo','案件を選んでください');bd.appendChild(selInfo);
     bd.appendChild($('div','flabel','作業日'));
-    const dinput=$('input');dinput.type='date';dinput.className='finput';if(prefillDate)dinput.value=prefillDate;bd.appendChild(dinput);
+    const dinput=$('input');dinput.type='date';dinput.className='finput';if(prefillDate)dinput.value=prefillDate;dinput.onclick=()=>{if(dinput.showPicker){try{dinput.showPicker();}catch(e){}}};bd.appendChild(dinput);
     bd.appendChild($('div','flabel','担当者（複数可）'));
     const staffWrap=$('div','staffwrap');(STAFF||[]).forEach(nm=>{const lb=$('label','staffchk');const cb=$('input');cb.type='checkbox';cb.value=nm;lb.appendChild(cb);lb.appendChild(document.createTextNode(nm));staffWrap.appendChild(lb);});bd.appendChild(staffWrap);
     const lockLb=$('label','lockrow');const lockCb=$('input');lockCb.type='checkbox';lockCb.checked=true;lockLb.appendChild(lockCb);lockLb.appendChild(document.createTextNode(' 🔒 ロックする（ダッシュボードを正に・推奨）'));bd.appendChild(lockLb);
