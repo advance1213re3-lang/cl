@@ -69,6 +69,7 @@ footer{padding:16px;text-align:center;color:var(--ink-2);font-size:12px}
 .finput{width:100%;font:inherit;font-size:15px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink)}
 .reglist{max-height:34vh;overflow:auto;border:1px solid var(--line);border-radius:10px;margin-top:6px}
 .regitem{display:flex;align-items:center;gap:8px;padding:9px 11px;border-bottom:1px solid var(--line);cursor:pointer;font-size:13.5px;font-weight:600}
+.regitem .badge{flex:none}.regitem .rnm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .regitem:active{background:var(--surface-2)}.regitem.on{background:color-mix(in srgb,var(--accent) 16%,var(--surface))}
 .regmore{padding:8px 11px;font-size:12px;color:var(--ink-2)}
 .selinfo{margin-top:8px;font-size:13px;font-weight:700;color:var(--accent)}
@@ -281,7 +282,7 @@ async function renderDashboard(){
     function drawList(){
       const q=csearch.value.trim().toLowerCase();clist.innerHTML='';
       let ms=clist_data;if(q)ms=clist_data.filter(c=>((c.prop||'')+' '+(c.case_no||'')+' '+(c.room||'')).toLowerCase().indexOf(q)>=0);
-      ms.slice(0,40).forEach(c=>{const it=$('div','regitem');it.appendChild($('span','badge '+c.kbn,KBN[c.kbn]||c.kbn));it.appendChild($('span',null,(c.prop||'')+(c.room?' '+c.room:'')));it.onclick=()=>{selected=c;selInfo.textContent='選択: ['+(KBN[c.kbn]||c.kbn)+'] '+(c.prop||'')+(c.room?' '+c.room:'')+' ('+c.case_no+')';[...clist.children].forEach(y=>y.classList.remove('on'));it.classList.add('on');};clist.appendChild(it);});
+      ms.slice(0,40).forEach(c=>{const it=$('div','regitem');it.appendChild($('span','badge '+c.kbn,KBN[c.kbn]||c.kbn));it.appendChild($('span','rnm',(c.prop||'')+(c.room?' '+c.room:'')));it.onclick=()=>{selected=c;selInfo.textContent='選択: ['+(KBN[c.kbn]||c.kbn)+'] '+(c.prop||'')+(c.room?' '+c.room:'')+' ('+c.case_no+')';[...clist.children].forEach(y=>y.classList.remove('on'));it.classList.add('on');};clist.appendChild(it);});
       if(ms.length>40)clist.appendChild($('div','regmore','他 '+(ms.length-40)+'件…絞り込んでください'));
     }
     csearch.oninput=drawList;drawList();
