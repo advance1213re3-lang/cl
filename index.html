@@ -293,7 +293,7 @@ async function renderDashboard(){
       regBtn.disabled=true;msg.textContent='登録中…（カレンダー予定を作成）';
       try{
         const res=await postEdit({action:'register',case_no:selected.case_no,kbn:selected.kbn,work_date:dinput.value,staff:staff,lock:lockCb.checked});
-        if(res.ok){msg.textContent='✅ 登録しました（Googleカレンダーを確認）';setTimeout(()=>{ov.classList.remove('open');location.reload();},1400);}
+        if(res.ok){msg.textContent='✅ 登録しました（CAL2がSSの書式でGoogleカレンダーに作成・数十秒〜1分）';setTimeout(()=>{ov.classList.remove('open');location.reload();},1800);}
         else{msg.textContent='失敗: '+(res.error||'')+' '+(res.calNote||'');regBtn.disabled=false;}
       }catch(e){msg.textContent='通信失敗: '+e;regBtn.disabled=false;}
     };
