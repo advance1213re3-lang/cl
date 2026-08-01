@@ -8,15 +8,15 @@
 <meta name="robots" content="noindex,nofollow">
 <title>作業チェックリスト</title>
 <style>
-:root{--bg:#eef1f5;--surface:#fff;--surface-2:#f3f6f9;--ink:#16202b;--ink-2:#5b6775;--line:#dce2ea;--accent:#0e7490;--accent-ink:#fff;--naiso:#b45309;--seisou:#0e7490;--none:#8794a3;--prog:#2f6fb0;--done:#2f9e5b;--sh:0 1px 2px rgba(16,32,48,.06),0 8px 24px rgba(16,32,48,.07);--r:14px}
-@media(prefers-color-scheme:dark){:root{--bg:#0f1620;--surface:#16202c;--surface-2:#1c2836;--ink:#e9eef4;--ink-2:#94a2b3;--line:#2a3846;--accent:#26aac6;--accent-ink:#042630;--naiso:#d98a2b;--seisou:#26aac6;--none:#7f8d9c;--prog:#5b9bd8;--done:#48c281;--sh:0 1px 2px rgba(0,0,0,.3),0 10px 28px rgba(0,0,0,.4)}}
+:root{--bg:#eef1f5;--surface:#fff;--surface-2:#f3f6f9;--ink:#16202b;--ink-2:#5b6775;--line:#dce2ea;--accent:#0e7490;--accent-ink:#fff;--naiso:#b45309;--seisou:#0e7490;--setsubi:#7c3aed;--none:#8794a3;--prog:#2f6fb0;--done:#2f9e5b;--sh:0 1px 2px rgba(16,32,48,.06),0 8px 24px rgba(16,32,48,.07);--r:14px}
+@media(prefers-color-scheme:dark){:root{--bg:#0f1620;--surface:#16202c;--surface-2:#1c2836;--ink:#e9eef4;--ink-2:#94a2b3;--line:#2a3846;--accent:#26aac6;--accent-ink:#042630;--naiso:#d98a2b;--seisou:#26aac6;--setsubi:#a78bfa;--none:#7f8d9c;--prog:#5b9bd8;--done:#48c281;--sh:0 1px 2px rgba(0,0,0,.3),0 10px 28px rgba(0,0,0,.4)}}
 *{box-sizing:border-box}button,a,.item,.box,.memobtn,.fb,.tile,select,.btn,.upbig{touch-action:manipulation}html,body{margin:0}body{background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Hiragino Kaku Gothic ProN","Yu Gothic","Noto Sans JP",sans-serif;line-height:1.5;-webkit-text-size-adjust:100%}
 .wrap{max-width:960px;margin:0 auto;padding:20px 16px 48px}.app{max-width:480px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
 .eyebrow{font-size:12px;letter-spacing:.08em;color:var(--accent);font-weight:700;text-transform:uppercase}h1{margin:2px 0 8px;font-size:22px;font-weight:800;line-height:1.25}h1 .room{color:var(--ink-2)}.sub{color:var(--ink-2);font-size:13px}
 .hd2{position:sticky;top:0;z-index:5;background:var(--surface);border-bottom:1px solid var(--line);padding:12px 16px;box-shadow:var(--sh)}.back{display:inline-block;margin-bottom:8px;color:var(--accent);text-decoration:none;font-weight:700;font-size:14px}
 .pstat{margin:12px 12px 0;padding:11px 14px;border-radius:11px;font-weight:800;font-size:15px;text-align:center}.pstat.done{color:var(--done);background:color-mix(in srgb,var(--done) 16%,transparent);border:1px solid color-mix(in srgb,var(--done) 40%,var(--line))}.pstat.prog{color:var(--prog);background:color-mix(in srgb,var(--prog) 14%,transparent);border:1px solid color-mix(in srgb,var(--prog) 35%,var(--line))}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.chip{font-size:12px;font-weight:600;color:var(--ink-2);background:var(--surface-2);border:1px solid var(--line);padding:3px 9px;border-radius:999px}
-.badge{font-size:11px;font-weight:800;padding:3px 9px;border-radius:6px;color:#fff}.badge.naiso{background:var(--naiso)}.badge.seisou{background:var(--seisou)}
+.badge{font-size:11px;font-weight:800;padding:3px 9px;border-radius:6px;color:#fff}.badge.naiso{background:var(--naiso)}.badge.seisou{background:var(--seisou)}.badge.setsubi{background:var(--setsubi)}
 .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0}.tile{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;box-shadow:var(--sh)}.tile .n{font-size:26px;font-weight:800;line-height:1}.tile .l{font-size:12px;color:var(--ink-2);margin-top:4px;font-weight:600}.tile.done .n{color:var(--done)}.tile.prog .n{color:var(--prog)}.tile.none .n{color:var(--none)}
 .filters{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}.fb{font:inherit;font-weight:700;font-size:13px;padding:7px 14px;border-radius:999px;cursor:pointer;color:var(--ink-2);background:var(--surface);border:1px solid var(--line)}.fb[aria-pressed=true]{color:var(--accent-ink);background:var(--accent);border-color:transparent}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;box-shadow:var(--sh);display:flex;flex-direction:column;gap:9px}.card .top{display:flex;justify-content:space-between;align-items:center}.card .name{font-size:17px;font-weight:800}.card .name .room{color:var(--ink-2)}.card .meta{display:flex;flex-direction:column;gap:3px;font-size:13px}.card .mline{display:flex;gap:10px}.card .mk{color:var(--ink-2);min-width:46px}.card .mv{font-weight:600}.card .mline.due-over .mv{color:#c9772e;font-weight:800}.card .mline.due-soon .mv{color:#e0a02b}.card .mline.due-over .mv::after{content:"　超過";font-size:11px}.card .mline.due-soon .mv::after{content:"　間近";font-size:11px}
@@ -102,12 +102,13 @@ footer{padding:16px;text-align:center;color:var(--ink-2);font-size:12px}
 const SB_URL='https://vfreehhenmwrbxkhcdvu.supabase.co';
 const SB_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmcmVlaGhlbm13cmJ4a2hjZHZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5NTE5NTAsImV4cCI6MjA5OTUyNzk1MH0.UQKIOeJmn0Yt6gqUC_TF0uoFiRl4poTJyv_tx6BotS8';
 const BUCKET='cl-photos';
-const KBN={naiso:'内装',seisou:'清掃'};
+const KBN={naiso:'内装',seisou:'清掃',setsubi:'設備'};
 // Googleカレンダーの担当者色（担当者マスタC列＝カレンダー色に対応）
 const CAL_COLORS={red:'#D50000',blue:'#3F51B5',green:'#0B8043',yellow:'#F6BF26',orange:'#F4511E',cyan:'#039BE5',purple:'#8E24AA',gray:'#616161',lavender:'#7986CB',sage:'#33B679',flamingo:'#E67C73'};
 const STAFF_COLOR={'アイン':'orange','グエン':'green','奈良':'gray','永井':'purple','北冨':'red','今野':'blue','髙橋':'yellow','高橋':'yellow','稲垣':'cyan','鈴村':'green'};
 function normName(s){return String(s||'').trim().replace('北富','北冨').replace('あいん','アイン');}
 function staffColor(name){const n=normName(String(name||'').split(/[,、\/／＆&]/)[0]);const k=STAFF_COLOR[n];return k?CAL_COLORS[k]:'';}
+function kbnColor(kbn){return kbn==='naiso'?'var(--naiso)':kbn==='setsubi'?'var(--setsubi)':'var(--seisou)';}
 function ymd(d){const p=n=>(n<10?'0':'')+n;return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());}
 // 納期表示：JSのDate文字列(Mon Jul 27 2026 …GMT…)は yyyy/M/d に整形。「即日〜…」等の文章はそのまま。
 function fmtDue(v){if(!v)return'';const s=String(v);if(/GMT|\d{2}:\d{2}:\d{2}|\dT\d/.test(s)){const d=new Date(s);if(!isNaN(d))return d.getFullYear()+'/'+(d.getMonth()+1)+'/'+d.getDate();}return s;}
@@ -161,7 +162,7 @@ async function renderDashboard(){
   hd.appendChild(r1);
   const fil=$('div','calfil');
   const fbtns=[];
-  [['all','すべて'],['naiso','内装'],['seisou','清掃']].forEach(([k,l])=>{const b=$('button','fb',l);b.setAttribute('aria-pressed',k==='all');b.onclick=()=>{filter=k;fbtns.forEach(x=>x.setAttribute('aria-pressed',x===b));draw();drawResults();};fil.appendChild(b);fbtns.push(b);});
+  [['all','すべて'],['naiso','内装'],['seisou','清掃'],['setsubi','設備']].forEach(([k,l])=>{const b=$('button','fb',l);b.setAttribute('aria-pressed',k==='all');b.onclick=()=>{filter=k;fbtns.forEach(x=>x.setAttribute('aria-pressed',x===b));draw();drawResults();};fil.appendChild(b);fbtns.push(b);});
   const search=$('input');search.className='calsearch';search.type='search';search.placeholder='🔍 物件名・号室・担当者・業者で検索';search.oninput=()=>{query=search.value.trim();draw();drawResults();};fil.appendChild(search);
   hd.appendChild(fil);wrap.appendChild(hd);
   const sres=$('div','sres');sres.style.display='none';wrap.appendChild(sres);
@@ -179,7 +180,7 @@ async function renderDashboard(){
     const body=$('div');body.style.cssText='flex:1;overflow:auto';
     list.forEach(c=>{
       const row=$('div','dayrow');
-      const t=$('div','t');const dot=$('span','sc');dot.style.background=staffColor(c.staff)||(c.kbn==='naiso'?'var(--naiso)':'var(--seisou)');t.appendChild(dot);
+      const t=$('div','t');const dot=$('span','sc');dot.style.background=staffColor(c.staff)||kbnColor(c.kbn);t.appendChild(dot);
       t.appendChild($('span','badge '+c.kbn,KBN[c.kbn]||c.kbn));t.appendChild($('span','nm',(c.prop||'')+(c.room?' '+c.room:'')));row.appendChild(t);
       const info=$('div','dinfo');
       const kv=(k,v)=>{if(!v)return;const d=$('div','kv');d.appendChild($('span','k',k));d.appendChild($('span','v',String(v)));info.appendChild(d);};
@@ -203,7 +204,7 @@ async function renderDashboard(){
       const cls='dcell'+(d.getMonth()!==cur.getMonth()?' oth':'')+(key===tkey?' today':'')+(d.getDay()===0?' sun':d.getDay()===6?' sat':'');
       const cell=$('div',cls);cell.appendChild($('div','dn',String(d.getDate())));
       let list=(byDate[key]||[]).filter(matchQ);
-      list.slice(0,MAX).forEach(c=>{const ev=$('div','ev'+(doneOf(c)?' done':''),(c.prop||'')+(c.room?' '+c.room:''));ev.style.background=staffColor(c.staff)||(c.kbn==='naiso'?'var(--naiso)':'var(--seisou)');ev.onclick=e=>{e.stopPropagation();openDay(key,list);};cell.appendChild(ev);});
+      list.slice(0,MAX).forEach(c=>{const ev=$('div','ev'+(doneOf(c)?' done':''),(c.prop||'')+(c.room?' '+c.room:''));ev.style.background=staffColor(c.staff)||kbnColor(c.kbn);ev.onclick=e=>{e.stopPropagation();openDay(key,list);};cell.appendChild(ev);});
       if(list.length>MAX)cell.appendChild($('div','more','+'+(list.length-MAX)+' 件'));
       if(list.length)cell.onclick=()=>openDay(key,list);
       grid.appendChild(cell);
@@ -217,7 +218,7 @@ async function renderDashboard(){
     const listEl=$('div','sreslist');
     ms.slice(0,60).forEach(c=>{
       const row=$('div','sresrow');
-      const dot=$('span','sc');dot.style.background=staffColor(c.staff)||(c.kbn==='naiso'?'var(--naiso)':'var(--seisou)');row.appendChild(dot);
+      const dot=$('span','sc');dot.style.background=staffColor(c.staff)||kbnColor(c.kbn);row.appendChild(dot);
       const d=c.work_date?String(c.work_date).slice(0,10):'';
       row.appendChild($('span','sresdate',d?(+d.slice(5,7))+'/'+(+d.slice(8,10)):'未定'));
       row.appendChild($('span','badge '+c.kbn,KBN[c.kbn]||c.kbn));
