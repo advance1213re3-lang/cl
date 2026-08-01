@@ -65,6 +65,19 @@ footer{padding:16px;text-align:center;color:var(--ink-2);font-size:12px}
 .sresrow:active{background:var(--surface-2)}
 .sresrow .sc{width:10px;height:10px;border-radius:50%;flex:none}
 .sresrow .sresdate{font-size:12px;font-weight:700;color:var(--ink-2);min-width:44px;flex:none}
+.flabel{font-size:12px;font-weight:800;color:var(--ink-2);margin:12px 0 5px}
+.finput{width:100%;font:inherit;font-size:15px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink)}
+.reglist{max-height:34vh;overflow:auto;border:1px solid var(--line);border-radius:10px;margin-top:6px}
+.regitem{display:flex;align-items:center;gap:8px;padding:9px 11px;border-bottom:1px solid var(--line);cursor:pointer;font-size:13.5px;font-weight:600}
+.regitem:active{background:var(--surface-2)}.regitem.on{background:color-mix(in srgb,var(--accent) 16%,var(--surface))}
+.regmore{padding:8px 11px;font-size:12px;color:var(--ink-2)}
+.selinfo{margin-top:8px;font-size:13px;font-weight:700;color:var(--accent)}
+.staffwrap{display:flex;flex-wrap:wrap;gap:8px}
+.staffchk{display:inline-flex;align-items:center;gap:5px;font-size:14px;font-weight:600;padding:7px 11px;border:1px solid var(--line);border-radius:999px;background:var(--surface);cursor:pointer}
+.lockrow{display:flex;align-items:center;gap:8px;margin-top:14px;font-size:14px;font-weight:700}
+.regbtn{width:100%;margin-top:16px;font:inherit;font-weight:800;font-size:16px;padding:14px;border:none;border-radius:12px;background:var(--accent);color:var(--accent-ink);cursor:pointer}
+.regbtn:disabled{opacity:.6}
+.regmsg{margin-top:10px;font-size:13px;font-weight:700;text-align:center;color:var(--ink-2)}
 .sresrow .sresnm{font-size:13.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .wkhd{display:grid;grid-template-columns:repeat(7,1fr);background:var(--surface);border-bottom:1px solid var(--line)}
 .wkhd>div{padding:7px 0;text-align:center;font-size:12px;font-weight:700;color:var(--ink-2)}
@@ -102,6 +115,10 @@ footer{padding:16px;text-align:center;color:var(--ink-2);font-size:12px}
 const SB_URL='https://vfreehhenmwrbxkhcdvu.supabase.co';
 const SB_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmcmVlaGhlbm13cmJ4a2hjZHZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5NTE5NTAsImV4cCI6MjA5OTUyNzk1MH0.UQKIOeJmn0Yt6gqUC_TF0uoFiRl4poTJyv_tx6BotS8';
 const BUCKET='cl-photos';
+// 編集エンドポイント（GAS doPost）：新規登録・日付変更
+const EDIT_URL='https://script.google.com/macros/s/AKfycbwFPkduIwdp_2jQcr830kNcBKS6LvgRP6FJa8SfzgElQgG41WEq42sMOt5BvuA8omhW/exec';
+const EDIT_TOKEN='cl-edit-7Fq2Zk9';
+async function postEdit(payload){const r=await fetch(EDIT_URL,{method:'POST',body:JSON.stringify(Object.assign({token:EDIT_TOKEN},payload))});return r.json();}
 const KBN={naiso:'内装',seisou:'清掃',setsubi:'設備'};
 // Googleカレンダーの担当者色（担当者マスタC列＝カレンダー色に対応）
 const CAL_COLORS={red:'#D50000',blue:'#3F51B5',green:'#0B8043',yellow:'#F6BF26',orange:'#F4511E',cyan:'#039BE5',purple:'#8E24AA',gray:'#616161',lavender:'#7986CB',sage:'#33B679',flamingo:'#E67C73'};
@@ -164,6 +181,7 @@ async function renderDashboard(){
   const fbtns=[];
   [['all','すべて'],['naiso','内装'],['seisou','清掃'],['setsubi','設備']].forEach(([k,l])=>{const b=$('button','fb',l);b.setAttribute('aria-pressed',k==='all');b.onclick=()=>{filter=k;fbtns.forEach(x=>x.setAttribute('aria-pressed',x===b));draw();drawResults();};fil.appendChild(b);fbtns.push(b);});
   const search=$('input');search.className='calsearch';search.type='search';search.placeholder='🔍 物件名・号室・担当者・業者で検索';search.oninput=()=>{query=search.value.trim();draw();drawResults();};fil.appendChild(search);
+  const regTop=$('button','fb','＋新規登録');regTop.onclick=()=>openRegister('');fil.appendChild(regTop);
   hd.appendChild(fil);wrap.appendChild(hd);
   const sres=$('div','sres');sres.style.display='none';wrap.appendChild(sres);
   const wk=$('div','wkhd');['月','火','水','木','金','土','日'].forEach((w,i)=>{wk.appendChild($('div',i===5?'sat':i===6?'sun':null,w));});wrap.appendChild(wk);
@@ -190,7 +208,9 @@ async function renderDashboard(){
       const acts=$('div','acts');
       const a=$('a','btn','✅ チェック');a.href='?view=checklist&case='+encodeURIComponent(c.case_no)+'&kbn='+encodeURIComponent(c.kbn||'');
       const b=$('a','btn ghost','📷 完了写真');b.href='?view=photos&case='+encodeURIComponent(c.case_no)+'&kbn='+encodeURIComponent(c.kbn||'');
-      acts.appendChild(a);acts.appendChild(b);row.appendChild(acts);body.appendChild(row);
+      acts.appendChild(a);acts.appendChild(b);row.appendChild(acts);
+      const dch=$('button','btn ghost','📅 日付変更');dch.onclick=async()=>{const nd=prompt('新しい作業日 (YYYY-MM-DD)',key);if(!nd||!/^\d{4}-\d{2}-\d{2}$/.test(nd)){if(nd)alert('YYYY-MM-DD形式で入れてください');return;}dch.textContent='変更中…';const res=await postEdit({action:'setdate',case_no:c.case_no,kbn:c.kbn,work_date:nd});if(res.ok){alert('日付を変更しました（Googleカレンダー反映）');location.reload();}else{dch.textContent='📅 日付変更';alert('失敗: '+(res.error||res.calNote||''));}};
+      const dchRow=$('div','acts');dchRow.appendChild(dch);row.appendChild(dchRow);body.appendChild(row);
     });
     sh.appendChild(body);ov.classList.add('open');
   }
@@ -206,7 +226,7 @@ async function renderDashboard(){
       let list=(byDate[key]||[]).filter(matchQ);
       list.slice(0,MAX).forEach(c=>{const ev=$('div','ev'+(doneOf(c)?' done':''),(c.prop||'')+(c.room?' '+c.room:''));ev.style.background=staffColor(c.staff)||kbnColor(c.kbn);ev.onclick=e=>{e.stopPropagation();openDay(key,list);};cell.appendChild(ev);});
       if(list.length>MAX)cell.appendChild($('div','more','+'+(list.length-MAX)+' 件'));
-      if(list.length)cell.onclick=()=>openDay(key,list);
+      cell.onclick=()=>{if(list.length)openDay(key,list);else openRegister(key);};
       grid.appendChild(cell);
     }
   }
@@ -230,6 +250,44 @@ async function renderDashboard(){
       listEl.appendChild(row);
     });
     sres.appendChild(listEl);
+  }
+  async function openRegister(prefillDate){
+    sh.innerHTML='';
+    const mhd=$('div','mhd');mhd.appendChild($('b',null,'＋ 新規登録'));const x=$('button','x','×');x.onclick=()=>ov.classList.remove('open');mhd.appendChild(x);sh.appendChild(mhd);
+    const bd=$('div');bd.style.cssText='flex:1;overflow:auto;padding:14px';
+    bd.appendChild($('div','flabel','案件（作業日なしから選択）'));
+    const csearch=$('input');csearch.className='finput';csearch.placeholder='物件名・案件Noで絞り込み';bd.appendChild(csearch);
+    const clist=$('div','reglist');bd.appendChild(clist);
+    const selInfo=$('div','selinfo','案件を選んでください');bd.appendChild(selInfo);
+    bd.appendChild($('div','flabel','作業日'));
+    const dinput=$('input');dinput.type='date';dinput.className='finput';if(prefillDate)dinput.value=prefillDate;bd.appendChild(dinput);
+    bd.appendChild($('div','flabel','担当者（複数可）'));
+    const staffWrap=$('div','staffwrap');(STAFF||[]).forEach(nm=>{const lb=$('label','staffchk');const cb=$('input');cb.type='checkbox';cb.value=nm;lb.appendChild(cb);lb.appendChild(document.createTextNode(nm));staffWrap.appendChild(lb);});bd.appendChild(staffWrap);
+    const lockLb=$('label','lockrow');const lockCb=$('input');lockCb.type='checkbox';lockCb.checked=true;lockLb.appendChild(lockCb);lockLb.appendChild(document.createTextNode(' 🔒 ロックする（ダッシュボードを正に・推奨）'));bd.appendChild(lockLb);
+    const regBtn=$('button','regbtn','この内容で登録');bd.appendChild(regBtn);
+    const msg=$('div','regmsg','');bd.appendChild(msg);
+    sh.appendChild(bd);ov.classList.add('open');
+    let clist_data=[],selected=null;
+    msg.textContent='未登録案件を読み込み中…';
+    try{const res=await postEdit({action:'list'});clist_data=res.cases||[];msg.textContent='未登録 '+clist_data.length+'件';}catch(e){msg.textContent='読み込み失敗: '+e;}
+    function drawList(){
+      const q=csearch.value.trim().toLowerCase();clist.innerHTML='';
+      let ms=clist_data;if(q)ms=clist_data.filter(c=>((c.prop||'')+' '+(c.case_no||'')+' '+(c.room||'')).toLowerCase().indexOf(q)>=0);
+      ms.slice(0,40).forEach(c=>{const it=$('div','regitem');it.appendChild($('span','badge '+c.kbn,KBN[c.kbn]||c.kbn));it.appendChild($('span',null,(c.prop||'')+(c.room?' '+c.room:'')));it.onclick=()=>{selected=c;selInfo.textContent='選択: ['+(KBN[c.kbn]||c.kbn)+'] '+(c.prop||'')+(c.room?' '+c.room:'')+' ('+c.case_no+')';[...clist.children].forEach(y=>y.classList.remove('on'));it.classList.add('on');};clist.appendChild(it);});
+      if(ms.length>40)clist.appendChild($('div','regmore','他 '+(ms.length-40)+'件…絞り込んでください'));
+    }
+    csearch.oninput=drawList;drawList();
+    regBtn.onclick=async()=>{
+      if(!selected){msg.textContent='⚠ 案件を選んでください';return;}
+      if(!dinput.value){msg.textContent='⚠ 作業日を入れてください';return;}
+      const staff=[...staffWrap.querySelectorAll('input:checked')].map(y=>y.value).join(', ');
+      regBtn.disabled=true;msg.textContent='登録中…（カレンダー予定を作成）';
+      try{
+        const res=await postEdit({action:'register',case_no:selected.case_no,kbn:selected.kbn,work_date:dinput.value,staff:staff,lock:lockCb.checked});
+        if(res.ok){msg.textContent='✅ 登録しました（Googleカレンダーを確認）';setTimeout(()=>{ov.classList.remove('open');location.reload();},1400);}
+        else{msg.textContent='失敗: '+(res.error||'')+' '+(res.calNote||'');regBtn.disabled=false;}
+      }catch(e){msg.textContent='通信失敗: '+e;regBtn.disabled=false;}
+    };
   }
   draw();drawResults();
 }
