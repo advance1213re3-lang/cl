@@ -220,7 +220,10 @@ async function renderDashboard(){
         di.onclick=()=>{if(di.showPicker){try{di.showPicker();}catch(e){}}};
         if(di.showPicker){try{di.showPicker();}catch(e){}}di.focus();
       };
-      dchRow.appendChild(dch);row.appendChild(dchRow);body.appendChild(row);
+      dchRow.appendChild(dch);
+      const canc=$('button','btn ghost','🗑 削除');canc.style.color='#c0392b';
+      canc.onclick=async()=>{if(!confirm('この予定を削除して「未登録」に戻します。\n（Googleカレンダーの予定も削除されます）よろしいですか？'))return;canc.textContent='削除中…';const res=await postEdit({action:'cancel',case_no:c.case_no,kbn:c.kbn});if(res.ok){alert('削除しました（未登録に戻しました）');location.reload();}else{canc.textContent='🗑 削除';alert('失敗: '+(res.error||''));}};
+      dchRow.appendChild(canc);row.appendChild(dchRow);body.appendChild(row);
     });
     sh.appendChild(body);ov.classList.add('open');
   }
