@@ -200,7 +200,7 @@ async function renderDashboard(){
     list.forEach(c=>{
       const row=$('div','dayrow');
       const t=$('div','t');const dot=$('span','sc');dot.style.background=staffColor(c.staff)||kbnColor(c.kbn);t.appendChild(dot);
-      t.appendChild($('span','badge '+c.kbn,KBN[c.kbn]||c.kbn));t.appendChild($('span','nm',(c.prop||'')+(c.room?' '+c.room:'')));row.appendChild(t);
+      t.appendChild($('span','badge '+c.kbn,KBN[c.kbn]||c.kbn));t.appendChild($('span','nm',(c.locked?'🔒 ':'')+(c.prop||'')+(c.room?' '+c.room:'')));row.appendChild(t);
       const info=$('div','dinfo');
       const kv=(k,v)=>{if(!v)return;const d=$('div','kv');d.appendChild($('span','k',k));d.appendChild($('span','v',String(v)));info.appendChild(d);};
       if(c.work_end)kv('期間',String(c.work_date).slice(0,10)+' 〜 '+String(c.work_end).slice(0,10));
@@ -223,7 +223,10 @@ async function renderDashboard(){
       dchRow.appendChild(dch);
       const canc=$('button','btn ghost','🗑 削除');canc.style.color='#c0392b';
       canc.onclick=async()=>{if(!confirm('この予定を削除して「未登録」に戻します。\n（Googleカレンダーの予定も削除されます）よろしいですか？'))return;canc.textContent='削除中…';const res=await postEdit({action:'cancel',case_no:c.case_no,kbn:c.kbn});if(res.ok){alert('削除しました（未登録に戻しました）');location.reload();}else{canc.textContent='🗑 削除';alert('失敗: '+(res.error||''));}};
-      dchRow.appendChild(canc);row.appendChild(dchRow);body.appendChild(row);
+      dchRow.appendChild(canc);
+      const stf=$('button','btn ghost','👤 担当変更');const stfRow=$('div');
+      stf.onclick=()=>{if(stfRow.children.length){stfRow.innerHTML='';return;}const wrap=$('div','staffwrap');wrap.style.cssText='padding:8px 0';const cur=(c.staff||'').split(/[,、\/／＆&]/).map(s=>s.trim());(STAFF||[]).forEach(nm=>{const lb=$('label','staffchk');const cb=$('input');cb.type='checkbox';cb.value=nm;if(cur.indexOf(nm)>=0)cb.checked=true;lb.appendChild(cb);lb.appendChild(document.createTextNode(nm));wrap.appendChild(lb);});const okb=$('button','regbtn','この担当で変更');okb.style.marginTop='8px';okb.onclick=async()=>{const s=[...wrap.querySelectorAll('input:checked')].map(x=>x.value).join(', ');okb.disabled=true;okb.textContent='変更中…';const res=await postEdit({action:'setstaff',case_no:c.case_no,kbn:c.kbn,staff:s});if(res.ok){alert('担当者を変更しました');location.reload();}else{okb.disabled=false;okb.textContent='この担当で変更';alert('失敗: '+(res.error||''));}};stfRow.appendChild(wrap);stfRow.appendChild(okb);};
+      dchRow.appendChild(stf);row.appendChild(dchRow);row.appendChild(stfRow);body.appendChild(row);
     });
     sh.appendChild(body);ov.classList.add('open');
   }
@@ -237,7 +240,7 @@ async function renderDashboard(){
       const cls='dcell'+(d.getMonth()!==cur.getMonth()?' oth':'')+(key===tkey?' today':'')+(d.getDay()===0?' sun':d.getDay()===6?' sat':'');
       const cell=$('div',cls);cell.appendChild($('div','dn',String(d.getDate())));
       let list=(byDate[key]||[]).filter(matchQ);
-      list.slice(0,MAX).forEach(c=>{const ev=$('div','ev'+(doneOf(c)?' done':''),(c.prop||'')+(c.room?' '+c.room:''));ev.style.background=staffColor(c.staff)||kbnColor(c.kbn);ev.onclick=e=>{e.stopPropagation();openDay(key,list);};cell.appendChild(ev);});
+      list.slice(0,MAX).forEach(c=>{const ev=$('div','ev'+(doneOf(c)?' done':''),(c.locked?'🔒':'')+(c.prop||'')+(c.room?' '+c.room:''));ev.style.background=staffColor(c.staff)||kbnColor(c.kbn);ev.onclick=e=>{e.stopPropagation();openDay(key,list);};cell.appendChild(ev);});
       if(list.length>MAX)cell.appendChild($('div','more','+'+(list.length-MAX)+' 件'));
       cell.onclick=()=>{if(list.length)openDay(key,list);else openRegister(key);};
       grid.appendChild(cell);
