@@ -183,6 +183,7 @@ async function renderDashboard(){
   [['all','すべて'],['naiso','内装'],['seisou','清掃'],['setsubi','設備']].forEach(([k,l])=>{const b=$('button','fb',l);b.setAttribute('aria-pressed',k==='all');b.onclick=()=>{filter=k;fbtns.forEach(x=>x.setAttribute('aria-pressed',x===b));draw();drawResults();};fil.appendChild(b);fbtns.push(b);});
   const search=$('input');search.className='calsearch';search.type='search';search.placeholder='🔍 物件名・号室・担当者・業者で検索';search.oninput=()=>{query=search.value.trim();draw();drawResults();};fil.appendChild(search);
   const regTop=$('button','fb','＋新規登録');regTop.onclick=()=>openRegister('');fil.appendChild(regTop);
+  const wkBtn=$('button','fb','📊 今週');wkBtn.onclick=()=>openWeek();fil.appendChild(wkBtn);
   hd.appendChild(fil);wrap.appendChild(hd);
   const sres=$('div','sres');sres.style.display='none';wrap.appendChild(sres);
   const wk=$('div','wkhd');['月','火','水','木','金','土','日'].forEach((w,i)=>{wk.appendChild($('div',i===5?'sat':i===6?'sun':null,w));});wrap.appendChild(wk);
@@ -306,6 +307,27 @@ async function renderDashboard(){
         else{msg.textContent='失敗: '+(res.error||'')+' '+(res.calNote||'');regBtn.disabled=false;}
       }catch(e){msg.textContent='通信失敗: '+e;regBtn.disabled=false;}
     };
+  }
+  function openWeek(){
+    sh.innerHTML='';
+    const today=new Date();const dow=(today.getDay()+6)%7;const mon=new Date(today.getFullYear(),today.getMonth(),today.getDate()-dow);const sun=new Date(mon);sun.setDate(mon.getDate()+6);
+    const mhd=$('div','mhd');mhd.appendChild($('b',null,'📊 今週 '+(mon.getMonth()+1)+'/'+mon.getDate()+'〜'+(sun.getMonth()+1)+'/'+sun.getDate()));const x=$('button','x','×');x.onclick=()=>ov.classList.remove('open');mhd.appendChild(x);sh.appendChild(mhd);
+    const bd=$('div');bd.style.cssText='flex:1;overflow:auto;padding-bottom:10px';
+    const wk=['月','火','水','木','金','土','日'];const seen={},staffCnt={};let total=0;
+    for(let i=0;i<7;i++){
+      const t=new Date(mon);t.setDate(mon.getDate()+i);const k=ymd(t);const list=byDate[k]||[];
+      bd.appendChild($('div','sreshd',(t.getMonth()+1)+'/'+t.getDate()+'('+wk[i]+') '+list.length+'件'));
+      list.forEach(c=>{
+        const rrow=$('div','sresrow');const dot=$('span','sc');dot.style.background=staffColor(c.staff)||kbnColor(c.kbn);rrow.appendChild(dot);
+        rrow.appendChild($('span','badge '+c.kbn,KBN[c.kbn]||c.kbn));
+        rrow.appendChild($('span','sresnm',(c.locked?'🔒':'')+(c.prop||'')+(c.room?' '+c.room:'')+(c.staff?' ／'+c.staff:'')));
+        rrow.onclick=()=>openDay(k,list);bd.appendChild(rrow);
+        const uk=c.case_no+'|'+c.kbn;if(!seen[uk]){seen[uk]=1;total++;const nm=(c.staff||'').split(/[,、\/／＆&]/).map(s=>s.trim()).filter(Boolean);if(nm.length)nm.forEach(n=>{staffCnt[n]=(staffCnt[n]||0)+1;});else staffCnt['(未設定)']=(staffCnt['(未設定)']||0)+1;}
+      });
+    }
+    bd.appendChild($('div','sreshd','担当者別（今週 '+total+'件）'));
+    Object.keys(staffCnt).sort((a,b)=>staffCnt[b]-staffCnt[a]).forEach(n=>{const rr=$('div','sresrow');const dot=$('span','sc');dot.style.background=staffColor(n)||'var(--none)';rr.appendChild(dot);rr.appendChild($('span','sresnm',n+'：'+staffCnt[n]+'件'));bd.appendChild(rr);});
+    sh.appendChild(bd);ov.classList.add('open');
   }
   draw();drawResults();
 }
