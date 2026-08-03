@@ -58,6 +58,9 @@ footer{padding:16px;text-align:center;color:var(--ink-2);font-size:12px}
 .calfil .fb{font:inherit;font-weight:700;font-size:12px;padding:5px 13px;border-radius:999px;cursor:pointer;color:var(--ink-2);background:var(--surface-2);border:1px solid var(--line)}
 .calfil .fb[aria-pressed=true]{color:var(--accent-ink);background:var(--accent);border-color:transparent}
 .calsearch{flex:1;min-width:150px;font:inherit;font-size:13px;padding:7px 13px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+.calactions{display:flex;gap:8px;margin-top:8px}
+.calactions .actbtn{flex:1;font:inherit;font-weight:800;font-size:14px;padding:11px;border-radius:10px;border:none;background:var(--accent);color:var(--accent-ink);cursor:pointer}
+.calactions .actbtn.ghost{background:var(--surface-2);color:var(--ink);border:1px solid var(--line)}
 .sres{background:var(--surface);border-bottom:1px solid var(--line);max-height:46vh;overflow:auto}
 .sreshd{padding:8px 14px;font-size:12px;font-weight:800;color:var(--ink-2);position:sticky;top:0;background:var(--surface);border-bottom:1px solid var(--line)}
 .sreslist{display:flex;flex-direction:column}
@@ -182,9 +185,11 @@ async function renderDashboard(){
   const fbtns=[];
   [['all','すべて'],['naiso','内装'],['seisou','清掃'],['setsubi','設備']].forEach(([k,l])=>{const b=$('button','fb',l);b.setAttribute('aria-pressed',k==='all');b.onclick=()=>{filter=k;fbtns.forEach(x=>x.setAttribute('aria-pressed',x===b));draw();drawResults();};fil.appendChild(b);fbtns.push(b);});
   const search=$('input');search.className='calsearch';search.type='search';search.placeholder='🔍 物件名・号室・担当者・業者で検索';search.oninput=()=>{query=search.value.trim();draw();drawResults();};fil.appendChild(search);
-  const regTop=$('button','fb','＋新規登録');regTop.onclick=()=>openRegister('');fil.appendChild(regTop);
-  const wkBtn=$('button','fb','📊 今週');wkBtn.onclick=()=>openWeek();fil.appendChild(wkBtn);
-  hd.appendChild(fil);wrap.appendChild(hd);
+  hd.appendChild(fil);
+  const acts=$('div','calactions');
+  const regTop=$('button','actbtn','＋ 新規登録');regTop.onclick=()=>openRegister('');acts.appendChild(regTop);
+  const wkBtn=$('button','actbtn ghost','📊 今週の予定');wkBtn.onclick=()=>openWeek();acts.appendChild(wkBtn);
+  hd.appendChild(acts);wrap.appendChild(hd);
   const sres=$('div','sres');sres.style.display='none';wrap.appendChild(sres);
   const wk=$('div','wkhd');['月','火','水','木','金','土','日'].forEach((w,i)=>{wk.appendChild($('div',i===5?'sat':i===6?'sun':null,w));});wrap.appendChild(wk);
   const grid=$('div','calgrid');wrap.appendChild(grid);
