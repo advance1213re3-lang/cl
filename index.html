@@ -220,11 +220,19 @@ async function renderDashboard(){
       const dchRow=$('div','acts');
       const dch=$('button','btn ghost','📅 日付変更');
       dch.onclick=()=>{
-        const di=$('input');di.type='date';di.value=key;di.className='finput';di.style.margin='0';
-        dchRow.innerHTML='';dchRow.appendChild(di);
-        di.onchange=async()=>{const nd=di.value;if(!/^\d{4}-\d{2}-\d{2}$/.test(nd))return;di.disabled=true;const res=await postEdit({action:'setdate',case_no:c.case_no,kbn:c.kbn,work_date:nd});if(res.ok){alert('日付を変更しました（Googleカレンダー反映）');location.reload();}else{di.disabled=false;alert('失敗: '+(res.error||res.calNote||''));}};
+        dchRow.innerHTML='';
+        const wrap=$('div');wrap.style.cssText='display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:4px 0';
+        const di=$('input');di.type='date';di.value=key;di.className='finput';di.style.cssText='margin:0;flex:1;min-width:130px';
+        const sep=$('span',null,'〜');sep.style.color='#888';
+        const de=$('input');de.type='date';de.className='finput';de.style.cssText='margin:0;flex:1;min-width:130px';if(c.work_end)de.value=String(c.work_end).slice(0,10);
+        const hint=$('div',null,'※終了日は空欄なら1日のみ（○○日〜○○日で複数日）');hint.style.cssText='font-size:11px;color:#888;width:100%';
+        const okb=$('button','regbtn','この日付に変更');okb.style.marginTop='6px';
         di.onclick=()=>{if(di.showPicker){try{di.showPicker();}catch(e){}}};
-        if(di.showPicker){try{di.showPicker();}catch(e){}}di.focus();
+        de.onclick=()=>{if(de.showPicker){try{de.showPicker();}catch(e){}}};
+        okb.onclick=async()=>{const nd=di.value;if(!/^\d{4}-\d{2}-\d{2}$/.test(nd)){alert('作業日を入れてください');return;}const ne=de.value;if(ne&&/^\d{4}-\d{2}-\d{2}$/.test(ne)&&ne<nd){alert('終了日は作業日以降にしてください');return;}okb.disabled=true;okb.textContent='変更中…';const res=await postEdit({action:'setdate',case_no:c.case_no,kbn:c.kbn,work_date:nd,work_end:ne});if(res.ok){alert('日付を変更しました（Googleカレンダー反映）');location.reload();}else{okb.disabled=false;okb.textContent='この日付に変更';alert('失敗: '+(res.error||res.calNote||''));}};
+        wrap.appendChild(di);wrap.appendChild(sep);wrap.appendChild(de);wrap.appendChild(hint);
+        dchRow.appendChild(wrap);dchRow.appendChild(okb);
+        if(di.showPicker){try{di.showPicker();}catch(e){}}
       };
       dchRow.appendChild(dch);
       const canc=$('button','btn ghost','🗑 削除');canc.style.color='#c0392b';
