@@ -95,6 +95,10 @@ footer{padding:16px;text-align:center;color:var(--ink-2);font-size:12px}
 .dcell.sun .dn{color:#ef4444}.dcell.sat .dn{color:#3b82f6}
 .dcell .ev{font-size:11px;font-weight:700;color:#fff;background:var(--none);border-radius:5px;padding:2px 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.4;cursor:pointer}
 .dcell .ev.done{opacity:.5;text-decoration:line-through}
+/* 複数日(範囲)を1本の帯に繋げる：継続側は角を四角＋セル端まで伸ばす */
+.dcell .ev.span{border-radius:0;margin-left:-4px;margin-right:-4px}
+.dcell .ev.span.s{border-top-left-radius:5px;border-bottom-left-radius:5px;margin-left:0}
+.dcell .ev.span.e{border-top-right-radius:5px;border-bottom-right-radius:5px;margin-right:0}
 .dcell .more{font-size:10.5px;font-weight:700;color:var(--ink-2);padding:0 3px}
 @media(max-width:560px){.dcell{min-height:76px}.dcell .ev{font-size:9.5px;padding:1px 4px}.calbrand{font-size:15px}.calmonth{font-size:15px}}
 .dayrow{display:flex;flex-direction:column;gap:6px;padding:12px 14px;border-bottom:1px solid var(--line)}
@@ -254,8 +258,19 @@ async function renderDashboard(){
       const cls='dcell'+(d.getMonth()!==cur.getMonth()?' oth':'')+(key===tkey?' today':'')+(d.getDay()===0?' sun':d.getDay()===6?' sat':'');
       const cell=$('div',cls);cell.appendChild($('div','dn',String(d.getDate())));
       let list=(byDate[key]||[]).filter(matchQ);
-      list.slice(0,MAX).forEach(c=>{const ev=$('div','ev'+(doneOf(c)?' done':''),(c.locked?'🔒':'')+(c.prop||'')+(c.room?' '+c.room:''));ev.style.background=staffColor(c.staff)||kbnColor(c.kbn);ev.onclick=e=>{e.stopPropagation();openDay(key,list);};cell.appendChild(ev);});
-      if(list.length>MAX)cell.appendChild($('div','more','+'+(list.length-MAX)+' 件'));
+      // 複数日(範囲)は帯として上のレーンに固定順で並べ、単日はその後ろ（セル間で位置を揃え帯を繋げる）
+      const spans=[],singles=[];
+      list.forEach(c=>{const s=String(c.work_date||'').slice(0,10);const e=c.work_end?String(c.work_end).slice(0,10):s;(e>s?spans:singles).push(c);});
+      spans.sort((a,b)=>{const as=String(a.work_date).slice(0,10),bs=String(b.work_date).slice(0,10);return as!==bs?as.localeCompare(bs):String(a.case_no).localeCompare(String(b.case_no));});
+      const ordered=spans.concat(singles);
+      ordered.slice(0,MAX).forEach(c=>{
+        const s=String(c.work_date||'').slice(0,10);const e=c.work_end?String(c.work_end).slice(0,10):s;const isSpan=e>s;
+        let cls='ev'+(doneOf(c)?' done':'');
+        let label=(c.locked?'🔒':'')+(c.prop||'')+(c.room?' '+c.room:'');
+        if(isSpan){const atS=(key===s),atE=(key===e),wk=(i%7===0);cls+=' span'+(atS?' s':'')+(atE?' e':'');if(!atS&&!wk)label='';}
+        const ev=$('div',cls,label);ev.style.background=staffColor(c.staff)||kbnColor(c.kbn);ev.onclick=ev2=>{ev2.stopPropagation();openDay(key,list);};cell.appendChild(ev);
+      });
+      if(ordered.length>MAX)cell.appendChild($('div','more','+'+(ordered.length-MAX)+' 件'));
       cell.onclick=()=>{if(list.length)openDay(key,list);else openRegister(key);};
       grid.appendChild(cell);
     }
