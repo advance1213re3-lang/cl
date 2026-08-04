@@ -339,7 +339,7 @@ async function renderDashboard(){
 
 function caseHeader(c,eyebrow){
   const hd=$('header','hd2');
-  const back=$('a','back','← ダッシュボードに戻る');back.href=location.pathname;hd.appendChild(back);
+  // ★一方通行：チェックリストからダッシュボードへは戻さない（作業員が全案件/発注書に回り込めないように）
   hd.appendChild($('div','eyebrow',eyebrow));
   const h1=$('h1');h1.appendChild(document.createTextNode((c.prop||'')+' '));h1.appendChild($('span','room',c.room||''));hd.appendChild(h1);
   const chips=$('div','chips');
@@ -351,7 +351,7 @@ function caseHeader(c,eyebrow){
   const info=$('div','hdinfo');
   const kv=(k,v)=>{if(!v)return;const d=$('div','kv');d.appendChild($('span','k',k));d.appendChild($('span','v',String(v)));info.appendChild(d);};
   kv('住所',c.address);kv('鍵',c.key_info);kv('納期',fmtDue(c.due));kv('連絡',c.note);
-  if(c.order_url){const d=$('div','kv');d.appendChild($('span','k','発注書'));const a=$('a',null,'📄 開く');a.href=c.order_url;a.target='_blank';a.rel='noopener';a.style.color='var(--accent)';a.style.fontWeight='700';const v=$('span','v');v.appendChild(a);d.appendChild(v);info.appendChild(d);}
+  if(c.order_url&&c.kbn!=='seisou'){const d=$('div','kv');d.appendChild($('span','k','発注書'));const a=$('a',null,'📄 開く');a.href=c.order_url;a.target='_blank';a.rel='noopener';a.style.color='var(--accent)';a.style.fontWeight='700';const v=$('span','v');v.appendChild(a);d.appendChild(v);info.appendChild(d);}
   if(info.children.length)hd.appendChild(info);
   return hd;
 }
