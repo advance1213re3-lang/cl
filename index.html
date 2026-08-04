@@ -212,7 +212,7 @@ async function renderDashboard(){
       if(c.work_end)kv('期間',String(c.work_date).slice(0,10)+' 〜 '+String(c.work_end).slice(0,10));
       kv('住所',c.address);kv('鍵',c.key_info);kv('業者',c.vendor);kv('担当',c.staff);kv('納期',fmtDue(c.due));kv('作業',c.work_content);kv('連絡',c.note);
       if(info.children.length)row.appendChild(info);
-      if(c.order_url&&c.kbn!=='seisou'){const od=$('div','dinfo');const a=$('a','olink','📄 発注書を開く');a.href=c.order_url;a.target='_blank';a.rel='noopener';od.appendChild(a);row.appendChild(od);}
+      if(c.order_url){const od=$('div','dinfo');const a=$('a','olink','📄 発注書を開く');a.href=c.order_url;a.target='_blank';a.rel='noopener';od.appendChild(a);row.appendChild(od);}
       const acts=$('div','acts');
       const a=$('a','btn','✅ チェック');a.href='?view=checklist&case='+encodeURIComponent(c.case_no)+'&kbn='+encodeURIComponent(c.kbn||'');
       const b=$('a','btn ghost','📷 完了写真');b.href='?view=photos&case='+encodeURIComponent(c.case_no)+'&kbn='+encodeURIComponent(c.kbn||'');
@@ -351,7 +351,7 @@ function caseHeader(c,eyebrow){
   const info=$('div','hdinfo');
   const kv=(k,v)=>{if(!v)return;const d=$('div','kv');d.appendChild($('span','k',k));d.appendChild($('span','v',String(v)));info.appendChild(d);};
   kv('住所',c.address);kv('鍵',c.key_info);kv('納期',fmtDue(c.due));kv('連絡',c.note);
-  if(c.order_url&&c.kbn!=='seisou'){const d=$('div','kv');d.appendChild($('span','k','発注書'));const a=$('a',null,'📄 開く');a.href=c.order_url;a.target='_blank';a.rel='noopener';a.style.color='var(--accent)';a.style.fontWeight='700';const v=$('span','v');v.appendChild(a);d.appendChild(v);info.appendChild(d);}
+  if(c.order_url){const d=$('div','kv');d.appendChild($('span','k','発注書'));const a=$('a',null,'📄 開く');a.href=c.order_url;a.target='_blank';a.rel='noopener';a.style.color='var(--accent)';a.style.fontWeight='700';const v=$('span','v');v.appendChild(a);d.appendChild(v);info.appendChild(d);}
   if(info.children.length)hd.appendChild(info);
   return hd;
 }
