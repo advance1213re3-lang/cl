@@ -399,17 +399,6 @@ async function renderChecklist(caseNo,kbn){
     ({data:items}=await sb.from('cl_checks').select('*').eq('case_no',caseNo).eq('kbn',K).order('sort').order('created_at'));
   }
   items=items||[];
-  // ★開くたびに作業内容(work_content)と突き合わせ、未登録の項目だけ追加（既存の項目・チェックは保持）。後からタスクを足しても欠けない。
-  try{
-    const want=splitWork(c.work_content);
-    const have=new Set(items.map(x=>String(x.item)));
-    const add=want.filter(t=>!have.has(t));
-    if(add.length){
-      const mx=items.reduce((m,x)=>Math.max(m,x.sort||0),-1);
-      const {error:ae}=await sb.from('cl_checks').insert(add.map((t,i)=>({case_no:caseNo,kbn:K,item:t,sort:mx+1+i})));
-      if(!ae){({data:items}=await sb.from('cl_checks').select('*').eq('case_no',caseNo).eq('kbn',K).order('sort').order('created_at'));items=items||[];}
-    }
-  }catch(e){}
   const {data:memos}=await sb.from('cl_memos').select('item,body,author,created_at').eq('case_no',caseNo).eq('kbn',K).order('created_at');
   const mc={},ml={};(memos||[]).forEach(m=>{mc[m.item]=(mc[m.item]||0)+1;ml[m.item]=m;});
 
@@ -422,6 +411,7 @@ async function renderChecklist(caseNo,kbn){
   const mainEl=$('main');
   const list=$('ul');mainEl.appendChild(list);
   const add=$('div','additem');const ni=$('input');ni.placeholder='＋ 項目を追加';const nb=$('button','','追加');add.appendChild(ni);add.appendChild(nb);mainEl.appendChild(add);
+  const rb=$('button',null,'🔄 作業内容から作り直す');rb.style.cssText='margin:6px 0 0;width:100%;padding:9px;background:var(--surface-2);color:var(--ink-2);border:1px solid var(--line);border-radius:10px;font-weight:700';rb.onclick=()=>rebuildFromWork();mainEl.appendChild(rb);
   const toPhotos=$('a','tolink','📷 完了写真をアップロード →');toPhotos.href='?view=photos&case='+encodeURIComponent(caseNo)+'&kbn='+encodeURIComponent(K);mainEl.appendChild(toPhotos);
   app.appendChild(mainEl);
   const ov=$('div','ov');ov.id='ov';const msheet=$('div','msheet');msheet.id='msheet';ov.appendChild(msheet);app.appendChild(ov);
@@ -446,6 +436,17 @@ async function renderChecklist(caseNo,kbn){
   async function toggle(it){const nd=!it.done;it.done=nd;it.done_by=nd?curOp:null;it.done_at=nd?new Date().toISOString():null;paintItem(it);prog_();const {error}=await sb.from('cl_checks').update({done:nd,done_by:it.done_by,done_at:it.done_at}).eq('id',it.id);if(error){it.done=!nd;paintItem(it);prog_();alert('保存に失敗しました');}}
   nb.onclick=async()=>{const v=ni.value.trim();if(!v)return;ni.value='';const {data,error}=await sb.from('cl_checks').insert({case_no:caseNo,kbn:K,item:v,sort:items.length}).select();if(error){alert('追加に失敗');return;}items.push(data[0]);renderItems();};
   ni.onkeydown=e=>{if(e.key==='Enter')nb.onclick();};
+  async function rebuildFromWork(){
+    const clean=splitWork(c.work_content);
+    if(!clean.length){alert('この案件は「作業内容」が空なので作り直せません。項目は手動で追加してください。');return;}
+    if(!confirm('現在の '+items.length+' 項目をすべて消して、作業内容から作り直します（チェック状態も消えます）。\n\n新しい項目（'+clean.length+'）:\n・'+clean.join('\n・')+'\n\nよろしいですか？'))return;
+    rb.disabled=true;rb.textContent='作り直し中…';
+    const {error:de}=await sb.from('cl_checks').delete().eq('case_no',caseNo).eq('kbn',K);
+    if(de){rb.disabled=false;rb.textContent='🔄 作業内容から作り直す';alert('削除に失敗しました');return;}
+    const {data,error}=await sb.from('cl_checks').insert(clean.map((t,i)=>({case_no:caseNo,kbn:K,item:t,sort:i}))).select();
+    if(error){rb.disabled=false;rb.textContent='🔄 作業内容から作り直す';alert('作り直しに失敗しました');return;}
+    items=(data||[]).slice().sort((a,b)=>(a.sort||0)-(b.sort||0));rb.disabled=false;rb.textContent='🔄 作業内容から作り直す';renderItems();
+  }
   async function deleteItem(it){
     if(!confirm('この項目を削除しますか？\n「'+it.item+'」'))return;
     const {error}=await sb.from('cl_checks').delete().eq('id',it.id);
