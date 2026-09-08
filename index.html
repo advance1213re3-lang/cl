@@ -152,7 +152,11 @@ const qp=new URLSearchParams(location.search);
 const opKey='cl_op';
 function op(){return localStorage.getItem(opKey)||STAFF[0];}
 function setOp(v){localStorage.setItem(opKey,v);}
-function splitWork(s){s=String(s||'').trim();if(!s)return[];return s.split(/\s*[\/／、,，\n・]\s*/).map(x=>x.trim()).filter(Boolean);}
+function splitWork(s){s=String(s||'').trim();if(!s)return[];
+  // 区切り= / ／ 、 ， 改行 ・ とカンマ。ただし桁区切り(,の直後が3桁+境界=¥14,385等)は区切らない。金額¥・面積㎡は作業名から除去。
+  return s.split(/\s*(?:[\/／、，\n・]|,(?!\d{3}(?:\D|$)))\s*/)
+    .map(x=>x.replace(/\s*[¥￥][\d,]+(?:\.\d+)?/g,'').replace(/\s*[\d,]+(?:\.\d+)?\s*(?:㎡|m2|平米)/g,'').trim())
+    .filter(Boolean);}
 function dtxt(v){if(!v)return'';const d=new Date(v);if(isNaN(d))return String(v);return (d.getMonth()+1)+'/'+d.getDate();}
 function ttxt(v){if(!v)return'';const d=new Date(v);if(isNaN(d))return'';const p=n=>(n<10?'0':'')+n;return (d.getMonth()+1)+'/'+d.getDate()+' '+p(d.getHours())+':'+p(d.getMinutes());}
 function dueState(due){if(!due)return'';const m=String(due).match(/(\d{4})[\/\-.](\d{1,2})[\/\-.](\d{1,2})/g);if(!m)return'';const last=m[m.length-1].split(/[\/\-.]/);const d=new Date(+last[0],+last[1]-1,+last[2]);const now=new Date();const t=new Date(now.getFullYear(),now.getMonth(),now.getDate());const diff=Math.round((d-t)/86400000);if(diff<0)return'over';if(diff<=3)return'soon';return'ok';}
