@@ -259,29 +259,48 @@ async function renderDashboard(){
     });
     sh.appendChild(body);ov.classList.add('open');
   }
+  const isSpanC=c=>{const s=String(c.work_date||'').slice(0,10);const e=c.work_end?String(c.work_end).slice(0,10):s;return !!(c.work_date&&e>s);};
+  const ekey=c=>c.case_no+'|'+(c.kbn||'');
   function draw(){
     grid.innerHTML='';monthLabel.textContent=cur.getFullYear()+'年'+(cur.getMonth()+1)+'月';
     const first=new Date(cur.getFullYear(),cur.getMonth(),1);const startDow=(first.getDay()+6)%7;
     const start=new Date(first);start.setDate(1-startDow);
     const tkey=ymd(new Date());const MAX=window.innerWidth<560?3:4;
+    const spanList=(cases||[]).filter(matchQ).filter(isSpanC)
+      .map(c=>({c,s:String(c.work_date).slice(0,10),e:String(c.work_end).slice(0,10)}))
+      .sort((a,b)=>a.s!==b.s?a.s.localeCompare(b.s):(a.e!==b.e?a.e.localeCompare(b.e):String(a.c.case_no).localeCompare(String(b.c.case_no))));
+    const laneEnd=[],laneOf={};
+    spanList.forEach(sp=>{let ln=laneEnd.findIndex(end=>end<sp.s);if(ln<0)ln=laneEnd.length;laneEnd[ln]=sp.e;laneOf[ekey(sp.c)]=ln;});
+    const keys=[],cellSpanArr=[],weekLanes=[0,0,0,0,0,0];
+    for(let i=0;i<42;i++){const d=new Date(start);d.setDate(start.getDate()+i);const key=ymd(d);keys[i]=key;
+      const here=spanList.filter(sp=>sp.s<=key&&key<=sp.e);cellSpanArr[i]=here;
+      const w=(i/7)|0;here.forEach(sp=>{const ln=laneOf[ekey(sp.c)];if(ln+1>weekLanes[w])weekLanes[w]=ln+1;});}
     for(let i=0;i<42;i++){
-      const d=new Date(start);d.setDate(start.getDate()+i);const key=ymd(d);
+      const d=new Date(start);d.setDate(start.getDate()+i);const key=keys[i];const w=(i/7)|0;
       const cls='dcell'+(d.getMonth()!==cur.getMonth()?' oth':'')+(key===tkey?' today':'')+(d.getDay()===0?' sun':d.getDay()===6?' sat':'');
       const cell=$('div',cls);cell.appendChild($('div','dn',String(d.getDate())));
-      let list=(byDate[key]||[]).filter(matchQ);
-      // 複数日(範囲)は帯として上のレーンに固定順で並べ、単日はその後ろ（セル間で位置を揃え帯を繋げる）
-      const spans=[],singles=[];
-      list.forEach(c=>{const s=String(c.work_date||'').slice(0,10);const e=c.work_end?String(c.work_end).slice(0,10):s;(e>s?spans:singles).push(c);});
-      spans.sort((a,b)=>{const as=String(a.work_date).slice(0,10),bs=String(b.work_date).slice(0,10);return as!==bs?as.localeCompare(bs):String(a.case_no).localeCompare(String(b.case_no));});
-      const ordered=spans.concat(singles);
-      ordered.slice(0,MAX).forEach(c=>{
-        const s=String(c.work_date||'').slice(0,10);const e=c.work_end?String(c.work_end).slice(0,10):s;const isSpan=e>s;
-        let cls='ev'+(doneOf(c)?' done':'');
-        let label=(c.locked?'🔒':'')+(c.prop||'')+(c.room?' '+c.room:'');
-        if(isSpan){const atS=(key===s),atE=(key===e),wk=(i%7===0);cls+=' span'+(atS?' s':'')+(atE?' e':'');if(!atS&&!wk)label=' ';}
-        const ev=$('div',cls,label);ev.style.background=staffColor(c.staff)||kbnColor(c.kbn);ev.onclick=ev2=>{ev2.stopPropagation();openDay(key,list);};cell.appendChild(ev);
+      const list=(byDate[key]||[]).filter(matchQ);
+      const spansHere=cellSpanArr[i];
+      const singlesHere=list.filter(c=>!isSpanC(c));
+      const laneRows=Math.min(weekLanes[w],MAX);
+      for(let ln=0;ln<laneRows;ln++){
+        const sp=spansHere.find(x=>laneOf[ekey(x.c)]===ln);
+        if(sp){
+          const c=sp.c,s=sp.s,e=sp.e,atS=(key===s),atE=(key===e),wk=(i%7===0);
+          let ecls='ev'+(doneOf(c)?' done':'')+' span'+(atS?' s':'')+(atE?' e':'');
+          let label=(c.locked?'🔒':'')+(c.prop||'')+(c.room?' '+c.room:'');if(!atS&&!wk)label=' ';
+          const ev=$('div',ecls,label);ev.style.background=staffColor(c.staff)||kbnColor(c.kbn);ev.onclick=ev2=>{ev2.stopPropagation();openDay(key,list);};cell.appendChild(ev);
+        }else{const spc=$('div','ev');spc.textContent=' ';spc.style.visibility='hidden';cell.appendChild(spc);}
+      }
+      const remain=Math.max(0,MAX-laneRows);
+      singlesHere.slice(0,remain).forEach(c=>{
+        const ev=$('div','ev'+(doneOf(c)?' done':''),(c.locked?'🔒':'')+(c.prop||'')+(c.room?' '+c.room:''));
+        ev.style.background=staffColor(c.staff)||kbnColor(c.kbn);ev.onclick=ev2=>{ev2.stopPropagation();openDay(key,list);};cell.appendChild(ev);
       });
-      if(ordered.length>MAX)cell.appendChild($('div','more','+'+(ordered.length-MAX)+' 件'));
+      const spanShown=spansHere.filter(x=>laneOf[ekey(x.c)]<laneRows).length;
+      const shown=spanShown+Math.min(singlesHere.length,remain);
+      const total=spansHere.length+singlesHere.length;
+      if(total>shown)cell.appendChild($('div','more','+'+(total-shown)+' 件'));
       cell.onclick=()=>{if(list.length)openDay(key,list);else openRegister(key);};
       grid.appendChild(cell);
     }
