@@ -436,8 +436,9 @@ async function renderChecklist(caseNo,kbn){
       const body=$('span','body');body.appendChild($('span','label',it.item));const meta=$('span','meta','✔ '+(it.done_by||'')+'・'+ttxt(it.done_at));it._meta=meta;body.appendChild(meta);
       if(ml[it.item]){const mp=$('span','mprev');mp.textContent='💬 '+(ml[it.item].author?ml[it.item].author+'：':'')+String(ml[it.item].body||'').slice(0,50)+(mc[it.item]>1?'（他'+(mc[it.item]-1)+'件）':'');body.appendChild(mp);}
       const mb=$('button','memobtn','メモ'+(mc[it.item]?' '+mc[it.item]:''));it._mb=mb;
-      li.onclick=()=>toggle(it);mb.onclick=e=>{e.stopPropagation();openThread(it);};
-      li.appendChild(box);li.appendChild(body);li.appendChild(mb);list.appendChild(li);
+      const eb=$('button','memobtn','✏️');
+      li.onclick=()=>toggle(it);mb.onclick=e=>{e.stopPropagation();openThread(it);};eb.onclick=e=>{e.stopPropagation();editItem(it,li,body);};
+      li.appendChild(box);li.appendChild(body);li.appendChild(mb);li.appendChild(eb);list.appendChild(li);
     });prog_();
   }
   function paintItem(it){if(!it._li)return;it._li.className='item'+(it.done?' done':'');if(it._meta)it._meta.textContent='✔ '+(it.done_by||'')+'・'+ttxt(it.done_at);
@@ -445,6 +446,30 @@ async function renderChecklist(caseNo,kbn){
   async function toggle(it){const nd=!it.done;it.done=nd;it.done_by=nd?curOp:null;it.done_at=nd?new Date().toISOString():null;paintItem(it);prog_();const {error}=await sb.from('cl_checks').update({done:nd,done_by:it.done_by,done_at:it.done_at}).eq('id',it.id);if(error){it.done=!nd;paintItem(it);prog_();alert('保存に失敗しました');}}
   nb.onclick=async()=>{const v=ni.value.trim();if(!v)return;ni.value='';const {data,error}=await sb.from('cl_checks').insert({case_no:caseNo,kbn:K,item:v,sort:items.length}).select();if(error){alert('追加に失敗');return;}items.push(data[0]);renderItems();};
   ni.onkeydown=e=>{if(e.key==='Enter')nb.onclick();};
+  async function deleteItem(it){
+    if(!confirm('この項目を削除しますか？\n「'+it.item+'」'))return;
+    const {error}=await sb.from('cl_checks').delete().eq('id',it.id);
+    if(error){alert('削除に失敗しました');return;}
+    items=items.filter(x=>x.id!==it.id);renderItems();
+  }
+  function editItem(it,li,body){
+    li.onclick=null;body.onclick=e=>e.stopPropagation();body.innerHTML='';
+    const inp=$('input');inp.value=it.item;inp.style.cssText='width:100%;font-size:15px;padding:7px;border:1px solid var(--line);border-radius:8px;box-sizing:border-box';
+    const row=$('div');row.style.cssText='display:flex;gap:6px;margin-top:8px;flex-wrap:wrap';
+    const sv=$('button','regbtn','保存');sv.style.cssText='padding:7px 14px';
+    const dl=$('button',null,'🗑 削除');dl.style.cssText='background:#c0392b;color:#fff;border:0;border-radius:8px;padding:7px 12px;font-weight:700';
+    const cc=$('button',null,'取消');cc.style.cssText='background:var(--surface-2);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 12px';
+    body.appendChild(inp);row.appendChild(sv);row.appendChild(dl);row.appendChild(cc);body.appendChild(row);inp.focus();
+    cc.onclick=e=>{e.stopPropagation();renderItems();};
+    dl.onclick=e=>{e.stopPropagation();deleteItem(it);};
+    sv.onclick=async e=>{e.stopPropagation();const v=inp.value.trim();if(!v){alert('内容を入れてください');return;}if(v===it.item){renderItems();return;}sv.disabled=true;
+      const {error}=await sb.from('cl_checks').update({item:v}).eq('id',it.id);
+      if(error){sv.disabled=false;alert('保存に失敗しました');return;}
+      try{await sb.from('cl_memos').update({item:v}).eq('case_no',caseNo).eq('kbn',K).eq('item',it.item);}catch(_){}
+      it.item=v;renderItems();
+    };
+    inp.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();sv.onclick(e);}};
+  }
 
   let curItem=null,curMsgs=[];
   function closeThread(){ov.classList.remove('open');curItem=null;}
