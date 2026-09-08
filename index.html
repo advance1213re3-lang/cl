@@ -218,7 +218,12 @@ async function renderDashboard(){
     list.forEach(c=>{
       const row=$('div','dayrow');
       const t=$('div','t');const dot=$('span','sc');dot.style.background=staffColor(c.staff)||kbnColor(c.kbn);t.appendChild(dot);
-      t.appendChild($('span','badge '+c.kbn,KBN[c.kbn]||c.kbn));t.appendChild($('span','nm',(c.locked?'🔒 ':'')+(c.prop||'')+(c.room?' '+c.room:'')));row.appendChild(t);
+      t.appendChild($('span','badge '+c.kbn,KBN[c.kbn]||c.kbn));
+      const nm=$('span','nm',(c.locked?'🔒 ':'')+(c.prop||'')+(c.room?' '+c.room:''));
+      if(doneOf(c)){nm.style.textDecoration='line-through';nm.style.opacity='.55';}
+      t.appendChild(nm);
+      if(doneOf(c)){const dg=$('span',null,'✅完了');dg.style.cssText='margin-left:6px;font-size:12px;font-weight:700;color:#0b8043;white-space:nowrap';t.appendChild(dg);}
+      row.appendChild(t);
       const info=$('div','dinfo');
       const kv=(k,v)=>{if(!v)return;const d=$('div','kv');d.appendChild($('span','k',k));d.appendChild($('span','v',String(v)));info.appendChild(d);};
       if(c.work_end)kv('期間',String(c.work_date).slice(0,10)+' 〜 '+String(c.work_end).slice(0,10));
