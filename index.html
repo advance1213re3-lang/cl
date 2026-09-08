@@ -153,8 +153,8 @@ const opKey='cl_op';
 function op(){return localStorage.getItem(opKey)||STAFF[0];}
 function setOp(v){localStorage.setItem(opKey,v);}
 function splitWork(s){s=String(s||'').trim();if(!s)return[];
-  // 区切り= / ／ 、 ， 改行 ・ とカンマ。ただし桁区切り(,の直後が3桁+境界=¥14,385等)は区切らない。金額¥・面積㎡は作業名から除去。
-  return s.split(/\s*(?:[\/／、，\n・]|,(?!\d{3}(?:\D|$)))\s*/)
+  // 区切りはカンマ(，,)と改行のみ。・ 、 ／ は語中で使うので区切らない。桁区切り(,の直後が3桁+境界=¥14,385)は除外。金額¥・面積㎡は作業名から除去。
+  return s.split(/\s*(?:[，\n]|,(?!\d{3}(?:\D|$)))\s*/)
     .map(x=>x.replace(/\s*[¥￥][\d,]+(?:\.\d+)?/g,'').replace(/\s*[\d,]+(?:\.\d+)?\s*(?:㎡|m2|平米)/g,'').trim())
     .filter(Boolean);}
 function dtxt(v){if(!v)return'';const d=new Date(v);if(isNaN(d))return String(v);return (d.getMonth()+1)+'/'+d.getDate();}
