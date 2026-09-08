@@ -178,7 +178,7 @@ async function renderDashboard(){
   const {data:checks}=await sb.from('cl_checks').select('case_no,kbn,done');
   const stat={};(checks||[]).forEach(r=>{const k=r.case_no+'|'+(r.kbn||'');const s=stat[k]||(stat[k]={d:0,t:0});s.t++;if(r.done)s.d++;});
   // 完了=「チェック項目が全部済み」または「手動フラグ(cl_cases.done)」。自動追加(B)は撤去済みなので勝手に復活しない。
-  const doneOf=x=>{if(x.done===true)return true;const st=stat[x.case_no+'|'+(x.kbn||'')];return !!(st&&st.t>0&&st.d>=st.t);};
+  const doneOf=x=>{const st=stat[x.case_no+'|'+(x.kbn||'')];return !!(st&&st.t>0&&st.d>=st.t);};
   const byDate={};(cases||[]).forEach(x=>{if(!x.work_date)return;const s=String(x.work_date).slice(0,10);let e=x.work_end?String(x.work_end).slice(0,10):s;if(e<s)e=s;let t=new Date(s+'T00:00:00');const end=new Date(e+'T00:00:00');let g=0;while(t<=end&&g<62){const key=ymd(t);(byDate[key]||(byDate[key]=[])).push(x);t.setDate(t.getDate()+1);g++;}});
   let filter='all',query='';
   const matchQ=c=>{if(filter!=='all'&&c.kbn!==filter)return false;if(!query)return true;const q=kana(query);return [c.prop,c.room,c.staff,c.vendor].some(v=>kana(v).indexOf(q)>=0);};
@@ -235,9 +235,6 @@ async function renderDashboard(){
       const b=$('a','btn ghost','📷 完了写真');b.href='?view=photos&case='+encodeURIComponent(c.case_no)+'&kbn='+encodeURIComponent(c.kbn||'');
       acts.appendChild(a);acts.appendChild(b);row.appendChild(acts);
       const dchRow=$('div','acts');
-      const dnb=$('button','btn',c.done?'↩︎ 完了を解除':'✅ 完了にする');dnb.style.color=c.done?'#888':'#0b8043';dnb.style.fontWeight='700';
-      dnb.onclick=async()=>{dnb.disabled=true;const nv=!c.done;const {error}=await sb.from('cl_cases').update({done:nv}).eq('case_no',c.case_no).eq('kbn',c.kbn);if(error){dnb.disabled=false;alert('完了の更新に失敗しました: '+(error.message||''));return;}location.reload();};
-      dchRow.appendChild(dnb);
       const dch=$('button','btn ghost','📅 日付変更');
       dch.onclick=()=>{
         dchRow.innerHTML='';
