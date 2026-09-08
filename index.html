@@ -399,6 +399,17 @@ async function renderChecklist(caseNo,kbn){
     ({data:items}=await sb.from('cl_checks').select('*').eq('case_no',caseNo).eq('kbn',K).order('sort').order('created_at'));
   }
   items=items||[];
+  // ★開くたびに作業内容(work_content)と突き合わせ、未登録の項目だけ追加（既存の項目・チェックは保持）。後からタスクを足しても欠けない。
+  try{
+    const want=splitWork(c.work_content);
+    const have=new Set(items.map(x=>String(x.item)));
+    const add=want.filter(t=>!have.has(t));
+    if(add.length){
+      const mx=items.reduce((m,x)=>Math.max(m,x.sort||0),-1);
+      const {error:ae}=await sb.from('cl_checks').insert(add.map((t,i)=>({case_no:caseNo,kbn:K,item:t,sort:mx+1+i})));
+      if(!ae){({data:items}=await sb.from('cl_checks').select('*').eq('case_no',caseNo).eq('kbn',K).order('sort').order('created_at'));items=items||[];}
+    }
+  }catch(e){}
   const {data:memos}=await sb.from('cl_memos').select('item,body,author,created_at').eq('case_no',caseNo).eq('kbn',K).order('created_at');
   const mc={},ml={};(memos||[]).forEach(m=>{mc[m.item]=(mc[m.item]||0)+1;ml[m.item]=m;});
 
