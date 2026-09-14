@@ -124,7 +124,7 @@ footer{padding:16px;text-align:center;color:var(--ink-2);font-size:12px}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 /* 配信ごとに置換されるビルド印。古いキャッシュを検知したら最新へ自動で読み直す（普通の再読み込みで最新に） */
-const BUILD='1788852959';
+const BUILD='1789364753';
 (function(){try{fetch(location.pathname+'?_cb='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/BUILD='([^']+)'/);if(m&&m[1]!==BUILD&&sessionStorage.getItem('cbv')!==m[1]){sessionStorage.setItem('cbv',m[1]);var u=new URL(location.href);u.searchParams.set('v',m[1]);location.replace(u.toString());}}).catch(function(){});}catch(e){}})();
 const SB_URL='https://vfreehhenmwrbxkhcdvu.supabase.co';
 const SB_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmcmVlaGhlbm13cmJ4a2hjZHZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5NTE5NTAsImV4cCI6MjA5OTUyNzk1MH0.UQKIOeJmn0Yt6gqUC_TF0uoFiRl4poTJyv_tx6BotS8';
@@ -577,16 +577,22 @@ async function renderPhotos(caseNo,kbn){
   let lastFailed=[];
   const sleep=ms=>new Promise(r=>setTimeout(r,ms));
   async function shrinkImage(f){
-    // 画像でなければそのまま。画像は長辺1600px/JPEG80に縮小してサイズ超過を防ぐ
+    // 画像でなければそのまま。画像は画質100%(JPEG)・解像度そのまま。20MBを超える時だけ縮小して20MB未満に収める。
+    const LIMIT=20*1024*1024; // 20MB
     const rawExt=(f.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg';
     if(!/^image\//.test(f.type||''))return{blob:f,ext:rawExt,type:f.type||'application/octet-stream'};
     try{
-      const bmp=await createImageBitmap(f);const MAX=1600;let w=bmp.width,h=bmp.height;
-      const s=Math.min(1,MAX/Math.max(w,h));w=Math.max(1,Math.round(w*s));h=Math.max(1,Math.round(h*s));
-      const cv=document.createElement('canvas');cv.width=w;cv.height=h;cv.getContext('2d').drawImage(bmp,0,0,w,h);
-      const blob=await new Promise(r=>cv.toBlob(r,'image/jpeg',0.8));
-      if(blob&&blob.size>0)return{blob,ext:'jpg',type:'image/jpeg'};
-    }catch(e){/* HEIC等で縮小不可なら元のまま試す */}
+      const bmp=await createImageBitmap(f);
+      let scale=1;
+      for(let attempt=0;attempt<12;attempt++){
+        const w=Math.max(1,Math.round(bmp.width*scale)),h=Math.max(1,Math.round(bmp.height*scale));
+        const cv=document.createElement('canvas');cv.width=w;cv.height=h;cv.getContext('2d').drawImage(bmp,0,0,w,h);
+        const blob=await new Promise(r=>cv.toBlob(r,'image/jpeg',1.0)); // 画質100%
+        if(blob&&blob.size>0&&blob.size<LIMIT){if(bmp.close)bmp.close();return{blob,ext:'jpg',type:'image/jpeg'};}
+        scale*=0.85; // 20MB以上ならさらに縮小して再試行
+      }
+      if(bmp.close)bmp.close();
+    }catch(e){/* HEIC等で不可なら元のまま */}
     return{blob:f,ext:rawExt,type:f.type||'image/jpeg'};
   }
   async function uploadOne(f,who){
