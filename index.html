@@ -102,6 +102,8 @@ footer{padding:16px;text-align:center;color:var(--ink-2);font-size:12px}
 /* 完了案件の帯：全幅に斜線（取り消し線）を引く。継続日も途切れず1本に見える */
 .dcell .ev.span.done{position:relative}
 .dcell .ev.span.done::after{content:'';position:absolute;left:0;right:0;top:50%;height:1px;background:#fff;pointer-events:none}
+/* 休み帯：案件バーと区別するため斜めストライプを重ねる */
+.dcell .ev.off{background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.22) 0 4px,rgba(255,255,255,0) 4px 8px);font-style:italic}
 .dcell .more{font-size:10.5px;font-weight:700;color:var(--ink-2);padding:0 3px}
 @media(max-width:560px){.dcell{min-height:76px}.dcell .ev{font-size:9.5px;padding:1px 4px}.calbrand{font-size:15px}.calmonth{font-size:15px}}
 .dayrow{display:flex;flex-direction:column;gap:6px;padding:12px 14px;border-bottom:1px solid var(--line)}
@@ -124,7 +126,7 @@ footer{padding:16px;text-align:center;color:var(--ink-2);font-size:12px}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 /* 配信ごとに置換されるビルド印。古いキャッシュを検知したら最新へ自動で読み直す（普通の再読み込みで最新に） */
-const BUILD='1789529905';
+const BUILD='1789542166';
 (function(){try{fetch(location.pathname+'?_cb='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/BUILD='([^']+)'/);if(m&&m[1]!==BUILD&&sessionStorage.getItem('cbv')!==m[1]){sessionStorage.setItem('cbv',m[1]);var u=new URL(location.href);u.searchParams.set('v',m[1]);location.replace(u.toString());}}).catch(function(){});}catch(e){}})();
 const SB_URL='https://vfreehhenmwrbxkhcdvu.supabase.co';
 const SB_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmcmVlaGhlbm13cmJ4a2hjZHZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5NTE5NTAsImV4cCI6MjA5OTUyNzk1MH0.UQKIOeJmn0Yt6gqUC_TF0uoFiRl4poTJyv_tx6BotS8';
@@ -179,6 +181,9 @@ async function renderDashboard(){
   const {data:cases,error}=await sb.from('cl_cases').select('*');
   if(error)throw error;
   const {data:checks}=await sb.from('cl_checks').select('case_no,kbn,done');
+  // 休み帯（cl_offdays）。テーブル未作成でもエラーにせず空で続行。
+  const {data:offRaw}=await sb.from('cl_offdays').select('*');
+  const offdays=(offRaw||[]).map(o=>{const s=String(o.start_date||'').slice(0,10);let e=String(o.end_date||o.start_date||'').slice(0,10);if(e<s)e=s;return{o,s,e};}).filter(x=>x.s);
   const stat={};(checks||[]).forEach(r=>{const k=r.case_no+'|'+(r.kbn||'');const s=stat[k]||(stat[k]={d:0,t:0});s.t++;if(r.done)s.d++;});
   // 完了=「チェック項目が全部済み」または「手動フラグ(cl_cases.done)」。自動追加(B)は撤去済みなので勝手に復活しない。
   const doneOf=x=>{const st=stat[x.case_no+'|'+(x.kbn||'')];return !!(st&&st.t>0&&st.d>=st.t);};
@@ -276,14 +281,34 @@ async function renderDashboard(){
       .sort((a,b)=>a.s!==b.s?a.s.localeCompare(b.s):(a.e!==b.e?a.e.localeCompare(b.e):String(a.c.case_no).localeCompare(String(b.c.case_no))));
     const laneEnd=[],laneOf={};
     spanList.forEach(sp=>{let ln=laneEnd.findIndex(end=>end<sp.s);if(ln<0)ln=laneEnd.length;laneEnd[ln]=sp.e;laneOf[ekey(sp.c)]=ln;});
-    const keys=[],cellSpanArr=[],weekLanes=[0,0,0,0,0,0];
+    // 休み帯：案件バーと同じ貪欲レーン割り当て（段違い防止）。フィルタ/検索に関係なく常時表示。
+    const offList=offdays.map((x,idx)=>({o:x.o,s:x.s,e:x.e,id:(x.o.id!=null?'off'+x.o.id:'off#'+idx)}))
+      .sort((a,b)=>a.s!==b.s?a.s.localeCompare(b.s):a.e.localeCompare(b.e));
+    const offLaneEnd=[],offLaneOf={};
+    offList.forEach(sp=>{let ln=offLaneEnd.findIndex(end=>end<sp.s);if(ln<0)ln=offLaneEnd.length;offLaneEnd[ln]=sp.e;offLaneOf[sp.id]=ln;});
+    const MAXOFF=2;
+    const keys=[],cellSpanArr=[],weekLanes=[0,0,0,0,0,0],offCellArr=[],weekOff=[0,0,0,0,0,0];
     for(let i=0;i<42;i++){const d=new Date(start);d.setDate(start.getDate()+i);const key=ymd(d);keys[i]=key;
       const here=spanList.filter(sp=>sp.s<=key&&key<=sp.e);cellSpanArr[i]=here;
-      const w=(i/7)|0;here.forEach(sp=>{const ln=laneOf[ekey(sp.c)];if(ln+1>weekLanes[w])weekLanes[w]=ln+1;});}
+      const w=(i/7)|0;here.forEach(sp=>{const ln=laneOf[ekey(sp.c)];if(ln+1>weekLanes[w])weekLanes[w]=ln+1;});
+      const offHere=offList.filter(sp=>sp.s<=key&&key<=sp.e);offCellArr[i]=offHere;
+      offHere.forEach(sp=>{const ln=offLaneOf[sp.id];if(ln+1>weekOff[w])weekOff[w]=ln+1;});}
     for(let i=0;i<42;i++){
       const d=new Date(start);d.setDate(start.getDate()+i);const key=keys[i];const w=(i/7)|0;
       const cls='dcell'+(d.getMonth()!==cur.getMonth()?' oth':'')+(key===tkey?' today':'')+(d.getDay()===0?' sun':d.getDay()===6?' sat':'');
       const cell=$('div',cls);cell.appendChild($('div','dn',String(d.getDate())));
+      // 休み帯（上段）
+      const offHere=offCellArr[i];const offRows=Math.min(weekOff[w],MAXOFF);
+      for(let ln=0;ln<offRows;ln++){
+        const sp=offHere.find(x=>offLaneOf[x.id]===ln);
+        if(sp){const o=sp.o,atS=(key===sp.s),atE=(key===sp.e),wk=(i%7===0);
+          let ecls='ev off span'+(atS?' s':'')+(atE?' e':'');
+          let label=(o.title||((o.staff||'')+'休み'));if(!atS&&!wk)label=' ';
+          const ev=$('div',ecls,label);ev.style.background=o.color||staffColor(o.staff)||'#8a8f98';ev.title=(o.title||o.staff||'休み');
+          ev.onclick=ev2=>{ev2.stopPropagation();};cell.appendChild(ev);
+        }else{const spc=$('div','ev');spc.textContent=' ';spc.style.visibility='hidden';cell.appendChild(spc);}
+      }
+      if(weekOff[w]>MAXOFF&&offHere.length){const mo=offHere.length-offHere.filter(x=>offLaneOf[x.id]<MAXOFF).length;if(mo>0)cell.appendChild($('div','more','+'+mo+' 休み'));}
       const list=(byDate[key]||[]).filter(matchQ);
       const spansHere=cellSpanArr[i];
       const singlesHere=list.filter(c=>!isSpanC(c));
