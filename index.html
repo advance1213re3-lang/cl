@@ -126,7 +126,7 @@ footer{padding:16px;text-align:center;color:var(--ink-2);font-size:12px}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 /* 配信ごとに置換されるビルド印。古いキャッシュを検知したら最新へ自動で読み直す（普通の再読み込みで最新に） */
-const BUILD='1789545180';
+const BUILD='1789545851';
 (function(){try{fetch(location.pathname+'?_cb='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/BUILD='([^']+)'/);if(m&&m[1]!==BUILD&&sessionStorage.getItem('cbv')!==m[1]){sessionStorage.setItem('cbv',m[1]);var u=new URL(location.href);u.searchParams.set('v',m[1]);location.replace(u.toString());}}).catch(function(){});}catch(e){}})();
 const SB_URL='https://vfreehhenmwrbxkhcdvu.supabase.co';
 const SB_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmcmVlaGhlbm13cmJ4a2hjZHZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5NTE5NTAsImV4cCI6MjA5OTUyNzk1MH0.UQKIOeJmn0Yt6gqUC_TF0uoFiRl4poTJyv_tx6BotS8';
@@ -269,6 +269,19 @@ async function renderDashboard(){
     });
     sh.appendChild(body);ov.classList.add('open');
   }
+  function openOff(o){
+    sh.innerHTML='';
+    const mhd=$('div','mhd');mhd.appendChild($('b',null,o.title||'予定'));const x=$('button','x','×');x.onclick=()=>ov.classList.remove('open');mhd.appendChild(x);sh.appendChild(mhd);
+    const body=$('div');body.style.cssText='flex:1;overflow:auto;padding:14px';
+    const kv=(k,v)=>{if(!v)return;const d=$('div','kv');d.appendChild($('span','k',k));d.appendChild($('span','v',String(v)));body.appendChild(d);};
+    const s=String(o.start_date).slice(0,10),e=String(o.end_date||o.start_date).slice(0,10);
+    kv('期間', s===e?s:(s+' 〜 '+e));
+    kv('時間', o.time_text||(!o.time_text&&'終日'));
+    kv('場所', o.location);
+    kv('担当', o.staff);
+    if(o.description){const d=$('div');d.style.cssText='margin-top:10px';d.appendChild($('div','k','詳細'));const p=$('div');p.style.cssText='white-space:pre-wrap;margin-top:4px;line-height:1.5;color:var(--ink)';p.textContent=o.description;d.appendChild(p);body.appendChild(d);}
+    sh.appendChild(body);ov.classList.add('open');
+  }
   const isSpanC=c=>{const s=String(c.work_date||'').slice(0,10);const e=c.work_end?String(c.work_end).slice(0,10):s;return !!(c.work_date&&e>s);};
   const ekey=c=>c.case_no+'|'+(c.kbn||'');
   function draw(){
@@ -305,7 +318,7 @@ async function renderDashboard(){
           let ecls='ev off span'+(atS?' s':'')+(atE?' e':'')+(sp.e<tkey?' done':'');
           let label=(o.title||((o.staff||'')+'休み'));if(!atS&&!wk)label=' ';
           const ev=$('div',ecls,label);ev.style.background=o.color||staffColor(o.staff)||'#8a8f98';ev.title=(o.title||o.staff||'休み');
-          ev.onclick=ev2=>{ev2.stopPropagation();};cell.appendChild(ev);
+          ev.onclick=ev2=>{ev2.stopPropagation();openOff(o);};cell.appendChild(ev);
         }else{const spc=$('div','ev');spc.textContent=' ';spc.style.visibility='hidden';cell.appendChild(spc);}
       }
       if(weekOff[w]>MAXOFF&&offHere.length){const mo=offHere.length-offHere.filter(x=>offLaneOf[x.id]<MAXOFF).length;if(mo>0)cell.appendChild($('div','more','+'+mo+' 休み'));}
