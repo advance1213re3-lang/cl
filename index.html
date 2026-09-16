@@ -126,7 +126,7 @@ footer{padding:16px;text-align:center;color:var(--ink-2);font-size:12px}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 /* 配信ごとに置換されるビルド印。古いキャッシュを検知したら最新へ自動で読み直す（普通の再読み込みで最新に） */
-const BUILD='1789542166';
+const BUILD='1789545180';
 (function(){try{fetch(location.pathname+'?_cb='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/BUILD='([^']+)'/);if(m&&m[1]!==BUILD&&sessionStorage.getItem('cbv')!==m[1]){sessionStorage.setItem('cbv',m[1]);var u=new URL(location.href);u.searchParams.set('v',m[1]);location.replace(u.toString());}}).catch(function(){});}catch(e){}})();
 const SB_URL='https://vfreehhenmwrbxkhcdvu.supabase.co';
 const SB_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmcmVlaGhlbm13cmJ4a2hjZHZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5NTE5NTAsImV4cCI6MjA5OTUyNzk1MH0.UQKIOeJmn0Yt6gqUC_TF0uoFiRl4poTJyv_tx6BotS8';
@@ -302,7 +302,7 @@ async function renderDashboard(){
       for(let ln=0;ln<offRows;ln++){
         const sp=offHere.find(x=>offLaneOf[x.id]===ln);
         if(sp){const o=sp.o,atS=(key===sp.s),atE=(key===sp.e),wk=(i%7===0);
-          let ecls='ev off span'+(atS?' s':'')+(atE?' e':'');
+          let ecls='ev off span'+(atS?' s':'')+(atE?' e':'')+(sp.e<tkey?' done':'');
           let label=(o.title||((o.staff||'')+'休み'));if(!atS&&!wk)label=' ';
           const ev=$('div',ecls,label);ev.style.background=o.color||staffColor(o.staff)||'#8a8f98';ev.title=(o.title||o.staff||'休み');
           ev.onclick=ev2=>{ev2.stopPropagation();};cell.appendChild(ev);
