@@ -124,7 +124,7 @@ footer{padding:16px;text-align:center;color:var(--ink-2);font-size:12px}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 /* 配信ごとに置換されるビルド印。古いキャッシュを検知したら最新へ自動で読み直す（普通の再読み込みで最新に） */
-const BUILD='1789365740';
+const BUILD='1789529905';
 (function(){try{fetch(location.pathname+'?_cb='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/BUILD='([^']+)'/);if(m&&m[1]!==BUILD&&sessionStorage.getItem('cbv')!==m[1]){sessionStorage.setItem('cbv',m[1]);var u=new URL(location.href);u.searchParams.set('v',m[1]);location.replace(u.toString());}}).catch(function(){});}catch(e){}})();
 const SB_URL='https://vfreehhenmwrbxkhcdvu.supabase.co';
 const SB_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmcmVlaGhlbm13cmJ4a2hjZHZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5NTE5NTAsImV4cCI6MjA5OTUyNzk1MH0.UQKIOeJmn0Yt6gqUC_TF0uoFiRl4poTJyv_tx6BotS8';
@@ -156,8 +156,8 @@ const opKey='cl_op';
 function op(){return localStorage.getItem(opKey)||STAFF[0];}
 function setOp(v){localStorage.setItem(opKey,v);}
 function splitWork(s){s=String(s||'').trim();if(!s)return[];
-  // 区切りはカンマ(，,)と改行のみ。・ 、 ／ は語中で使うので区切らない。桁区切り(,の直後が3桁+境界=¥14,385)は除外。金額¥・面積㎡は作業名から除去。
-  return s.split(/\s*(?:[，\n]|,(?!\d{3}(?:\D|$)))\s*/)
+  // 区切り: カンマ(，,)・改行・前後にスペースのある「 / ／ 」(発注書Botの連結形式)。語中の・、／や日付9/15(スペース無)は割らない。桁区切り(¥14,385)は除外。金額¥・面積㎡は作業名から除去。
+  return s.split(/(?:\s*[，\n]\s*|\s*,(?!\d{3}(?:\D|$))\s*|\s+[／/]\s+)/)
     .map(x=>x.replace(/\s*[¥￥][\d,]+(?:\.\d+)?/g,'').replace(/\s*[\d,]+(?:\.\d+)?\s*(?:㎡|m2|平米)/g,'').trim())
     .filter(Boolean);}
 function dtxt(v){if(!v)return'';const d=new Date(v);if(isNaN(d))return String(v);return (d.getMonth()+1)+'/'+d.getDate();}
