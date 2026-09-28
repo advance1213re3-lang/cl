@@ -45,7 +45,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,Bl
 <div id="root"><div class="load">読み込み中…</div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const BUILD='1790582167';
+const BUILD='1790582251';
 const SB_URL='https://vfreehhenmwrbxkhcdvu.supabase.co';
 const SB_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmcmVlaGhlbm13cmJ4a2hjZHZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5NTE5NTAsImV4cCI6MjA5OTUyNzk1MH0.UQKIOeJmn0Yt6gqUC_TF0uoFiRl4poTJyv_tx6BotS8';
 const BUCKET='cl-photos';
@@ -75,7 +75,7 @@ function renderList(rows){
   rows.forEach(r=>{const k=r.building;if(!k)return;const m=map[k]||(map[k]={building:k,address:r.address||'',vendor:r.vendor||'',count:0,last:''});m.count++;if(r.address)m.address=r.address;if(r.vendor)m.vendor=r.vendor;const d=String(r.visit_date||r.created_at||'').slice(0,10);if(d>m.last)m.last=d;});
   const blds=Object.values(map).sort((a,b)=>(b.last||'').localeCompare(a.last||''));
   root.innerHTML='';
-  const hd=$('div','hd');const t=$('div');t.appendChild(Object.assign($('h1',null,'📷 現調・立会 写真'),{}));t.appendChild($('div','sub','建物ごとに写真をためる（テスト版）'));hd.appendChild(t);root.appendChild(hd);
+  const hd=$('div','hd');const t=$('div');t.appendChild(Object.assign($('h1',null,'📷 現調・立会 写真'),{}));t.appendChild($('div','sub','建物ごとに写真をためる'));hd.appendChild(t);root.appendChild(hd);
   const card=$('div','card');
   const search=$('input','search');search.type='search';search.placeholder='🔍 物件名で検索';card.appendChild(search);
   const list=$('div','blist');card.appendChild(list);
@@ -96,11 +96,11 @@ async function openBuilding(name,address,vendor,isNew){
   const card=$('div','card');
   if(isNew){
     card.appendChild($('div','label','業者名（任意）'));
-    const ve=$('input','finput');ve.placeholder='例：〇〇不動産';ve.value=localStorage.getItem('survey_vendor')||'';card.appendChild(ve);
+    const ve=$('input','finput');ve.placeholder='業者名';ve.value=localStorage.getItem('survey_vendor')||'';card.appendChild(ve);
     card.appendChild($('div','label','建物名（号室まで）（必須）'));
-    const ni=$('input','finput');ni.placeholder='例：ピュアルⅡ 403';card.appendChild(ni);
+    const ni=$('input','finput');ni.placeholder='物件名 号室';card.appendChild(ni);
     card.appendChild($('div','label','住所（任意）'));
-    const ai=$('input','finput');ai.placeholder='例：埼玉県春日部市…';card.appendChild(ai);
+    const ai=$('input','finput');ai.placeholder='住所';card.appendChild(ai);
     const go=$('button','btn ghost','この建物ではじめる');go.onclick=()=>{const v=ni.value.trim();if(!v){alert('建物名を入れてください');return;}openBuilding(v,ai.value.trim(),ve.value.trim(),false);};card.appendChild(go);
     root.appendChild(card);ni.focus();return;
   }
@@ -112,7 +112,7 @@ async function openBuilding(name,address,vendor,isNew){
   (async()=>{try{const {data}=await sb.from('cl_cases').select('case_no,prop,room');const nb=String(name).replace(/[\s　]/g,'').toLowerCase();(data||[]).forEach(c=>{const k=String((c.prop||'')+(c.room||'')).replace(/[\s　]/g,'').toLowerCase();if(k.length>=4&&(nb.indexOf(k)>=0||k.indexOf(nb)>=0)){caseNo=c.case_no;}});if(caseNo)linkBox.textContent='案件No '+caseNo+' に紐付け';else linkBox.textContent='（一致する案件No なし）';}catch(e){}})();
   // 業者名・撮影者・現調日
   card.appendChild($('div','label','業者名（ファイル名・送付先用）'));
-  const vend=$('input','finput');vend.placeholder='例：〇〇不動産';vend.value=vendor||localStorage.getItem('survey_vendor')||'';vend.onchange=()=>localStorage.setItem('survey_vendor',vend.value.trim());card.appendChild(vend);
+  const vend=$('input','finput');vend.placeholder='業者名';vend.value=vendor||localStorage.getItem('survey_vendor')||'';vend.onchange=()=>localStorage.setItem('survey_vendor',vend.value.trim());card.appendChild(vend);
   card.appendChild($('div','label','撮影者（この端末で記憶）'));
   const who=$('input','finput');who.placeholder='お名前';who.value=opName();who.onchange=()=>setOp(who.value.trim());card.appendChild(who);
   card.appendChild($('div','label','現調日'));
