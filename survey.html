@@ -45,10 +45,12 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,Bl
 <div id="root"><div class="load">読み込み中…</div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const BUILD='1790581073';
+const BUILD='1790582167';
 const SB_URL='https://vfreehhenmwrbxkhcdvu.supabase.co';
 const SB_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmcmVlaGhlbm13cmJ4a2hjZHZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5NTE5NTAsImV4cCI6MjA5OTUyNzk1MH0.UQKIOeJmn0Yt6gqUC_TF0uoFiRl4poTJyv_tx6BotS8';
 const BUCKET='cl-photos';
+const SYNC_URL='https://script.google.com/macros/s/AKfycbxE4U-K2y4trcPDF7cGY1vZXKTRVxUmWgp0Ke-R6obcnKEJlwo03eoVX0YHMZ-oP2D_/exec';
+const SYNC_TOKEN='sv-9Kq2Zx';
 const MAX_PX=1280, QUALITY=0.8, UP_CONC=4;
 const sb=supabase.createClient(SB_URL,SB_ANON);
 const root=document.getElementById('root');
@@ -175,6 +177,8 @@ async function openBuilding(name,address,vendor,isNew){
     if(fail===0){banner.style.background='#123d2e';banner.style.color='#2bd4b6';banner.textContent='✅ 送信完了：'+ok+'枚（'+name+'）';}
     else{banner.style.background='#3d1a17';banner.style.color='#ff8a7a';banner.textContent='⚠️ '+ok+'枚 送信 / '+fail+'枚 失敗。失敗分はもう一度アップしてください';}
     banner.style.display='block';
+    // アップ成功したら即Drive同期を起動（fire-and-forget）
+    if(ok>0&&SYNC_URL){try{fetch(SYNC_URL+'?token='+encodeURIComponent(SYNC_TOKEN)+'&t='+Date.now(),{mode:'no-cors',cache:'no-store'});}catch(e){}}
   }
   upbtn.onclick=()=>fi.click();
   fi.onchange=()=>{const files=[...fi.files];fi.value='';run(files);};
