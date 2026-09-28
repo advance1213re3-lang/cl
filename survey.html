@@ -45,7 +45,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,Bl
 <div id="root"><div class="load">読み込み中…</div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const BUILD='1790580717';
+const BUILD='1790581073';
 const SB_URL='https://vfreehhenmwrbxkhcdvu.supabase.co';
 const SB_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmcmVlaGhlbm13cmJ4a2hjZHZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5NTE5NTAsImV4cCI6MjA5OTUyNzk1MH0.UQKIOeJmn0Yt6gqUC_TF0uoFiRl4poTJyv_tx6BotS8';
 const BUCKET='cl-photos';
@@ -55,7 +55,8 @@ const root=document.getElementById('root');
 const $=(t,c,x)=>{const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e;};
 function todayStr(){const d=new Date();const p=n=>(n<10?'0':'')+n;return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());}
 function dtxt(v){if(!v)return'';const s=String(v).slice(0,10).split('-');return (+s[1])+'/'+(+s[2]);}
-function slug(s){return String(s||'').trim().replace(/[\\\/:*?"<>|#\s]+/g,'_').slice(0,60)||'b';}
+function slug(s){return String(s||'').trim().replace(/[\\\/:*?"<>|#]+/g,'_').replace(/\s+/g,' ').slice(0,80)||'b';}
+function hhex(s){let h=5381;s=String(s||'');for(let i=0;i<s.length;i++){h=((h*33)^s.charCodeAt(i))>>>0;}return h.toString(16);}
 function opName(){return localStorage.getItem('survey_op')||'';}
 function setOp(v){localStorage.setItem('survey_op',v);}
 
@@ -146,13 +147,15 @@ async function openBuilding(name,address,vendor,isNew){
     const {blob,ext,type}=await shrink(f);
     const vdv=vd.value||todayStr();
     const ven=vend.value.trim();
-    // ファイル名＝業者名_物件名 号室_現調日_連番
-    const fname=[ven,name,vdv].filter(Boolean).map(slug).join('_')+'_'+String(seq).padStart(2,'0')+'.'+ext;
-    const path='survey/'+slug(name)+'/'+fname;
+    // 表示用の読めるファイル名（日本語OK・Drive/送付用。DBに保存）
+    const displayName=[ven,name,vdv].filter(Boolean).map(slug).join('_')+'_'+String(seq).padStart(2,'0')+'.'+ext;
+    // ストレージのキーは必ずASCII（Supabaseは日本語キー不可）。建物はハッシュ化。
+    const stamp=new Date().toISOString().replace(/[-:T.]/g,'').slice(0,17);
+    const path='survey/b'+hhex(name)+'/'+vdv.replace(/-/g,'')+'_'+stamp+'_'+Math.floor(Math.random()*1e9)+'.'+ext;
     const {error:ue}=await sb.storage.from(BUCKET).upload(path,blob,{contentType:type,upsert:false});
     if(ue)throw ue;
     const {data:pub}=sb.storage.from(BUCKET).getPublicUrl(path);
-    const rec={building:name,address:address||null,vendor:ven||null,case_no:caseNo||null,visit_date:vdv,url:pub.publicUrl,path:path,author:who.value.trim()||null};
+    const rec={building:name,address:address||null,vendor:ven||null,case_no:caseNo||null,visit_date:vdv,url:pub.publicUrl,path:path,filename:displayName,author:who.value.trim()||null};
     const {data:row,error:ie}=await sb.from('cl_survey_photos').insert(rec).select();
     if(ie)throw ie;
     return row[0];
