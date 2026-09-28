@@ -45,7 +45,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,Bl
 <div id="root"><div class="load">読み込み中…</div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const BUILD='1790580136';
+const BUILD='1790580717';
 const SB_URL='https://vfreehhenmwrbxkhcdvu.supabase.co';
 const SB_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmcmVlaGhlbm13cmJ4a2hjZHZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5NTE5NTAsImV4cCI6MjA5OTUyNzk1MH0.UQKIOeJmn0Yt6gqUC_TF0uoFiRl4poTJyv_tx6BotS8';
 const BUCKET='cl-photos';
@@ -61,7 +61,7 @@ function setOp(v){localStorage.setItem('survey_op',v);}
 
 async function main(){
   try{
-    const {data,error}=await sb.from('cl_survey_photos').select('building,address,visit_date,created_at');
+    const {data,error}=await sb.from('cl_survey_photos').select('building,address,vendor,visit_date,created_at');
     if(error)throw error;
     renderList(data||[]);
   }catch(e){root.innerHTML='';root.appendChild($('div','load','エラー: '+e.message));}
@@ -69,39 +69,47 @@ async function main(){
 
 function renderList(rows){
   const map={};
-  rows.forEach(r=>{const k=r.building;if(!k)return;const m=map[k]||(map[k]={building:k,address:r.address||'',count:0,last:''});m.count++;if(r.address)m.address=r.address;const d=String(r.visit_date||r.created_at||'').slice(0,10);if(d>m.last)m.last=d;});
+  rows.forEach(r=>{const k=r.building;if(!k)return;const m=map[k]||(map[k]={building:k,address:r.address||'',vendor:r.vendor||'',count:0,last:''});m.count++;if(r.address)m.address=r.address;if(r.vendor)m.vendor=r.vendor;const d=String(r.visit_date||r.created_at||'').slice(0,10);if(d>m.last)m.last=d;});
   const blds=Object.values(map).sort((a,b)=>(b.last||'').localeCompare(a.last||''));
   root.innerHTML='';
   const hd=$('div','hd');const t=$('div');t.appendChild(Object.assign($('h1',null,'📷 現調・立会 写真'),{}));t.appendChild($('div','sub','建物ごとに写真をためる（テスト版）'));hd.appendChild(t);root.appendChild(hd);
   const card=$('div','card');
   const search=$('input','search');search.type='search';search.placeholder='🔍 物件名で検索';card.appendChild(search);
   const list=$('div','blist');card.appendChild(list);
-  const nb=$('div','newb','＋ 新しい建物');nb.onclick=()=>openBuilding('', '', true);card.appendChild(nb);
+  const nb=$('div','newb','＋ 新しい建物');nb.onclick=()=>openBuilding('','','',true);card.appendChild(nb);
   root.appendChild(card);
   function draw(){
     const q=search.value.trim().toLowerCase();list.innerHTML='';
     const ms=blds.filter(b=>!q||b.building.toLowerCase().indexOf(q)>=0||(b.address||'').toLowerCase().indexOf(q)>=0);
     if(!ms.length){list.appendChild($('div','hint',q?'該当なし':'まだ建物がありません。「＋新しい建物」から追加してください。'));return;}
-    ms.forEach(b=>{const r=$('div','brow');r.appendChild($('div','nm',b.building));r.appendChild($('div','meta',(b.address?b.address+' ・ ':'')+'写真 '+b.count+'枚'+(b.last?' ・ 最終 '+dtxt(b.last):'')));r.onclick=()=>openBuilding(b.building,b.address,false);list.appendChild(r);});
+    ms.forEach(b=>{const r=$('div','brow');r.appendChild($('div','nm',b.building));r.appendChild($('div','meta',(b.address?b.address+' ・ ':'')+'写真 '+b.count+'枚'+(b.last?' ・ 最終 '+dtxt(b.last):'')));r.onclick=()=>openBuilding(b.building,b.address,b.vendor,false);list.appendChild(r);});
   }
   search.oninput=draw;draw();
 }
 
-async function openBuilding(name,address,isNew){
+async function openBuilding(name,address,vendor,isNew){
   root.innerHTML='';
   const back=$('button','back','‹ 建物一覧へ');back.onclick=main;root.appendChild(back);
   const card=$('div','card');
   if(isNew){
-    card.appendChild($('div','label','建物名（必須）'));
+    card.appendChild($('div','label','業者名（任意）'));
+    const ve=$('input','finput');ve.placeholder='例：〇〇不動産';ve.value=localStorage.getItem('survey_vendor')||'';card.appendChild(ve);
+    card.appendChild($('div','label','建物名（号室まで）（必須）'));
     const ni=$('input','finput');ni.placeholder='例：ピュアルⅡ 403';card.appendChild(ni);
     card.appendChild($('div','label','住所（任意）'));
     const ai=$('input','finput');ai.placeholder='例：埼玉県春日部市…';card.appendChild(ai);
-    const go=$('button','btn ghost','この建物ではじめる');go.onclick=()=>{const v=ni.value.trim();if(!v){alert('建物名を入れてください');return;}openBuilding(v,ai.value.trim(),false);};card.appendChild(go);
+    const go=$('button','btn ghost','この建物ではじめる');go.onclick=()=>{const v=ni.value.trim();if(!v){alert('建物名を入れてください');return;}openBuilding(v,ai.value.trim(),ve.value.trim(),false);};card.appendChild(go);
     root.appendChild(card);ni.focus();return;
   }
   card.appendChild($('h1',null,name));
   if(address)card.appendChild($('div','sub',address));
-  // 撮影者・現調日
+  const linkBox=$('div','sub','');linkBox.style.marginTop='2px';card.appendChild(linkBox);
+  // 案件Noの自動照合（物件名+号室が案件と一致すれば紐付け）
+  let caseNo='';
+  (async()=>{try{const {data}=await sb.from('cl_cases').select('case_no,prop,room');const nb=String(name).replace(/[\s　]/g,'').toLowerCase();(data||[]).forEach(c=>{const k=String((c.prop||'')+(c.room||'')).replace(/[\s　]/g,'').toLowerCase();if(k.length>=4&&(nb.indexOf(k)>=0||k.indexOf(nb)>=0)){caseNo=c.case_no;}});if(caseNo)linkBox.textContent='案件No '+caseNo+' に紐付け';else linkBox.textContent='（一致する案件No なし）';}catch(e){}})();
+  // 業者名・撮影者・現調日
+  card.appendChild($('div','label','業者名（ファイル名・送付先用）'));
+  const vend=$('input','finput');vend.placeholder='例：〇〇不動産';vend.value=vendor||localStorage.getItem('survey_vendor')||'';vend.onchange=()=>localStorage.setItem('survey_vendor',vend.value.trim());card.appendChild(vend);
   card.appendChild($('div','label','撮影者（この端末で記憶）'));
   const who=$('input','finput');who.placeholder='お名前';who.value=opName();who.onchange=()=>setOp(who.value.trim());card.appendChild(who);
   card.appendChild($('div','label','現調日'));
@@ -109,6 +117,7 @@ async function openBuilding(name,address,isNew){
   const upbtn=$('button','btn up','📤 写真をアップロード');card.appendChild(upbtn);
   card.appendChild($('div','hint','長辺'+MAX_PX+'pxに自動縮小して送信（軽く・速く）'));
   const fi=$('input');fi.type='file';fi.accept='image/*';fi.multiple=true;fi.style.display='none';card.appendChild(fi);
+  const banner=$('div');banner.style.cssText='display:none;margin-top:10px;border-radius:10px;padding:12px;font-weight:800;text-align:center;font-size:15px';card.appendChild(banner);
   const prog=$('div','prog');const pbar=$('div','pbar');const pf=$('span');pbar.appendChild(pf);const ptxt=$('div','ptxt','');prog.appendChild(pbar);prog.appendChild(ptxt);card.appendChild(prog);
   root.appendChild(card);
   const gc=$('div','gcount','');root.appendChild(gc);
@@ -133,30 +142,36 @@ async function openBuilding(name,address,isNew){
     try{const bmp=await createImageBitmap(f);const s=Math.min(1,MAX_PX/Math.max(bmp.width,bmp.height));const w=Math.max(1,Math.round(bmp.width*s)),h=Math.max(1,Math.round(bmp.height*s));const cv=document.createElement('canvas');cv.width=w;cv.height=h;cv.getContext('2d').drawImage(bmp,0,0,w,h);const blob=await new Promise(r=>cv.toBlob(r,'image/jpeg',QUALITY));if(bmp.close)bmp.close();if(blob&&blob.size>0)return{blob,ext:'jpg',type:'image/jpeg'};}catch(e){}
     return{blob:f,ext:rawExt,type:f.type||'image/jpeg'};
   }
-  async function uploadOne(f){
+  async function uploadOne(f,seq){
     const {blob,ext,type}=await shrink(f);
-    const stamp=new Date().toISOString().replace(/[-:T.]/g,'').slice(0,17);
     const vdv=vd.value||todayStr();
-    const path='survey/'+slug(name)+'/'+vdv.replace(/-/g,'')+'_'+stamp+'_'+Math.floor(Math.random()*1e9)+'.'+ext;
+    const ven=vend.value.trim();
+    // ファイル名＝業者名_物件名 号室_現調日_連番
+    const fname=[ven,name,vdv].filter(Boolean).map(slug).join('_')+'_'+String(seq).padStart(2,'0')+'.'+ext;
+    const path='survey/'+slug(name)+'/'+fname;
     const {error:ue}=await sb.storage.from(BUCKET).upload(path,blob,{contentType:type,upsert:false});
     if(ue)throw ue;
     const {data:pub}=sb.storage.from(BUCKET).getPublicUrl(path);
-    const rec={building:name,address:address||null,visit_date:vdv,url:pub.publicUrl,path:path,author:who.value.trim()||null};
+    const rec={building:name,address:address||null,vendor:ven||null,case_no:caseNo||null,visit_date:vdv,url:pub.publicUrl,path:path,author:who.value.trim()||null};
     const {data:row,error:ie}=await sb.from('cl_survey_photos').insert(rec).select();
     if(ie)throw ie;
-    if(!address&&who) address=address; // keep
     return row[0];
   }
   async function run(files){
-    if(!files.length)return;setOp(who.value.trim());
-    upbtn.disabled=true;prog.classList.add('on');
+    if(!files.length)return;setOp(who.value.trim());if(vend.value.trim())localStorage.setItem('survey_vendor',vend.value.trim());
+    upbtn.disabled=true;prog.classList.add('on');banner.style.display='none';
+    const vdv=vd.value||todayStr();
+    const base=photos.filter(p=>String(p.visit_date||'').slice(0,10)===vdv).length; // 同日既存の続き番号
     const total=files.length;let done=0,ok=0,fail=0,idx=0;
-    const upd=()=>{pf.style.width=Math.round(done/total*100)+'%';ptxt.textContent=done+' / '+total+' 枚'+(fail?'（失敗 '+fail+'）':'');};
+    const upd=()=>{pf.style.width=Math.round(done/total*100)+'%';ptxt.textContent='送信中… '+done+' / '+total+' 枚'+(fail?'（失敗 '+fail+'）':'');};
     upd();
-    async function worker(){while(idx<files.length){const my=idx++;try{const r=await uploadOne(files[my]);photos.unshift(r);ok++;drawGallery();}catch(e){fail++;console.error(e);}done++;upd();}}
+    async function worker(){while(idx<files.length){const my=idx++;try{const r=await uploadOne(files[my],base+my+1);photos.unshift(r);ok++;drawGallery();}catch(e){fail++;console.error(e);}done++;upd();}}
     await Promise.all(Array.from({length:Math.min(UP_CONC,files.length)},worker));
-    upbtn.disabled=false;ptxt.textContent='完了：'+ok+'枚アップ'+(fail?'（失敗 '+fail+'）':'');
-    setTimeout(()=>prog.classList.remove('on'),4000);
+    upbtn.disabled=false;prog.classList.remove('on');
+    // 送信結果をはっきり表示（自動で消さない）
+    if(fail===0){banner.style.background='#123d2e';banner.style.color='#2bd4b6';banner.textContent='✅ 送信完了：'+ok+'枚（'+name+'）';}
+    else{banner.style.background='#3d1a17';banner.style.color='#ff8a7a';banner.textContent='⚠️ '+ok+'枚 送信 / '+fail+'枚 失敗。失敗分はもう一度アップしてください';}
+    banner.style.display='block';
   }
   upbtn.onclick=()=>fi.click();
   fi.onchange=()=>{const files=[...fi.files];fi.value='';run(files);};
