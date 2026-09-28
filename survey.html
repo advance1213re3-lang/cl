@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-store">
+<title>現調・立会 写真</title>
+<style>
+:root{--bg:#0f1420;--surface:#151c2c;--surface2:#1c2540;--line:#2a3350;--ink:#e8edf7;--ink2:#9fb0cf;--accent:#22a7c2;--accent2:#2bd4b6;--danger:#c0392b}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;-webkit-text-size-adjust:100%}
+#root{max-width:720px;margin:0 auto;padding:14px 14px calc(28px + env(safe-area-inset-bottom,0px))}
+.hd{display:flex;align-items:center;gap:10px;margin:4px 0 14px}
+.hd h1{font-size:19px;margin:0;font-weight:800}
+.hd .sub{font-size:12px;color:var(--ink2)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+.search{width:100%;background:var(--surface2);border:1px solid var(--line);border-radius:10px;color:var(--ink);padding:11px 12px;font-size:15px;margin-bottom:12px}
+.blist{display:flex;flex-direction:column;gap:8px}
+.brow{background:var(--surface2);border:1px solid var(--line);border-radius:11px;padding:12px 13px;cursor:pointer}
+.brow:active{transform:scale(.99)}
+.brow .nm{font-size:15px;font-weight:700}
+.brow .meta{font-size:12px;color:var(--ink2);margin-top:3px}
+.newb{border:1px dashed var(--accent);color:var(--accent2);border-radius:11px;padding:12px 13px;text-align:center;font-weight:700;cursor:pointer;background:transparent}
+.finput{width:100%;background:var(--surface2);border:1px solid var(--line);border-radius:10px;color:var(--ink);padding:11px 12px;font-size:15px;margin:6px 0 10px}
+.label{font-size:12px;color:var(--ink2);margin:6px 0 2px;font-weight:700}
+.btn{display:block;width:100%;border:0;border-radius:12px;padding:13px;font-size:16px;font-weight:800;cursor:pointer}
+.btn.up{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#04202a}
+.btn.ghost{background:var(--surface2);color:var(--ink);border:1px solid var(--line)}
+.back{background:none;border:0;color:var(--accent2);font-size:14px;font-weight:700;cursor:pointer;padding:4px 0;margin-bottom:8px}
+.hint{font-size:11px;color:var(--ink2);text-align:center;margin:6px 0 0}
+.grp{font-size:12px;color:var(--ink2);font-weight:700;margin:14px 0 6px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.grid a{display:block;aspect-ratio:1;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface2)}
+.grid img{width:100%;height:100%;object-fit:cover;display:block}
+.prog{margin-top:10px;background:var(--surface2);border-radius:10px;padding:10px;display:none}
+.prog.on{display:block}
+.pbar{height:8px;background:#0b1220;border-radius:6px;overflow:hidden}
+.pbar span{display:block;height:100%;width:0;background:var(--accent2);transition:width .2s}
+.ptxt{font-size:12px;color:var(--ink2);margin-top:6px}
+.load{color:var(--ink2);text-align:center;padding:30px 0}
+.gcount{font-size:12px;color:var(--ink2);margin:10px 0 4px}
+</style>
+</head>
+<body>
+<div id="root"><div class="load">読み込み中…</div></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const BUILD='1790580136';
+const SB_URL='https://vfreehhenmwrbxkhcdvu.supabase.co';
+const SB_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmcmVlaGhlbm13cmJ4a2hjZHZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5NTE5NTAsImV4cCI6MjA5OTUyNzk1MH0.UQKIOeJmn0Yt6gqUC_TF0uoFiRl4poTJyv_tx6BotS8';
+const BUCKET='cl-photos';
+const MAX_PX=1280, QUALITY=0.8, UP_CONC=4;
+const sb=supabase.createClient(SB_URL,SB_ANON);
+const root=document.getElementById('root');
+const $=(t,c,x)=>{const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e;};
+function todayStr(){const d=new Date();const p=n=>(n<10?'0':'')+n;return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());}
+function dtxt(v){if(!v)return'';const s=String(v).slice(0,10).split('-');return (+s[1])+'/'+(+s[2]);}
+function slug(s){return String(s||'').trim().replace(/[\\\/:*?"<>|#\s]+/g,'_').slice(0,60)||'b';}
+function opName(){return localStorage.getItem('survey_op')||'';}
+function setOp(v){localStorage.setItem('survey_op',v);}
+
+async function main(){
+  try{
+    const {data,error}=await sb.from('cl_survey_photos').select('building,address,visit_date,created_at');
+    if(error)throw error;
+    renderList(data||[]);
+  }catch(e){root.innerHTML='';root.appendChild($('div','load','エラー: '+e.message));}
+}
+
+function renderList(rows){
+  const map={};
+  rows.forEach(r=>{const k=r.building;if(!k)return;const m=map[k]||(map[k]={building:k,address:r.address||'',count:0,last:''});m.count++;if(r.address)m.address=r.address;const d=String(r.visit_date||r.created_at||'').slice(0,10);if(d>m.last)m.last=d;});
+  const blds=Object.values(map).sort((a,b)=>(b.last||'').localeCompare(a.last||''));
+  root.innerHTML='';
+  const hd=$('div','hd');const t=$('div');t.appendChild(Object.assign($('h1',null,'📷 現調・立会 写真'),{}));t.appendChild($('div','sub','建物ごとに写真をためる（テスト版）'));hd.appendChild(t);root.appendChild(hd);
+  const card=$('div','card');
+  const search=$('input','search');search.type='search';search.placeholder='🔍 物件名で検索';card.appendChild(search);
+  const list=$('div','blist');card.appendChild(list);
+  const nb=$('div','newb','＋ 新しい建物');nb.onclick=()=>openBuilding('', '', true);card.appendChild(nb);
+  root.appendChild(card);
+  function draw(){
+    const q=search.value.trim().toLowerCase();list.innerHTML='';
+    const ms=blds.filter(b=>!q||b.building.toLowerCase().indexOf(q)>=0||(b.address||'').toLowerCase().indexOf(q)>=0);
+    if(!ms.length){list.appendChild($('div','hint',q?'該当なし':'まだ建物がありません。「＋新しい建物」から追加してください。'));return;}
+    ms.forEach(b=>{const r=$('div','brow');r.appendChild($('div','nm',b.building));r.appendChild($('div','meta',(b.address?b.address+' ・ ':'')+'写真 '+b.count+'枚'+(b.last?' ・ 最終 '+dtxt(b.last):'')));r.onclick=()=>openBuilding(b.building,b.address,false);list.appendChild(r);});
+  }
+  search.oninput=draw;draw();
+}
+
+async function openBuilding(name,address,isNew){
+  root.innerHTML='';
+  const back=$('button','back','‹ 建物一覧へ');back.onclick=main;root.appendChild(back);
+  const card=$('div','card');
+  if(isNew){
+    card.appendChild($('div','label','建物名（必須）'));
+    const ni=$('input','finput');ni.placeholder='例：ピュアルⅡ 403';card.appendChild(ni);
+    card.appendChild($('div','label','住所（任意）'));
+    const ai=$('input','finput');ai.placeholder='例：埼玉県春日部市…';card.appendChild(ai);
+    const go=$('button','btn ghost','この建物ではじめる');go.onclick=()=>{const v=ni.value.trim();if(!v){alert('建物名を入れてください');return;}openBuilding(v,ai.value.trim(),false);};card.appendChild(go);
+    root.appendChild(card);ni.focus();return;
+  }
+  card.appendChild($('h1',null,name));
+  if(address)card.appendChild($('div','sub',address));
+  // 撮影者・現調日
+  card.appendChild($('div','label','撮影者（この端末で記憶）'));
+  const who=$('input','finput');who.placeholder='お名前';who.value=opName();who.onchange=()=>setOp(who.value.trim());card.appendChild(who);
+  card.appendChild($('div','label','現調日'));
+  const vd=$('input','finput');vd.type='date';vd.value=todayStr();card.appendChild(vd);
+  const upbtn=$('button','btn up','📤 写真をアップロード');card.appendChild(upbtn);
+  card.appendChild($('div','hint','長辺'+MAX_PX+'pxに自動縮小して送信（軽く・速く）'));
+  const fi=$('input');fi.type='file';fi.accept='image/*';fi.multiple=true;fi.style.display='none';card.appendChild(fi);
+  const prog=$('div','prog');const pbar=$('div','pbar');const pf=$('span');pbar.appendChild(pf);const ptxt=$('div','ptxt','');prog.appendChild(pbar);prog.appendChild(ptxt);card.appendChild(prog);
+  root.appendChild(card);
+  const gc=$('div','gcount','');root.appendChild(gc);
+  const gwrap=$('div');root.appendChild(gwrap);
+
+  let photos=[];
+  async function load(){
+    const {data}=await sb.from('cl_survey_photos').select('*').eq('building',name).order('visit_date',{ascending:false}).order('created_at',{ascending:false});
+    photos=data||[];drawGallery();
+  }
+  function drawGallery(){
+    gc.textContent='アップ済み '+photos.length+'枚';gwrap.innerHTML='';
+    const grp={};photos.forEach(p=>{const d=String(p.visit_date||'').slice(0,10);(grp[d]||(grp[d]=[])).push(p);});
+    Object.keys(grp).sort((a,b)=>b.localeCompare(a)).forEach(d=>{
+      gwrap.appendChild($('div','grp',dtxt(d)+' 現調（'+grp[d].length+'枚）'));
+      const g=$('div','grid');grp[d].forEach(p=>{const a=$('a');a.href=p.url;a.target='_blank';a.rel='noopener';const im=$('img');im.src=p.url;im.loading='lazy';a.appendChild(im);g.appendChild(a);});gwrap.appendChild(g);
+    });
+  }
+  async function shrink(f){
+    const rawExt=(f.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg';
+    if(!/^image\//.test(f.type||''))return{blob:f,ext:rawExt,type:f.type||'application/octet-stream'};
+    try{const bmp=await createImageBitmap(f);const s=Math.min(1,MAX_PX/Math.max(bmp.width,bmp.height));const w=Math.max(1,Math.round(bmp.width*s)),h=Math.max(1,Math.round(bmp.height*s));const cv=document.createElement('canvas');cv.width=w;cv.height=h;cv.getContext('2d').drawImage(bmp,0,0,w,h);const blob=await new Promise(r=>cv.toBlob(r,'image/jpeg',QUALITY));if(bmp.close)bmp.close();if(blob&&blob.size>0)return{blob,ext:'jpg',type:'image/jpeg'};}catch(e){}
+    return{blob:f,ext:rawExt,type:f.type||'image/jpeg'};
+  }
+  async function uploadOne(f){
+    const {blob,ext,type}=await shrink(f);
+    const stamp=new Date().toISOString().replace(/[-:T.]/g,'').slice(0,17);
+    const vdv=vd.value||todayStr();
+    const path='survey/'+slug(name)+'/'+vdv.replace(/-/g,'')+'_'+stamp+'_'+Math.floor(Math.random()*1e9)+'.'+ext;
+    const {error:ue}=await sb.storage.from(BUCKET).upload(path,blob,{contentType:type,upsert:false});
+    if(ue)throw ue;
+    const {data:pub}=sb.storage.from(BUCKET).getPublicUrl(path);
+    const rec={building:name,address:address||null,visit_date:vdv,url:pub.publicUrl,path:path,author:who.value.trim()||null};
+    const {data:row,error:ie}=await sb.from('cl_survey_photos').insert(rec).select();
+    if(ie)throw ie;
+    if(!address&&who) address=address; // keep
+    return row[0];
+  }
+  async function run(files){
+    if(!files.length)return;setOp(who.value.trim());
+    upbtn.disabled=true;prog.classList.add('on');
+    const total=files.length;let done=0,ok=0,fail=0,idx=0;
+    const upd=()=>{pf.style.width=Math.round(done/total*100)+'%';ptxt.textContent=done+' / '+total+' 枚'+(fail?'（失敗 '+fail+'）':'');};
+    upd();
+    async function worker(){while(idx<files.length){const my=idx++;try{const r=await uploadOne(files[my]);photos.unshift(r);ok++;drawGallery();}catch(e){fail++;console.error(e);}done++;upd();}}
+    await Promise.all(Array.from({length:Math.min(UP_CONC,files.length)},worker));
+    upbtn.disabled=false;ptxt.textContent='完了：'+ok+'枚アップ'+(fail?'（失敗 '+fail+'）':'');
+    setTimeout(()=>prog.classList.remove('on'),4000);
+  }
+  upbtn.onclick=()=>fi.click();
+  fi.onchange=()=>{const files=[...fi.files];fi.value='';run(files);};
+  load();
+}
+main();
+</script>
+</body>
+</html>
