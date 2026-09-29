@@ -45,7 +45,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,Bl
 <div id="root"><div class="load">読み込み中…</div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const BUILD='1790657314';
+const BUILD='1790657820';
 const SB_URL='https://vfreehhenmwrbxkhcdvu.supabase.co';
 const SB_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmcmVlaGhlbm13cmJ4a2hjZHZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5NTE5NTAsImV4cCI6MjA5OTUyNzk1MH0.UQKIOeJmn0Yt6gqUC_TF0uoFiRl4poTJyv_tx6BotS8';
 const BUCKET='cl-photos';
@@ -109,25 +109,8 @@ async function openBuilding(name,address,vendor,isNew,viewOnly){
   }
   card.appendChild($('h1',null,name));
   const subEl=$('div','sub',address||'');card.appendChild(subEl);
-  let caseNo='',vend,who,vd,upbtn,fi,banner,prog,pf,ptxt;
-  if(!viewOnly){
-    const linkBox=$('div','sub','');linkBox.style.marginTop='2px';card.appendChild(linkBox);
-    // 案件Noの自動照合（物件名+号室が案件と一致すれば紐付け）
-    (async()=>{try{const {data}=await sb.from('cl_cases').select('case_no,prop,room');const nb=String(name).replace(/[\s　]/g,'').toLowerCase();(data||[]).forEach(c=>{const k=String((c.prop||'')+(c.room||'')).replace(/[\s　]/g,'').toLowerCase();if(k.length>=4&&(nb.indexOf(k)>=0||k.indexOf(nb)>=0)){caseNo=c.case_no;}});if(caseNo)linkBox.textContent='案件No '+caseNo+' に紐付け';else linkBox.textContent='（一致する案件No なし）';}catch(e){}})();
-    card.appendChild($('div','label','業者名（ファイル名・送付先用）'));
-    vend=$('input','finput');vend.placeholder='業者名';vend.value=vendor||localStorage.getItem('survey_vendor')||'';vend.onchange=()=>localStorage.setItem('survey_vendor',vend.value.trim());card.appendChild(vend);
-    card.appendChild($('div','label','撮影者（この端末で記憶）'));
-    who=$('input','finput');who.placeholder='お名前';who.value=opName();who.onchange=()=>setOp(who.value.trim());card.appendChild(who);
-    card.appendChild($('div','label','現調日'));
-    vd=$('input','finput');vd.type='date';vd.value=todayStr();card.appendChild(vd);
-    upbtn=$('button','btn up','📤 写真をアップロード');card.appendChild(upbtn);
-    card.appendChild($('div','hint','長辺'+MAX_PX+'pxに自動縮小して送信（軽く・速く）'));
-    fi=$('input');fi.type='file';fi.accept='image/*';fi.multiple=true;fi.style.display='none';card.appendChild(fi);
-    banner=$('div');banner.style.cssText='display:none;margin-top:10px;border-radius:10px;padding:12px;font-weight:800;text-align:center;font-size:15px';card.appendChild(banner);
-    prog=$('div','prog');const pbar=$('div','pbar');pf=$('span');pbar.appendChild(pf);ptxt=$('div','ptxt','');prog.appendChild(pbar);prog.appendChild(ptxt);card.appendChild(prog);
-  }
-  // まとめてダウンロード（ZIP）
-  const dlbtn=$('button','btn ghost','📥 まとめてダウンロード（ZIP）');dlbtn.style.marginTop='6px';card.appendChild(dlbtn);
+  // ▼ ダウンロード＆共有（上部に配置：すぐ見つかるように）
+  const dlbtn=$('button','btn ghost','📥 写真をまとめてダウンロード（ZIP）');dlbtn.style.marginTop='8px';card.appendChild(dlbtn);
   dlbtn.onclick=async()=>{
     if(!photos.length){alert('写真がありません');return;}
     const orig=dlbtn.textContent;dlbtn.disabled=true;
@@ -140,11 +123,27 @@ async function openBuilding(name,address,vendor,isNew,viewOnly){
       dlbtn.textContent='✓ '+n+'枚 ダウンロード';setTimeout(()=>{dlbtn.textContent=orig;dlbtn.disabled=false;},3000);
     }catch(e){alert('ダウンロード失敗: '+(e.message||e));dlbtn.textContent=orig;dlbtn.disabled=false;}
   };
-  // 共有リンク（閲覧専用で開くURL）— 編集モードのみ
   if(!viewOnly){
     const share=$('button','btn ghost','🔗 共有リンクをコピー');share.style.marginTop='6px';card.appendChild(share);
     share.onclick=()=>{const link=location.origin+location.pathname+'?b='+encodeURIComponent(name);
       (navigator.clipboard?navigator.clipboard.writeText(link):Promise.reject()).then(()=>alert('共有リンクをコピーしました。\nこのリンクは「この建物の写真だけ」表示されます:\n'+link)).catch(()=>prompt('この共有リンクをコピーしてください',link));};
+  }
+  let caseNo='',vend,who,vd,upbtn,fi,banner,prog,pf,ptxt;
+  if(!viewOnly){
+    const linkBox=$('div','sub','');linkBox.style.marginTop='8px';card.appendChild(linkBox);
+    // 案件Noの自動照合（物件名+号室が案件と一致すれば紐付け）
+    (async()=>{try{const {data}=await sb.from('cl_cases').select('case_no,prop,room');const nb=String(name).replace(/[\s　]/g,'').toLowerCase();(data||[]).forEach(c=>{const k=String((c.prop||'')+(c.room||'')).replace(/[\s　]/g,'').toLowerCase();if(k.length>=4&&(nb.indexOf(k)>=0||k.indexOf(nb)>=0)){caseNo=c.case_no;}});if(caseNo)linkBox.textContent='案件No '+caseNo+' に紐付け';else linkBox.textContent='（一致する案件No なし）';}catch(e){}})();
+    card.appendChild($('div','label','業者名（ファイル名・送付先用）'));
+    vend=$('input','finput');vend.placeholder='業者名';vend.value=vendor||localStorage.getItem('survey_vendor')||'';vend.onchange=()=>localStorage.setItem('survey_vendor',vend.value.trim());card.appendChild(vend);
+    card.appendChild($('div','label','撮影者（アップする人の名前）'));
+    who=$('input','finput');who.placeholder='お名前';card.appendChild(who);
+    card.appendChild($('div','label','現調日'));
+    vd=$('input','finput');vd.type='date';vd.value=todayStr();card.appendChild(vd);
+    upbtn=$('button','btn up','📤 写真をアップロード');card.appendChild(upbtn);
+    card.appendChild($('div','hint','長辺'+MAX_PX+'pxに自動縮小して送信（軽く・速く）'));
+    fi=$('input');fi.type='file';fi.accept='image/*';fi.multiple=true;fi.style.display='none';card.appendChild(fi);
+    banner=$('div');banner.style.cssText='display:none;margin-top:10px;border-radius:10px;padding:12px;font-weight:800;text-align:center;font-size:15px';card.appendChild(banner);
+    prog=$('div','prog');const pbar=$('div','pbar');pf=$('span');pbar.appendChild(pf);ptxt=$('div','ptxt','');prog.appendChild(pbar);prog.appendChild(ptxt);card.appendChild(prog);
   }
   root.appendChild(card);
   const gc=$('div','gcount','');root.appendChild(gc);
@@ -189,7 +188,7 @@ async function openBuilding(name,address,vendor,isNew,viewOnly){
     return row[0];
   }
   async function run(files){
-    if(!files.length)return;setOp(who.value.trim());if(vend.value.trim())localStorage.setItem('survey_vendor',vend.value.trim());
+    if(!files.length)return;if(!who.value.trim()){if(!confirm('撮影者名が空です。このままアップしますか？'))return;}if(vend.value.trim())localStorage.setItem('survey_vendor',vend.value.trim());
     upbtn.disabled=true;prog.classList.add('on');banner.style.display='none';
     const vdv=vd.value||todayStr();
     const base=photos.filter(p=>String(p.visit_date||'').slice(0,10)===vdv).length; // 同日既存の続き番号
