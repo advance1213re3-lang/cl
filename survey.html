@@ -45,7 +45,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,Bl
 <div id="root"><div class="load">読み込み中…</div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const BUILD='1790749095';
+const BUILD='1790749248';
 const SB_URL='https://vfreehhenmwrbxkhcdvu.supabase.co';
 const SB_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmcmVlaGhlbm13cmJ4a2hjZHZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5NTE5NTAsImV4cCI6MjA5OTUyNzk1MH0.UQKIOeJmn0Yt6gqUC_TF0uoFiRl4poTJyv_tx6BotS8';
 const BUCKET='cl-photos';
@@ -206,7 +206,16 @@ async function openBuilding(name,address,vendor,isNew,viewOnly){
   }
   async function uploadOne(f,seq,onMsg){
     let blob,ext,type;
-    if(isVideoFile(f)){ if(onMsg)onMsg('動画を圧縮中…'); const r=await compressVideo(f,p=>{if(onMsg)onMsg('動画を圧縮中… '+Math.round(p*100)+'%');}); blob=r.blob;ext=r.ext;type=r.type; }
+    if(isVideoFile(f)){
+      if(onMsg)onMsg('動画を圧縮中…');
+      try{ const r=await compressVideo(f,p=>{if(onMsg)onMsg('動画を圧縮中… '+Math.round(p*100)+'%');}); blob=r.blob;ext=r.ext;type=r.type; }
+      catch(err){
+        console.warn('video compress fallback:',err);
+        // 圧縮不可でも45MB以内ならそのままアップ（パイプラインの上限内）
+        if(f.size<=45*1024*1024){ ext=((f.name.split('.').pop()||'mp4').toLowerCase().replace(/[^a-z0-9]/g,'')||'mp4'); blob=f; type=f.type||'video/mp4'; if(onMsg)onMsg('動画をそのまま送信…'); }
+        else { throw new Error('動画が大きすぎます（約'+Math.round(f.size/1048576)+'MB）。1分以内・短めで撮り直すか、端末の録画画質を下げてください'); }
+      }
+    }
     else { const r=await shrink(f); blob=r.blob;ext=r.ext;type=r.type; }
     const vdv=vd.value||todayStr();
     const ven=vend.value.trim();
