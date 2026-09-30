@@ -45,7 +45,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,Bl
 <div id="root"><div class="load">読み込み中…</div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const BUILD='1790657820';
+const BUILD='1790749095';
 const SB_URL='https://vfreehhenmwrbxkhcdvu.supabase.co';
 const SB_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmcmVlaGhlbm13cmJ4a2hjZHZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5NTE5NTAsImV4cCI6MjA5OTUyNzk1MH0.UQKIOeJmn0Yt6gqUC_TF0uoFiRl4poTJyv_tx6BotS8';
 const BUCKET='cl-photos';
@@ -60,6 +60,36 @@ function dtxt(v){if(!v)return'';const s=String(v).slice(0,10).split('-');return 
 function slug(s){return String(s||'').trim().replace(/[\\\/:*?"<>|#]+/g,'_').replace(/\s+/g,' ').slice(0,80)||'b';}
 function hhex(s){let h=5381;s=String(s||'');for(let i=0;i<s.length;i++){h=((h*33)^s.charCodeAt(i))>>>0;}return h.toString(16);}
 async function loadJSZip(){if(window.JSZip)return;await new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js';s.onload=res;s.onerror=()=>rej(new Error('zip読込失敗'));document.head.appendChild(s);});}
+function isVideoFile(f){return /^video\//.test((f&&f.type)||'')|| /\.(mp4|mov|m4v|webm|3gp|avi|hevc)$/i.test((f&&f.name)||'');}
+function isVideoName(s){return /\.(mp4|mov|m4v|webm|3gp)(\?|$)/i.test(String(s||''));}
+// 動画をブラウザ内で再エンコード（480p/15fps・音声なし）。1分想定・実時間かかる。
+async function compressVideo(file,onProgress){
+  if(!window.MediaRecorder)throw new Error('この端末のブラウザは動画変換に未対応です');
+  const url=URL.createObjectURL(file);
+  const v=document.createElement('video');v.muted=true;v.playsInline=true;v.preload='auto';v.src=url;
+  await new Promise((res,rej)=>{v.onloadedmetadata=()=>res();v.onerror=()=>rej(new Error('動画を読み込めませんでした'));});
+  const dur=v.duration||0;
+  if(dur>75){URL.revokeObjectURL(url);throw new Error('動画は1分以内にしてください（現在 約'+Math.round(dur)+'秒）');}
+  const vw=v.videoWidth||640,vh=v.videoHeight||480;const sc=Math.min(1,480/(Math.min(vw,vh)||480));
+  const w=Math.max(2,Math.round(vw*sc/2)*2),h=Math.max(2,Math.round(vh*sc/2)*2);
+  const cv=document.createElement('canvas');cv.width=w;cv.height=h;const ctx=cv.getContext('2d');
+  const stream=cv.captureStream(15);
+  let mime='';['video/mp4;codecs=h264','video/mp4','video/webm;codecs=vp8','video/webm'].forEach(m=>{if(!mime&&MediaRecorder.isTypeSupported(m))mime=m;});
+  const rec=new MediaRecorder(stream,Object.assign({videoBitsPerSecond:900000},mime?{mimeType:mime}:{}));
+  const chunks=[];rec.ondataavailable=e=>{if(e.data&&e.data.size)chunks.push(e.data);};
+  const stopped=new Promise(res=>{rec.onstop=res;});
+  rec.start(1000);
+  let raf=0;const draw=()=>{try{ctx.drawImage(v,0,0,w,h);}catch(e){}if(onProgress&&dur)onProgress(Math.min(1,v.currentTime/dur));raf=requestAnimationFrame(draw);};
+  await v.play().catch(()=>{});draw();
+  await new Promise(res=>{let f=false;const fin=()=>{if(!f){f=true;res();}};v.onended=fin;setTimeout(fin,(dur+5)*1000);});
+  cancelAnimationFrame(raf);try{rec.stop();}catch(e){}await stopped;try{v.pause();}catch(e){}
+  URL.revokeObjectURL(url);
+  const outMime=(rec.mimeType||mime||'video/webm').split(';')[0];
+  const ext=outMime.indexOf('mp4')>=0?'mp4':'webm';
+  const blob=new Blob(chunks,{type:outMime});
+  if(!blob.size)throw new Error('動画の圧縮に失敗しました（ブラウザ未対応の可能性）');
+  return {blob,ext,type:outMime};
+}
 function opName(){return localStorage.getItem('survey_op')||'';}
 function setOp(v){localStorage.setItem('survey_op',v);}
 
@@ -139,9 +169,9 @@ async function openBuilding(name,address,vendor,isNew,viewOnly){
     who=$('input','finput');who.placeholder='お名前';card.appendChild(who);
     card.appendChild($('div','label','現調日'));
     vd=$('input','finput');vd.type='date';vd.value=todayStr();card.appendChild(vd);
-    upbtn=$('button','btn up','📤 写真をアップロード');card.appendChild(upbtn);
-    card.appendChild($('div','hint','長辺'+MAX_PX+'pxに自動縮小して送信（軽く・速く）'));
-    fi=$('input');fi.type='file';fi.accept='image/*';fi.multiple=true;fi.style.display='none';card.appendChild(fi);
+    upbtn=$('button','btn up','📤 写真・動画をアップロード');card.appendChild(upbtn);
+    card.appendChild($('div','hint','写真は長辺'+MAX_PX+'px／動画は480p・15fps（1分以内）に自動で軽くして送信'));
+    fi=$('input');fi.type='file';fi.accept='image/*,video/*';fi.multiple=true;fi.style.display='none';card.appendChild(fi);
     banner=$('div');banner.style.cssText='display:none;margin-top:10px;border-radius:10px;padding:12px;font-weight:800;text-align:center;font-size:15px';card.appendChild(banner);
     prog=$('div','prog');const pbar=$('div','pbar');pf=$('span');pbar.appendChild(pf);ptxt=$('div','ptxt','');prog.appendChild(pbar);prog.appendChild(ptxt);card.appendChild(prog);
   }
@@ -161,7 +191,11 @@ async function openBuilding(name,address,vendor,isNew,viewOnly){
     const grp={};photos.forEach(p=>{const d=String(p.visit_date||'').slice(0,10);(grp[d]||(grp[d]=[])).push(p);});
     Object.keys(grp).sort((a,b)=>b.localeCompare(a)).forEach(d=>{
       gwrap.appendChild($('div','grp',dtxt(d)+' 現調（'+grp[d].length+'枚）'));
-      const g=$('div','grid');grp[d].forEach(p=>{const a=$('a');a.href=p.url;a.target='_blank';a.rel='noopener';const im=$('img');im.src=p.url;im.loading='lazy';a.appendChild(im);g.appendChild(a);});gwrap.appendChild(g);
+      const g=$('div','grid');grp[d].forEach(p=>{
+        const isV=isVideoName(p.filename)||isVideoName(p.path)||/\.(mp4|webm|mov|m4v)(\?|$)/i.test(p.url);
+        if(isV){const cell=$('div');cell.style.cssText='aspect-ratio:1;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#000';const vv=document.createElement('video');vv.src=p.url;vv.controls=true;vv.playsInline=true;vv.preload='metadata';vv.style.cssText='width:100%;height:100%;object-fit:cover;display:block';cell.appendChild(vv);g.appendChild(cell);}
+        else{const a=$('a');a.href=p.url;a.target='_blank';a.rel='noopener';const im=$('img');im.src=p.url;im.loading='lazy';a.appendChild(im);g.appendChild(a);}
+      });gwrap.appendChild(g);
     });
   }
   async function shrink(f){
@@ -170,8 +204,10 @@ async function openBuilding(name,address,vendor,isNew,viewOnly){
     try{const bmp=await createImageBitmap(f);const s=Math.min(1,MAX_PX/Math.max(bmp.width,bmp.height));const w=Math.max(1,Math.round(bmp.width*s)),h=Math.max(1,Math.round(bmp.height*s));const cv=document.createElement('canvas');cv.width=w;cv.height=h;cv.getContext('2d').drawImage(bmp,0,0,w,h);const blob=await new Promise(r=>cv.toBlob(r,'image/jpeg',QUALITY));if(bmp.close)bmp.close();if(blob&&blob.size>0)return{blob,ext:'jpg',type:'image/jpeg'};}catch(e){}
     return{blob:f,ext:rawExt,type:f.type||'image/jpeg'};
   }
-  async function uploadOne(f,seq){
-    const {blob,ext,type}=await shrink(f);
+  async function uploadOne(f,seq,onMsg){
+    let blob,ext,type;
+    if(isVideoFile(f)){ if(onMsg)onMsg('動画を圧縮中…'); const r=await compressVideo(f,p=>{if(onMsg)onMsg('動画を圧縮中… '+Math.round(p*100)+'%');}); blob=r.blob;ext=r.ext;type=r.type; }
+    else { const r=await shrink(f); blob=r.blob;ext=r.ext;type=r.type; }
     const vdv=vd.value||todayStr();
     const ven=vend.value.trim();
     // 表示用の読めるファイル名（日本語OK・Drive/送付用。DBに保存）
@@ -192,11 +228,12 @@ async function openBuilding(name,address,vendor,isNew,viewOnly){
     upbtn.disabled=true;prog.classList.add('on');banner.style.display='none';
     const vdv=vd.value||todayStr();
     const base=photos.filter(p=>String(p.visit_date||'').slice(0,10)===vdv).length; // 同日既存の続き番号
+    const hasVid=files.some(isVideoFile);const conc=hasVid?1:UP_CONC; // 動画は同時再エンコード不可のため順次
     const total=files.length;let done=0,ok=0,fail=0,idx=0;
-    const upd=()=>{pf.style.width=Math.round(done/total*100)+'%';ptxt.textContent='送信中… '+done+' / '+total+' 枚'+(fail?'（失敗 '+fail+'）':'');};
+    const upd=(msg)=>{pf.style.width=Math.round(done/total*100)+'%';ptxt.textContent=(msg||'送信中…')+' '+done+' / '+total+' 件'+(fail?'（失敗 '+fail+'）':'');};
     upd();
-    async function worker(){while(idx<files.length){const my=idx++;try{const r=await uploadOne(files[my],base+my+1);photos.unshift(r);ok++;drawGallery();}catch(e){fail++;console.error(e);}done++;upd();}}
-    await Promise.all(Array.from({length:Math.min(UP_CONC,files.length)},worker));
+    async function worker(){while(idx<files.length){const my=idx++;try{const r=await uploadOne(files[my],base+my+1,(m)=>{ptxt.textContent=m+'（'+(done+1)+'/'+total+'）';});photos.unshift(r);ok++;drawGallery();}catch(e){fail++;console.error(e);}done++;upd();}}
+    await Promise.all(Array.from({length:Math.min(conc,files.length)},worker));
     upbtn.disabled=false;prog.classList.remove('on');
     // 送信結果をはっきり表示（自動で消さない）
     if(fail===0){banner.style.background='#123d2e';banner.style.color='#2bd4b6';banner.textContent='✅ 送信完了：'+ok+'枚（'+name+'）';}
