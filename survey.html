@@ -45,7 +45,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,Bl
 <div id="root"><div class="load">読み込み中…</div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const BUILD='1790749933';
+const BUILD='1790750140';
 // 最新版へ自動更新（キャッシュで古いまま、を防ぐ）
 (function(){try{var K='survey_cbv';fetch(location.pathname+'?_cb='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/const BUILD='([^']+)'/);if(m&&m[1]!==BUILD&&sessionStorage.getItem(K)!==m[1]){sessionStorage.setItem(K,m[1]);var u=location.pathname+(location.search?location.search+'&':'?')+'v='+m[1];location.replace(u);}}).catch(function(){});}catch(e){}})();
 const SB_URL='https://vfreehhenmwrbxkhcdvu.supabase.co';
@@ -64,11 +64,11 @@ function hhex(s){let h=5381;s=String(s||'');for(let i=0;i<s.length;i++){h=((h*33
 async function loadJSZip(){if(window.JSZip)return;await new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js';s.onload=res;s.onerror=()=>rej(new Error('zip読込失敗'));document.head.appendChild(s);});}
 function isVideoFile(f){return /^video\//.test((f&&f.type)||'')|| /\.(mp4|mov|m4v|webm|3gp|avi|hevc)$/i.test((f&&f.name)||'');}
 function isVideoName(s){return /\.(mp4|mov|m4v|webm|3gp)(\?|$)/i.test(String(s||''));}
-// 動画をブラウザ内で再エンコード（480p/15fps・音声なし）。1分想定・実時間かかる。
+// 動画をブラウザ内で再エンコード（720p/20fps・音声つき）。1分想定・実時間かかる。
 async function compressVideo(file,onProgress){
   if(!window.MediaRecorder)throw new Error('この端末のブラウザは動画変換に未対応です');
   const url=URL.createObjectURL(file);
-  const v=document.createElement('video');v.muted=true;v.playsInline=true;v.preload='auto';v.src=url;
+  const v=document.createElement('video');v.playsInline=true;v.preload='auto';v.src=url; // 音声を録るのでミュートしない（スピーカーへは出さない）
   await new Promise((res,rej)=>{v.onloadedmetadata=()=>res();v.onerror=()=>rej(new Error('動画を読み込めませんでした'));});
   const dur=v.duration||0;
   if(dur>75){URL.revokeObjectURL(url);throw new Error('動画は1分以内にしてください（現在 約'+Math.round(dur)+'秒）');}
@@ -76,15 +76,29 @@ async function compressVideo(file,onProgress){
   const w=Math.max(2,Math.round(vw*sc/2)*2),h=Math.max(2,Math.round(vh*sc/2)*2);
   const cv=document.createElement('canvas');cv.width=w;cv.height=h;const ctx=cv.getContext('2d');
   const stream=cv.captureStream(20);
-  let mime='';['video/mp4;codecs=h264','video/mp4','video/webm;codecs=vp8','video/webm'].forEach(m=>{if(!mime&&MediaRecorder.isTypeSupported(m))mime=m;});
-  const rec=new MediaRecorder(stream,Object.assign({videoBitsPerSecond:2500000},mime?{mimeType:mime}:{}));
+  // 音声：Web Audioで映像要素の音を取り込む（ac.destinationには繋がない＝端末スピーカーからは鳴らない）
+  var ac=null,hasAudio=false;
+  try{
+    ac=new (window.AudioContext||window.webkitAudioContext)();
+    var srcN=ac.createMediaElementSource(v);
+    var adest=ac.createMediaStreamDestination();
+    srcN.connect(adest);
+    var atrks=adest.stream.getAudioTracks();
+    if(atrks&&atrks[0]){stream.addTrack(atrks[0]);hasAudio=true;}
+  }catch(e){ac=null;}
+  var mime='';(hasAudio?['video/mp4;codecs=h264,aac','video/webm;codecs=vp8,opus','video/mp4','video/webm']:['video/mp4;codecs=h264','video/mp4','video/webm;codecs=vp8','video/webm']).forEach(function(m){if(!mime&&MediaRecorder.isTypeSupported(m))mime=m;});
+  const rec=new MediaRecorder(stream,Object.assign({videoBitsPerSecond:2500000,audioBitsPerSecond:128000},mime?{mimeType:mime}:{}));
   const chunks=[];rec.ondataavailable=e=>{if(e.data&&e.data.size)chunks.push(e.data);};
   const stopped=new Promise(res=>{rec.onstop=res;});
+  try{if(ac&&ac.state==='suspended')await ac.resume();}catch(e){}
   rec.start(1000);
   let raf=0;const draw=()=>{try{ctx.drawImage(v,0,0,w,h);}catch(e){}if(onProgress&&dur)onProgress(Math.min(1,v.currentTime/dur));raf=requestAnimationFrame(draw);};
-  await v.play().catch(()=>{});draw();
+  await v.play().catch(()=>{});
+  await new Promise(r=>setTimeout(r,450));
+  if(v.paused||v.currentTime<=0){ try{rec.stop();}catch(e){} try{ac&&ac.close();}catch(e){} cancelAnimationFrame(raf); URL.revokeObjectURL(url); throw new Error('動画を再生できず圧縮できませんでした'); }
+  draw();
   await new Promise(res=>{let f=false;const fin=()=>{if(!f){f=true;res();}};v.onended=fin;setTimeout(fin,(dur+5)*1000);});
-  cancelAnimationFrame(raf);try{rec.stop();}catch(e){}await stopped;try{v.pause();}catch(e){}
+  cancelAnimationFrame(raf);try{rec.stop();}catch(e){}await stopped;try{v.pause();}catch(e){}try{ac&&ac.close();}catch(e){}
   URL.revokeObjectURL(url);
   const outMime=(rec.mimeType||mime||'video/webm').split(';')[0];
   const ext=outMime.indexOf('mp4')>=0?'mp4':'webm';
@@ -172,7 +186,7 @@ async function openBuilding(name,address,vendor,isNew,viewOnly){
     card.appendChild($('div','label','現調日'));
     vd=$('input','finput');vd.type='date';vd.value=todayStr();card.appendChild(vd);
     upbtn=$('button','btn up','📤 写真・動画をアップロード');card.appendChild(upbtn);
-    card.appendChild($('div','hint','写真は長辺'+MAX_PX+'px／動画は720p・20fps（1分以内）に自動で軽くして送信'));
+    card.appendChild($('div','hint','写真は長辺'+MAX_PX+'px／動画は720p・20fps・音声つき（1分以内）に自動で軽くして送信'));
     fi=$('input');fi.type='file';fi.accept='image/*,video/*';fi.multiple=true;fi.style.display='none';card.appendChild(fi);
     banner=$('div');banner.style.cssText='display:none;margin-top:10px;border-radius:10px;padding:12px;font-weight:800;text-align:center;font-size:15px';card.appendChild(banner);
     prog=$('div','prog');const pbar=$('div','pbar');pf=$('span');pbar.appendChild(pf);ptxt=$('div','ptxt','');prog.appendChild(pbar);prog.appendChild(ptxt);card.appendChild(prog);
