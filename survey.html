@@ -45,7 +45,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,Bl
 <div id="root"><div class="load">読み込み中…</div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const BUILD='1790749471';
+const BUILD='1790749933';
 // 最新版へ自動更新（キャッシュで古いまま、を防ぐ）
 (function(){try{var K='survey_cbv';fetch(location.pathname+'?_cb='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/const BUILD='([^']+)'/);if(m&&m[1]!==BUILD&&sessionStorage.getItem(K)!==m[1]){sessionStorage.setItem(K,m[1]);var u=location.pathname+(location.search?location.search+'&':'?')+'v='+m[1];location.replace(u);}}).catch(function(){});}catch(e){}})();
 const SB_URL='https://vfreehhenmwrbxkhcdvu.supabase.co';
@@ -72,12 +72,12 @@ async function compressVideo(file,onProgress){
   await new Promise((res,rej)=>{v.onloadedmetadata=()=>res();v.onerror=()=>rej(new Error('動画を読み込めませんでした'));});
   const dur=v.duration||0;
   if(dur>75){URL.revokeObjectURL(url);throw new Error('動画は1分以内にしてください（現在 約'+Math.round(dur)+'秒）');}
-  const vw=v.videoWidth||640,vh=v.videoHeight||480;const sc=Math.min(1,480/(Math.min(vw,vh)||480));
+  const vw=v.videoWidth||640,vh=v.videoHeight||480;const sc=Math.min(1,720/(Math.min(vw,vh)||720)); // 短辺720p
   const w=Math.max(2,Math.round(vw*sc/2)*2),h=Math.max(2,Math.round(vh*sc/2)*2);
   const cv=document.createElement('canvas');cv.width=w;cv.height=h;const ctx=cv.getContext('2d');
-  const stream=cv.captureStream(15);
+  const stream=cv.captureStream(20);
   let mime='';['video/mp4;codecs=h264','video/mp4','video/webm;codecs=vp8','video/webm'].forEach(m=>{if(!mime&&MediaRecorder.isTypeSupported(m))mime=m;});
-  const rec=new MediaRecorder(stream,Object.assign({videoBitsPerSecond:900000},mime?{mimeType:mime}:{}));
+  const rec=new MediaRecorder(stream,Object.assign({videoBitsPerSecond:2500000},mime?{mimeType:mime}:{}));
   const chunks=[];rec.ondataavailable=e=>{if(e.data&&e.data.size)chunks.push(e.data);};
   const stopped=new Promise(res=>{rec.onstop=res;});
   rec.start(1000);
@@ -172,7 +172,7 @@ async function openBuilding(name,address,vendor,isNew,viewOnly){
     card.appendChild($('div','label','現調日'));
     vd=$('input','finput');vd.type='date';vd.value=todayStr();card.appendChild(vd);
     upbtn=$('button','btn up','📤 写真・動画をアップロード');card.appendChild(upbtn);
-    card.appendChild($('div','hint','写真は長辺'+MAX_PX+'px／動画は480p・15fps（1分以内）に自動で軽くして送信'));
+    card.appendChild($('div','hint','写真は長辺'+MAX_PX+'px／動画は720p・20fps（1分以内）に自動で軽くして送信'));
     fi=$('input');fi.type='file';fi.accept='image/*,video/*';fi.multiple=true;fi.style.display='none';card.appendChild(fi);
     banner=$('div');banner.style.cssText='display:none;margin-top:10px;border-radius:10px;padding:12px;font-weight:800;text-align:center;font-size:15px';card.appendChild(banner);
     prog=$('div','prog');const pbar=$('div','pbar');pf=$('span');pbar.appendChild(pf);ptxt=$('div','ptxt','');prog.appendChild(pbar);prog.appendChild(ptxt);card.appendChild(prog);
