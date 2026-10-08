@@ -80,7 +80,7 @@ textarea{min-height:60px;resize:vertical}
 <div id="root"><div class="load">読み込み中…</div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const BUILD='1791560001';
+const BUILD='1791570001';
 (function(){try{var K='shinchoku_cbv';fetch(location.pathname+'?_cb='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/const BUILD='([^']+)'/);if(m&&m[1]!==BUILD&&sessionStorage.getItem(K)!==m[1]){sessionStorage.setItem(K,m[1]);location.replace(location.pathname+(location.search?location.search+'&':'?')+'v='+m[1]);}}).catch(function(){});}catch(e){}})();
 const SB_URL='https://vfreehhenmwrbxkhcdvu.supabase.co';
 const SB_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmcmVlaGhlbm13cmJ4a2hjZHZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5NTE5NTAsImV4cCI6MjA5OTUyNzk1MH0.UQKIOeJmn0Yt6gqUC_TF0uoFiRl4poTJyv_tx6BotS8';
@@ -102,7 +102,8 @@ function yen(n){if(n==null||n==='')return'';const v=Number(n);if(!isFinite(v)||v
 function lsGet(k){try{return localStorage.getItem(k);}catch(e){return null;}}
 function lsSet(k,v){try{localStorage.setItem(k,v);}catch(e){}}
 let VIEW=lsGet('shinchoku_view')||(window.innerWidth>=820?'kanban':'list');
-let ALLCASES=[],CASEWORK={},FILTER='',QUERY='';
+let ALLCASES=[],CASEWORK={},CASEMAT={},FILTER='',QUERY='';
+function shopName(u){try{const h=new URL(u).hostname.replace('www.','');if(/amazon/.test(h))return'Amazon';if(/rakuten/.test(h))return'楽天';if(/monotaro/.test(h))return'モノタロウ';if(/yahoo/.test(h))return'Yahoo';if(/askul/.test(h))return'アスクル';return h.split('.')[0];}catch(e){return'';}}
 
 async function main(){
   try{
@@ -116,6 +117,12 @@ async function main(){
     try{
       const {data:ccs}=await sb.from('cl_cases').select('case_no,kbn,work_date,work_end,staff,vendor,key_info,address,order_url,done');
       (ccs||[]).forEach(w=>{(CASEWORK[w.case_no]=CASEWORK[w.case_no]||[]).push(w);});
+    }catch(e){}
+    // cl_materials（資材発注＝仕入れ）を束ねる
+    CASEMAT={};
+    try{
+      const {data:mts}=await sb.from('cl_materials').select('case_no,prop,room,staff,order_url,ordered,order_date,delivered,delivery_date,orderer,order_no,note');
+      (mts||[]).forEach(w=>{if(w.case_no)(CASEMAT[w.case_no]=CASEMAT[w.case_no]||[]).push(w);});
     }catch(e){}
     ALLCASES=cases||[];
     renderBoard();
@@ -202,6 +209,22 @@ async function openCase(c){
       const mbits=[w.vendor&&('業者 '+w.vendor),w.staff&&('担当 '+w.staff),w.key_info&&('鍵 '+w.key_info)].filter(Boolean);
       if(mbits.length)wk.appendChild($('div','wmeta',mbits.join(' ・ ')));
       if(w.order_url){const a=document.createElement('a');a.href=w.order_url;a.target='_blank';a.rel='noopener';a.textContent='発注書/図面を開く ↗';const wm=$('div','wmeta');wm.appendChild(a);wk.appendChild(wm);}
+      card.appendChild(wk);
+    });
+  }
+  // 資材発注（仕入れ）cl_materials
+  const mats=(CASEMAT[c.case_no]||[]).slice().sort((a,b)=>String(a.order_date||'').localeCompare(String(b.order_date||'')));
+  if(mats.length){
+    card.appendChild($('div','label','資材発注（仕入れ）'+mats.length+'件'));
+    mats.forEach(w=>{
+      const wk=$('div','work');const wt=$('div','wt');
+      if(w.order_url){const a=document.createElement('a');a.href=w.order_url;a.target='_blank';a.rel='noopener';a.textContent=(shopName(w.order_url)||'発注先')+' ↗';wt.appendChild(a);}
+      else wt.appendChild($('span',null,w.note||'資材'));
+      if(w.delivered)wt.appendChild($('span','tag','✓納品'));
+      else if(w.ordered)wt.appendChild($('span','tag','発注済'));
+      wk.appendChild(wt);
+      const bits=[w.order_date&&('発注 '+w.order_date),w.delivery_date&&('納品 '+w.delivery_date),w.orderer&&('発注者 '+w.orderer),w.order_no&&('No '+w.order_no),w.note].filter(Boolean);
+      if(bits.length)wk.appendChild($('div','wmeta',bits.join(' ・ ')));
       card.appendChild(wk);
     });
   }
