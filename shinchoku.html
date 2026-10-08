@@ -80,7 +80,7 @@ textarea{min-height:60px;resize:vertical}
 <div id="root"><div class="load">読み込み中…</div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const BUILD='1791580001';
+const BUILD='1791590001';
 (function(){try{var K='shinchoku_cbv';fetch(location.pathname+'?_cb='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/const BUILD='([^']+)'/);if(m&&m[1]!==BUILD&&sessionStorage.getItem(K)!==m[1]){sessionStorage.setItem(K,m[1]);location.replace(location.pathname+(location.search?location.search+'&':'?')+'v='+m[1]);}}).catch(function(){});}catch(e){}})();
 const SB_URL='https://vfreehhenmwrbxkhcdvu.supabase.co';
 const SB_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmcmVlaGhlbm13cmJ4a2hjZHZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5NTE5NTAsImV4cCI6MjA5OTUyNzk1MH0.UQKIOeJmn0Yt6gqUC_TF0uoFiRl4poTJyv_tx6BotS8';
@@ -215,9 +215,7 @@ async function openCase(c){
       wk.appendChild(wt);
       const mbits=[w.vendor&&('業者 '+w.vendor),w.staff&&('担当 '+w.staff),w.key_info&&('鍵 '+w.key_info)].filter(Boolean);
       if(mbits.length)wk.appendChild($('div','wmeta',mbits.join(' ・ ')));
-      if(w.work_content&&String(w.work_content).trim()&&String(w.work_content).trim()!=='1')wk.appendChild($('div','wmeta','作業: '+w.work_content));
-      if(w.note&&String(w.note).trim())wk.appendChild($('div','wmeta','連絡: '+w.note));
-      if(w.order_url){const a=document.createElement('a');a.href=w.order_url;a.target='_blank';a.rel='noopener';a.textContent='発注書/図面を開く ↗';const wm=$('div','wmeta');wm.appendChild(a);wk.appendChild(wm);}
+      if(w.order_url){const a=document.createElement('a');a.href=w.order_url;a.target='_blank';a.rel='noopener';a.textContent='発注書を開く ↗';const wm=$('div','wmeta');wm.appendChild(a);wk.appendChild(wm);}
       card.appendChild(wk);
     });
   }
