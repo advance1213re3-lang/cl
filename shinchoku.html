@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-store">
+<title>案件 進捗管理</title>
+<style>
+:root{--bg:#0f1420;--surface:#151c2c;--surface2:#1c2540;--line:#2a3350;--ink:#e8edf7;--ink2:#9fb0cf;--accent:#22a7c2;--accent2:#2bd4b6}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;-webkit-text-size-adjust:100%}
+#root{max-width:860px;margin:0 auto;padding:14px 14px calc(30px + env(safe-area-inset-bottom,0px))}
+.hd{display:flex;align-items:center;gap:10px;margin:2px 0 12px}
+.hd h1{font-size:19px;margin:0;font-weight:800}
+.hd .sub{font-size:12px;color:var(--ink2)}
+.bar{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.chip{border:1px solid var(--line);background:var(--surface2);color:var(--ink2);border-radius:999px;padding:6px 12px;font-size:12.5px;font-weight:700;cursor:pointer}
+.chip.on{color:#04202a;border-color:transparent}
+.search{width:100%;background:var(--surface2);border:1px solid var(--line);border-radius:10px;color:var(--ink);padding:10px 12px;font-size:15px;margin-bottom:12px}
+.row{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:11px;padding:11px 13px;margin-bottom:8px;cursor:pointer}
+.row:active{transform:scale(.995)}
+.row .main{flex:1;min-width:0}
+.row .nm{font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .meta{font-size:12px;color:var(--ink2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pill{font-size:12px;font-weight:800;color:#fff;border-radius:999px;padding:4px 10px;white-space:nowrap}
+.badge{font-size:11px;font-weight:800;border-radius:6px;padding:2px 7px;color:#04202a}
+.badge.seisou{background:#39d3b4}.badge.naiso{background:#f3b14b}.badge.setsubi{background:#b08bf0}
+.back{background:none;border:0;color:var(--accent2);font-size:14px;font-weight:700;cursor:pointer;padding:4px 0;margin-bottom:8px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+.card h2{font-size:18px;margin:0 0 2px;font-weight:800}
+.card .sub{font-size:12.5px;color:var(--ink2)}
+.label{font-size:12px;color:var(--ink2);margin:10px 0 4px;font-weight:700}
+.sel,.finput,textarea{width:100%;background:var(--surface2);border:1px solid var(--line);border-radius:10px;color:var(--ink);padding:10px 12px;font-size:15px;font-family:inherit}
+textarea{min-height:60px;resize:vertical}
+.statusSel{font-weight:800}
+.tl{display:flex;flex-direction:column;gap:8px;margin-top:4px}
+.tlrow{background:var(--surface2);border:1px solid var(--line);border-left:4px solid var(--accent2);border-radius:8px;padding:9px 11px}
+.tlrow .top{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--ink2);margin-bottom:3px}
+.tlrow .d{font-weight:800;color:var(--ink)}
+.tlrow .mth{background:#0b1220;border:1px solid var(--line);border-radius:6px;padding:1px 7px;font-weight:700}
+.tlrow .b{font-size:14px;line-height:1.5;white-space:pre-wrap}
+.addwrap{background:var(--surface2);border:1px dashed var(--line);border-radius:10px;padding:10px;margin-top:8px}
+.addrow{display:flex;gap:6px;flex-wrap:wrap}
+.addrow .finput,.addrow .sel{flex:1;min-width:120px}
+.btn{border:0;border-radius:10px;padding:10px 14px;font-weight:800;font-size:14px;cursor:pointer}
+.btn.pri{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#04202a}
+.btn.g{background:var(--surface2);color:var(--ink);border:1px solid var(--line)}
+.load{color:var(--ink2);text-align:center;padding:30px 0}
+.savehint{font-size:11px;color:var(--accent2);margin-top:3px;min-height:14px}
+</style>
+</head>
+<body>
+<div id="root"><div class="load">読み込み中…</div></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const BUILD='1791436205';
+(function(){try{var K='shinchoku_cbv';fetch(location.pathname+'?_cb='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/const BUILD='([^']+)'/);if(m&&m[1]!==BUILD&&sessionStorage.getItem(K)!==m[1]){sessionStorage.setItem(K,m[1]);location.replace(location.pathname+(location.search?location.search+'&':'?')+'v='+m[1]);}}).catch(function(){});}catch(e){}})();
+const SB_URL='https://vfreehhenmwrbxkhcdvu.supabase.co';
+const SB_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmcmVlaGhlbm13cmJ4a2hjZHZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5NTE5NTAsImV4cCI6MjA5OTUyNzk1MH0.UQKIOeJmn0Yt6gqUC_TF0uoFiRl4poTJyv_tx6BotS8';
+const sb=supabase.createClient(SB_URL,SB_ANON);
+const root=document.getElementById('root');
+const $=(t,c,x)=>{const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e;};
+const KBN={seisou:'清掃',naiso:'内装',setsubi:'設備'};
+const STATUSES=[['未着手','#6b7280'],['日程調整中','#3b82f6'],['作業予定','#d97706'],['作業中','#0ea5e9'],['完了','#16a34a'],['請求済','#7c3aed']];
+const SCOLOR={};STATUSES.forEach(s=>SCOLOR[s[0]]=s[1]);
+const METHODS=['電話','メール','LINE','訪問','その他'];
+function todayStr(){const d=new Date();const p=n=>(n<10?'0':'')+n;return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());}
+function dtxt(v){if(!v)return'';const s=String(v).slice(0,10).split('-');return (+s[1])+'/'+(+s[2]);}
+
+async function main(){
+  try{
+    const {data:cases,error}=await sb.from('cl_progress').select('*');
+    if(error)throw error;
+    const {data:logs}=await sb.from('cl_progress_log').select('case_no,log_date');
+    const last={};(logs||[]).forEach(l=>{const d=String(l.log_date).slice(0,10);if(!last[l.case_no]||d>last[l.case_no])last[l.case_no]=d;});
+    renderList(cases||[],last);
+  }catch(e){root.innerHTML='';root.appendChild($('div','load','エラー: '+e.message));}
+}
+
+function renderList(cases,last){
+  cases.forEach(c=>c._last=last[c.case_no]||'');
+  let filter='',query='';
+  root.innerHTML='';
+  const hd=$('div','hd');const t=$('div');t.appendChild($('h1',null,'📋 案件 進捗管理'));t.appendChild($('div','sub','テスト版 ・ 案件ごとに進捗とやり取りを管理'));hd.appendChild(t);root.appendChild(hd);
+  const bar=$('div','bar');
+  const chips=[];
+  const mk=(k,label,color)=>{const b=$('div','chip',label);if(color)b.dataset.color=color;b.onclick=()=>{filter=(filter===k?'':k);chips.forEach(x=>{x.classList.toggle('on',x===b&&filter);if(x===b&&filter){x.style.background=color||'var(--accent2)';}else{x.style.background='';}});draw();};bar.appendChild(b);chips.push(b);};
+  mk('','すべて','var(--accent2)');
+  STATUSES.forEach(s=>mk(s[0],s[0],s[1]));
+  root.appendChild(bar);
+  const search=$('input','search');search.type='search';search.placeholder='🔍 物件名・担当・業者で検索';search.oninput=()=>{query=search.value.trim();draw();};root.appendChild(search);
+  const list=$('div');root.appendChild(list);
+  function draw(){
+    list.innerHTML='';
+    let ms=cases.slice();
+    if(filter)ms=ms.filter(c=>c.status===filter);
+    if(query){const q=query.toLowerCase();ms=ms.filter(c=>[c.prop,c.room,c.staff,c.vendor].some(v=>String(v||'').toLowerCase().indexOf(q)>=0));}
+    ms.sort((a,b)=>STATUSES.findIndex(s=>s[0]===a.status)-STATUSES.findIndex(s=>s[0]===b.status));
+    if(!ms.length){list.appendChild($('div','load','該当なし'));return;}
+    ms.forEach(c=>{
+      const r=$('div','row');
+      const m=$('div','main');
+      const nm=$('div','nm');nm.appendChild($('span','badge '+(c.kbn||''),KBN[c.kbn]||c.kbn||'—'));nm.appendChild(document.createTextNode(' '+(c.prop||'')+(c.room?' '+c.room:'')));
+      m.appendChild(nm);
+      m.appendChild($('div','meta',[c.vendor&&('業者:'+c.vendor),c.staff&&('担当:'+c.staff),c._last&&('最終やり取り '+dtxt(c._last))].filter(Boolean).join(' ・ ')||'—'));
+      r.appendChild(m);
+      const pill=$('span','pill',c.status);pill.style.background=SCOLOR[c.status]||'#6b7280';r.appendChild(pill);
+      r.onclick=()=>openCase(c);
+      list.appendChild(r);
+    });
+  }
+  draw();
+}
+
+async function openCase(c){
+  root.innerHTML='';
+  const back=$('button','back','‹ 一覧へ');back.onclick=main;root.appendChild(back);
+  const card=$('div','card');
+  const h2=$('h2');h2.appendChild($('span','badge '+(c.kbn||''),KBN[c.kbn]||c.kbn||'—'));h2.appendChild(document.createTextNode(' '+(c.prop||'')+(c.room?' '+c.room:'')));card.appendChild(h2);
+  card.appendChild($('div','sub',['案件 '+(c.case_no||''),c.vendor&&('業者 '+c.vendor),c.staff&&('担当 '+c.staff)].filter(Boolean).join(' ・ ')));
+  // ステータス
+  card.appendChild($('div','label','進捗ステータス'));
+  const sel=$('select','sel statusSel');STATUSES.forEach(s=>{const o=$('option',null,s[0]);o.value=s[0];sel.appendChild(o);});sel.value=c.status||'未着手';sel.style.color=SCOLOR[sel.value];
+  const sh1=$('div','savehint','');
+  sel.onchange=async()=>{sel.style.color=SCOLOR[sel.value];const {error}=await sb.from('cl_progress').update({status:sel.value,updated_at:new Date().toISOString()}).eq('id',c.id);sh1.textContent=error?'保存失敗':'✓ 保存しました';c.status=sel.value;setTimeout(()=>sh1.textContent='',1500);};
+  card.appendChild(sel);card.appendChild(sh1);
+  // メモ
+  card.appendChild($('div','label','メモ'));
+  const memo=$('textarea');memo.value=c.memo||'';memo.placeholder='自由記入（例：鍵は管理会社／追加見積待ち 等）';
+  const sh2=$('div','savehint','');
+  memo.onblur=async()=>{if((c.memo||'')===memo.value)return;const {error}=await sb.from('cl_progress').update({memo:memo.value,updated_at:new Date().toISOString()}).eq('id',c.id);sh2.textContent=error?'保存失敗':'✓ 保存しました';c.memo=memo.value;setTimeout(()=>sh2.textContent='',1500);};
+  card.appendChild(memo);card.appendChild(sh2);
+  root.appendChild(card);
+  // やり取り履歴
+  const lcard=$('div','card');
+  lcard.appendChild($('h2',null,'やり取り履歴').cloneNode(true));
+  const tl=$('div','tl');lcard.appendChild(tl);
+  const add=$('div','addwrap');
+  add.appendChild($('div','label','やり取りを追加'));
+  const row1=$('div','addrow');
+  const di=$('input','finput');di.type='date';di.value=todayStr();di.style.flex='0 0 150px';
+  const ms=$('select','sel');METHODS.forEach(m=>{const o=$('option',null,m);o.value=m;ms.appendChild(o);});ms.style.flex='0 0 120px';
+  const au=$('input','finput');au.placeholder='記入者';au.style.flex='0 0 120px';
+  row1.appendChild(di);row1.appendChild(ms);row1.appendChild(au);add.appendChild(row1);
+  const body=$('textarea');body.placeholder='内容（例：着工日を10/15で確定 ／ 追加見積を送付）';body.style.marginTop='6px';add.appendChild(body);
+  const addbtn=$('button','btn pri','＋ 記録する');addbtn.style.marginTop='8px';add.appendChild(addbtn);
+  lcard.appendChild(add);
+  root.appendChild(lcard);
+
+  let logs=[];
+  async function loadLogs(){const {data}=await sb.from('cl_progress_log').select('*').eq('case_no',c.case_no).order('log_date',{ascending:false}).order('created_at',{ascending:false});logs=data||[];drawLogs();}
+  function drawLogs(){tl.innerHTML='';if(!logs.length){tl.appendChild($('div','load','まだやり取りがありません'));return;}logs.forEach(l=>{const r=$('div','tlrow');r.style.borderLeftColor=SCOLOR[c.status]||'#2bd4b6';const top=$('div','top');top.appendChild($('span','d',dtxt(l.log_date)));if(l.method)top.appendChild($('span','mth',l.method));if(l.author)top.appendChild($('span',null,l.author));r.appendChild(top);r.appendChild($('div','b',l.body||''));tl.appendChild(r);});}
+  addbtn.onclick=async()=>{
+    const v=body.value.trim();if(!v){alert('内容を入れてください');return;}
+    addbtn.disabled=true;addbtn.textContent='記録中…';
+    const rec={case_no:c.case_no,log_date:di.value||todayStr(),method:ms.value,body:v,author:au.value.trim()||null};
+    const {data,error}=await sb.from('cl_progress_log').insert(rec).select();
+    if(error){addbtn.disabled=false;addbtn.textContent='＋ 記録する';alert('失敗: '+error.message);return;}
+    logs.unshift(data[0]);drawLogs();body.value='';addbtn.disabled=false;addbtn.textContent='＋ 記録する';
+    sb.from('cl_progress').update({updated_at:new Date().toISOString()}).eq('id',c.id);
+  };
+  loadLogs();
+}
+main();
+</script>
+</body>
+</html>
