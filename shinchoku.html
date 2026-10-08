@@ -80,7 +80,7 @@ textarea{min-height:60px;resize:vertical}
 <div id="root"><div class="load">読み込み中…</div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const BUILD='1791590001';
+const BUILD='1791600001';
 (function(){try{var K='shinchoku_cbv';fetch(location.pathname+'?_cb='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/const BUILD='([^']+)'/);if(m&&m[1]!==BUILD&&sessionStorage.getItem(K)!==m[1]){sessionStorage.setItem(K,m[1]);location.replace(location.pathname+(location.search?location.search+'&':'?')+'v='+m[1]);}}).catch(function(){});}catch(e){}})();
 const SB_URL='https://vfreehhenmwrbxkhcdvu.supabase.co';
 const SB_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmcmVlaGhlbm13cmJ4a2hjZHZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5NTE5NTAsImV4cCI6MjA5OTUyNzk1MH0.UQKIOeJmn0Yt6gqUC_TF0uoFiRl4poTJyv_tx6BotS8';
@@ -106,8 +106,7 @@ let ALLCASES=[],CASEWORK={},CASEMAT={},FILTER='',QUERY='';
 function shopName(u){try{const h=new URL(u).hostname.replace('www.','');if(/amazon/.test(h))return'Amazon';if(/rakuten/.test(h))return'楽天';if(/monotaro/.test(h))return'モノタロウ';if(/yahoo/.test(h))return'Yahoo';if(/askul/.test(h))return'アスクル';return h.split('.')[0];}catch(e){return'';}}
 function addrPart(a){if(!a)return'';const m=String(a).match(/(東京都|北海道|大阪府|京都府|..[都道府県])/);return m?String(a).slice(String(a).indexOf(m[0])):String(a);}
 
-async function main(){
-  try{
+async function loadData(){
     const {data:cases,error}=await sb.from('cl_progress').select('*').not('case_no','like','ad-TEST*');
     if(error)throw error;
     const {data:logs}=await sb.from('cl_progress_log').select('case_no,log_date');
@@ -126,13 +125,16 @@ async function main(){
       (mts||[]).forEach(w=>{if(w.case_no)(CASEMAT[w.case_no]=CASEMAT[w.case_no]||[]).push(w);});
     }catch(e){}
     ALLCASES=cases||[];
-    renderBoard();
-  }catch(e){root.innerHTML='';root.appendChild($('div','load','エラー: '+e.message));}
 }
+let INDETAIL=false, AUTOSET=false;
+async function main(){ try{ await loadData(); renderBoard(); startAutoRefresh(); }catch(e){ root.innerHTML=''; root.appendChild($('div','load','エラー: '+e.message)); } }
+async function refresh(){ if(INDETAIL) return; var ae=document.activeElement; if(ae&&/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)) return; try{ await loadData(); if(!INDETAIL) renderBoard(); }catch(e){} }
+function startAutoRefresh(){ if(AUTOSET) return; AUTOSET=true; setInterval(refresh,15000); document.addEventListener('visibilitychange',function(){ if(!document.hidden) refresh(); }); window.addEventListener('focus',refresh); }
 
 function statusIdx(s){const i=STATUSES.findIndex(x=>x[0]===s);return i<0?0:i;}
 
 function renderBoard(){
+  INDETAIL=false;
   root.innerHTML='';
   const hd=$('div','hd');const t=$('div');t.appendChild($('h1',null,'📋 案件 進捗管理'));t.appendChild($('div','sub','案件一覧と自動同期 ・ '+ALLCASES.length+'件'));hd.appendChild(t);
   const tog=$('div','tog');[['list','≣ リスト'],['kanban','▦ カンバン']].forEach(([v,lab])=>{const b=$('button','tb'+(VIEW===v?' on':''),lab);b.onclick=()=>{VIEW=v;lsSet('shinchoku_view',v);renderBoard();};tog.appendChild(b);});hd.appendChild(tog);
@@ -168,6 +170,7 @@ function renderBoard(){
 }
 
 async function openCase(c){
+  INDETAIL=true;
   root.innerHTML='';
   const back=$('button','back','‹ 一覧へ');back.onclick=main;root.appendChild(back);
   const card=$('div','card');
