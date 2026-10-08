@@ -64,7 +64,7 @@ textarea{min-height:60px;resize:vertical}
 <div id="root"><div class="load">読み込み中…</div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const BUILD='1791437092';
+const BUILD='1791442324';
 (function(){try{var K='shinchoku_cbv';fetch(location.pathname+'?_cb='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/const BUILD='([^']+)'/);if(m&&m[1]!==BUILD&&sessionStorage.getItem(K)!==m[1]){sessionStorage.setItem(K,m[1]);location.replace(location.pathname+(location.search?location.search+'&':'?')+'v='+m[1]);}}).catch(function(){});}catch(e){}})();
 const SB_URL='https://vfreehhenmwrbxkhcdvu.supabase.co';
 const SB_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmcmVlaGhlbm13cmJ4a2hjZHZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5NTE5NTAsImV4cCI6MjA5OTUyNzk1MH0.UQKIOeJmn0Yt6gqUC_TF0uoFiRl4poTJyv_tx6BotS8';
@@ -75,6 +75,8 @@ const KBN={seisou:'清掃',naiso:'内装',setsubi:'設備'};
 const STATUSES=[['未着手','#6b7280'],['日程調整中','#3b82f6'],['作業予定','#d97706'],['作業中','#0ea5e9'],['完了','#16a34a'],['請求済','#7c3aed']];
 const SCOLOR={};STATUSES.forEach(s=>SCOLOR[s[0]]=s[1]);
 const METHODS=['電話','メール','LINE','訪問','その他'];
+const PHASES=[['date_setsubi','設備工事'],['date_naiso','内装工事'],['date_seisou','清掃']];
+function nextPhase(c){const t=todayStr();let best=null;PHASES.forEach(([k,lab])=>{const d=c[k]?String(c[k]).slice(0,10):'';if(d&&d>=t&&(!best||d<best.date))best={label:lab,date:d};});return best;}
 function todayStr(){const d=new Date();const p=n=>(n<10?'0':'')+n;return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());}
 function dtxt(v){if(!v)return'';const s=String(v).slice(0,10).split('-');return (+s[1])+'/'+(+s[2]);}
 
@@ -109,7 +111,11 @@ function renderBoard(){
   function drawList(cont,ms){
     ms=ms.slice().sort((a,b)=>STATUSES.findIndex(s=>s[0]===a.status)-STATUSES.findIndex(s=>s[0]===b.status));
     if(!ms.length){cont.appendChild($('div','load','該当なし'));return;}
-    ms.forEach(c=>{const r=$('div','row');const m=$('div','main');const nm=$('div','nm');nm.appendChild($('span','badge '+(c.kbn||''),KBN[c.kbn]||c.kbn||'—'));nm.appendChild(document.createTextNode(' '+(c.prop||'')+(c.room?' '+c.room:'')));m.appendChild(nm);m.appendChild($('div','meta',[c.vendor&&('業者:'+c.vendor),c.staff&&('担当:'+c.staff),c._last&&('最終やり取り '+dtxt(c._last))].filter(Boolean).join(' ・ ')||'—'));r.appendChild(m);const pill=$('span','pill',c.status);pill.style.background=SCOLOR[c.status]||'#6b7280';r.appendChild(pill);r.onclick=()=>openCase(c);cont.appendChild(r);});
+    ms.forEach(c=>{const r=$('div','row');const m=$('div','main');const nm=$('div','nm');nm.appendChild($('span','badge '+(c.kbn||''),KBN[c.kbn]||c.kbn||'—'));nm.appendChild(document.createTextNode(' '+(c.prop||'')+(c.room?' '+c.room:'')));m.appendChild(nm);
+      const np=nextPhase(c);
+      if(np){const pl=$('div','meta');pl.style.color='var(--accent2)';pl.style.fontWeight='700';pl.textContent='▶ 次工程：'+np.label+' '+dtxt(np.date);m.appendChild(pl);}
+      m.appendChild($('div','meta',[c.vendor&&('業者:'+c.vendor),c.staff&&('担当:'+c.staff),c._last&&('最終やり取り '+dtxt(c._last))].filter(Boolean).join(' ・ ')||'—'));
+      r.appendChild(m);const pill=$('span','pill',c.status);pill.style.background=SCOLOR[c.status]||'#6b7280';r.appendChild(pill);r.onclick=()=>openCase(c);cont.appendChild(r);});
   }
   function drawKanban(cont,ms){
     const kb=$('div','kb');
@@ -117,7 +123,7 @@ function renderBoard(){
       const col=$('div','kbcol');col.dataset.status=s[0];
       const items=ms.filter(c=>c.status===s[0]);
       const head=$('div','kbhead',s[0]+' ・'+items.length);head.style.background=s[1];col.appendChild(head);
-      items.forEach(c=>{const card=$('div','kbcard');card.draggable=true;card.appendChild($('div','kbnm',(c.prop||'')+(c.room?' '+c.room:'')));card.appendChild($('div','kbmeta',[KBN[c.kbn]||c.kbn,c.staff].filter(Boolean).join(' ・ ')));if(c._last)card.appendChild($('div','kblast','最終 '+dtxt(c._last)));card.onclick=()=>openCase(c);card.ondragstart=e=>{e.dataTransfer.setData('text',String(c.id));};col.appendChild(card);});
+      items.forEach(c=>{const card=$('div','kbcard');card.draggable=true;card.appendChild($('div','kbnm',(c.prop||'')+(c.room?' '+c.room:'')));card.appendChild($('div','kbmeta',[KBN[c.kbn]||c.kbn,c.staff].filter(Boolean).join(' ・ ')));const np=nextPhase(c);if(np){const n=$('div','kblast','▶ '+np.label+' '+dtxt(np.date));n.style.color='#2bd4b6';card.appendChild(n);}else if(c._last)card.appendChild($('div','kblast','最終 '+dtxt(c._last)));card.onclick=()=>openCase(c);card.ondragstart=e=>{e.dataTransfer.setData('text',String(c.id));};col.appendChild(card);});
       col.ondragover=e=>{e.preventDefault();col.classList.add('over');};
       col.ondragleave=()=>col.classList.remove('over');
       col.ondrop=async e=>{e.preventDefault();col.classList.remove('over');const id=+e.dataTransfer.getData('text');const cc=ALLCASES.find(x=>x.id===id);if(!cc||cc.status===s[0])return;cc.status=s[0];drawBody();await sb.from('cl_progress').update({status:s[0],updated_at:new Date().toISOString()}).eq('id',id);};
@@ -140,6 +146,21 @@ async function openCase(c){
   const sh1=$('div','savehint','');
   sel.onchange=async()=>{sel.style.color=SCOLOR[sel.value];const {error}=await sb.from('cl_progress').update({status:sel.value,updated_at:new Date().toISOString()}).eq('id',c.id);sh1.textContent=error?'保存失敗':'✓ 保存しました';c.status=sel.value;setTimeout(()=>sh1.textContent='',1500);};
   card.appendChild(sel);card.appendChild(sh1);
+  // 工程・予定日
+  card.appendChild($('div','label','工程・予定日（今どの段階か）'));
+  const cur=$('div');cur.style.cssText='font-size:13.5px;font-weight:800;margin:0 0 6px;color:var(--accent2)';
+  function refreshCur(){const n=nextPhase(c);cur.textContent=n?('▶ 現在／次の段階：'+n.label+'（'+dtxt(n.date)+'）'):'現在の段階：未定（予定日を入れてください）';}
+  refreshCur();card.appendChild(cur);
+  PHASES.forEach(([k,lab])=>{
+    const row=$('div');row.style.cssText='display:flex;align-items:center;gap:8px;margin-bottom:6px';
+    const l=$('div',null,lab);l.style.cssText='flex:0 0 84px;font-size:13px;color:var(--ink2);font-weight:700';
+    const di=$('input','finput');di.type='date';di.style.cssText='flex:1;margin:0';if(c[k])di.value=String(c[k]).slice(0,10);
+    const st=$('span');st.style.cssText='flex:0 0 42px;font-size:11px;font-weight:800;text-align:center';
+    const paint=()=>{const v=di.value;if(!v){st.textContent='—';st.style.color='var(--ink2)';return;}const done=v<todayStr();st.textContent=done?'済':'予定';st.style.color=done?'#2bd4b6':'#60a5fa';};
+    paint();
+    di.onchange=async()=>{const o={updated_at:new Date().toISOString()};o[k]=di.value||null;c[k]=di.value||null;paint();refreshCur();await sb.from('cl_progress').update(o).eq('id',c.id);};
+    row.appendChild(l);row.appendChild(di);row.appendChild(st);card.appendChild(row);
+  });
   // メモ
   card.appendChild($('div','label','メモ'));
   const memo=$('textarea');memo.value=c.memo||'';memo.placeholder='自由記入（例：鍵は管理会社／追加見積待ち 等）';
