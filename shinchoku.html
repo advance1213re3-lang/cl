@@ -80,7 +80,7 @@ textarea{min-height:60px;resize:vertical}
 <div id="root"><div class="load">読み込み中…</div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const BUILD='1791600001';
+const BUILD='1791610001';
 (function(){try{var K='shinchoku_cbv';fetch(location.pathname+'?_cb='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/const BUILD='([^']+)'/);if(m&&m[1]!==BUILD&&sessionStorage.getItem(K)!==m[1]){sessionStorage.setItem(K,m[1]);location.replace(location.pathname+(location.search?location.search+'&':'?')+'v='+m[1]);}}).catch(function(){});}catch(e){}})();
 const SB_URL='https://vfreehhenmwrbxkhcdvu.supabase.co';
 const SB_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmcmVlaGhlbm13cmJ4a2hjZHZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5NTE5NTAsImV4cCI6MjA5OTUyNzk1MH0.UQKIOeJmn0Yt6gqUC_TF0uoFiRl4poTJyv_tx6BotS8';
@@ -136,7 +136,7 @@ function statusIdx(s){const i=STATUSES.findIndex(x=>x[0]===s);return i<0?0:i;}
 function renderBoard(){
   INDETAIL=false;
   root.innerHTML='';
-  const hd=$('div','hd');const t=$('div');t.appendChild($('h1',null,'📋 案件 進捗管理'));t.appendChild($('div','sub','案件一覧と自動同期 ・ '+ALLCASES.length+'件'));hd.appendChild(t);
+  const hd=$('div','hd');const t=$('div');t.appendChild($('h1',null,'📋 案件 進捗管理'));t.appendChild($('div','sub',ALLCASES.length+'件'));hd.appendChild(t);
   const tog=$('div','tog');[['list','≣ リスト'],['kanban','▦ カンバン']].forEach(([v,lab])=>{const b=$('button','tb'+(VIEW===v?' on':''),lab);b.onclick=()=>{VIEW=v;lsSet('shinchoku_view',v);renderBoard();};tog.appendChild(b);});hd.appendChild(tog);
   root.appendChild(hd);
   const bar=$('div','bar');
@@ -180,7 +180,6 @@ async function openCase(c){
   // ステータス（自動）＋金額
   const stwrap=$('div');stwrap.style.cssText='display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap';
   const pill=$('span','pill',c.status);pill.style.background=SCOLOR[c.status]||'#6b7280';stwrap.appendChild(pill);
-  stwrap.appendChild($('span',null,'（案件一覧から自動）')).style.cssText='font-size:11.5px;color:var(--ink2)';
   if(yen(c.amount)){const a=$('span','amt',yen(c.amount));a.style.marginLeft='auto';stwrap.appendChild(a);}
   card.appendChild(stwrap);
   // 住所（cl_casesから・地図リンク付き）
@@ -190,7 +189,7 @@ async function openCase(c){
     const a=document.createElement('a');a.href='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(ap);a.target='_blank';a.rel='noopener';a.textContent=' 地図↗';a.style.cssText='color:var(--accent);font-weight:700;margin-left:6px;text-decoration:none';row.appendChild(a);
     card.appendChild(row);}
   // 工程ステッパー
-  card.appendChild($('div','label','工程（立会→見積→発注→完工→請求）'));
+  card.appendChild($('div','label','工程'));
   const steps=$('div','steps');
   const curIdx=statusIdx(c.status);
   LIFE.forEach(([k,lab],i)=>{
@@ -239,7 +238,7 @@ async function openCase(c){
     });
   }
   // 手入力項目（アプリ内・編集可／案件一覧同期で上書きされない）
-  card.appendChild($('div','label','手入力（完了確認担当者・各工事の日程/施工者）'));
+  card.appendChild($('div','label','手入力'));
   const man=$('div');man.style.cssText='display:flex;flex-direction:column;gap:8px';
   const mh=$('div','savehint','');
   async function saveField(key,val){const nv=val||null;if((c[key]||null)===nv)return;const o={updated_at:new Date().toISOString()};o[key]=nv;c[key]=nv;const {error}=await sb.from('cl_progress').update(o).eq('id',c.id);mh.textContent=error?('保存失敗: '+error.message):'✓ 保存しました';setTimeout(()=>{mh.textContent='';},1400);}
@@ -259,9 +258,9 @@ async function openCase(c){
   });
   man.appendChild(mh);card.appendChild(man);
   // 備考（案件一覧・参考）
-  if(c.note_master){card.appendChild($('div','label','案件一覧の備考'));const nm=$('div');nm.style.cssText='font-size:13.5px;line-height:1.5;white-space:pre-wrap;color:var(--ink)';nm.textContent=c.note_master;card.appendChild(nm);}
+  if(c.note_master){card.appendChild($('div','label','備考'));const nm=$('div');nm.style.cssText='font-size:13.5px;line-height:1.5;white-space:pre-wrap;color:var(--ink)';nm.textContent=c.note_master;card.appendChild(nm);}
   // メモ（アプリ内・編集可）
-  card.appendChild($('div','label','メモ（このアプリ内・自由記入）'));
+  card.appendChild($('div','label','メモ'));
   const memo=$('textarea');memo.value=c.memo||'';memo.placeholder='自由記入（例：鍵は管理会社／追加見積待ち 等）';
   const sh2=$('div','savehint','');
   memo.onblur=async()=>{if((c.memo||'')===memo.value)return;const {error}=await sb.from('cl_progress').update({memo:memo.value,updated_at:new Date().toISOString()}).eq('id',c.id);sh2.textContent=error?'保存失敗':'✓ 保存しました';c.memo=memo.value;setTimeout(()=>sh2.textContent='',1500);};
