@@ -64,7 +64,7 @@ textarea{min-height:60px;resize:vertical}
 <div id="root"><div class="load">読み込み中…</div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const BUILD='1791442324';
+const BUILD='1791520001';
 (function(){try{var K='shinchoku_cbv';fetch(location.pathname+'?_cb='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/const BUILD='([^']+)'/);if(m&&m[1]!==BUILD&&sessionStorage.getItem(K)!==m[1]){sessionStorage.setItem(K,m[1]);location.replace(location.pathname+(location.search?location.search+'&':'?')+'v='+m[1]);}}).catch(function(){});}catch(e){}})();
 const SB_URL='https://vfreehhenmwrbxkhcdvu.supabase.co';
 const SB_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmcmVlaGhlbm13cmJ4a2hjZHZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5NTE5NTAsImV4cCI6MjA5OTUyNzk1MH0.UQKIOeJmn0Yt6gqUC_TF0uoFiRl4poTJyv_tx6BotS8';
@@ -175,10 +175,13 @@ async function openCase(c){
   const add=$('div','addwrap');
   add.appendChild($('div','label','やり取りを追加'));
   const row1=$('div','addrow');
-  const di=$('input','finput');di.type='date';di.value=todayStr();di.style.flex='0 0 150px';
-  const ms=$('select','sel');METHODS.forEach(m=>{const o=$('option',null,m);o.value=m;ms.appendChild(o);});ms.style.flex='0 0 120px';
-  const au=$('input','finput');au.placeholder='記入者';au.style.flex='0 0 120px';
-  row1.appendChild(di);row1.appendChild(ms);row1.appendChild(au);add.appendChild(row1);
+  const di=$('input','finput');di.type='date';di.value=todayStr();di.style.flex='0 0 140px';
+  const dnow=$('button','chip','今日');const dyst=$('button','chip','昨日');
+  dnow.onclick=()=>{di.value=todayStr();};
+  dyst.onclick=()=>{const d=new Date();d.setDate(d.getDate()-1);di.value=d.toISOString().slice(0,10);};
+  const ms=$('select','sel');METHODS.forEach(m=>{const o=$('option',null,m);o.value=m;ms.appendChild(o);});ms.style.flex='0 0 110px';
+  const au=$('input','finput');au.placeholder='記入者';au.style.flex='1 1 100px';
+  row1.appendChild(di);row1.appendChild(dnow);row1.appendChild(dyst);row1.appendChild(ms);row1.appendChild(au);add.appendChild(row1);
   const body=$('textarea');body.placeholder='内容（例：着工日を10/15で確定 ／ 追加見積を送付）';body.style.marginTop='6px';add.appendChild(body);
   const addbtn=$('button','btn pri','＋ 記録する');addbtn.style.marginTop='8px';add.appendChild(addbtn);
   lcard.appendChild(add);
