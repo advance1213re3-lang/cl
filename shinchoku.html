@@ -47,13 +47,24 @@ textarea{min-height:60px;resize:vertical}
 .btn.g{background:var(--surface2);color:var(--ink);border:1px solid var(--line)}
 .load{color:var(--ink2);text-align:center;padding:30px 0}
 .savehint{font-size:11px;color:var(--accent2);margin-top:3px;min-height:14px}
+.tog{margin-left:auto;display:flex;gap:4px}
+.tb{border:1px solid var(--line);background:var(--surface2);color:var(--ink2);border-radius:8px;padding:6px 10px;font-size:12px;font-weight:700;cursor:pointer}
+.tb.on{background:var(--accent2);color:#04202a;border-color:transparent}
+.kb{display:flex;gap:10px;overflow-x:auto;padding-bottom:10px}
+.kbcol{flex:0 0 210px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px;min-height:90px}
+.kbcol.over{outline:2px dashed var(--accent2)}
+.kbhead{font-size:12px;font-weight:800;color:#fff;border-radius:6px;padding:5px 8px;margin-bottom:8px;text-align:center}
+.kbcard{background:var(--surface2);border:1px solid var(--line);border-radius:8px;padding:9px;margin-bottom:6px;cursor:pointer}
+.kbnm{font-size:13.5px;font-weight:700}
+.kbmeta{font-size:11px;color:var(--ink2);margin-top:2px}
+.kblast{font-size:10.5px;color:var(--accent2);margin-top:3px}
 </style>
 </head>
 <body>
 <div id="root"><div class="load">読み込み中…</div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const BUILD='1791436205';
+const BUILD='1791437092';
 (function(){try{var K='shinchoku_cbv';fetch(location.pathname+'?_cb='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/const BUILD='([^']+)'/);if(m&&m[1]!==BUILD&&sessionStorage.getItem(K)!==m[1]){sessionStorage.setItem(K,m[1]);location.replace(location.pathname+(location.search?location.search+'&':'?')+'v='+m[1]);}}).catch(function(){});}catch(e){}})();
 const SB_URL='https://vfreehhenmwrbxkhcdvu.supabase.co';
 const SB_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmcmVlaGhlbm13cmJ4a2hjZHZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5NTE5NTAsImV4cCI6MjA5OTUyNzk1MH0.UQKIOeJmn0Yt6gqUC_TF0uoFiRl4poTJyv_tx6BotS8';
@@ -67,49 +78,54 @@ const METHODS=['電話','メール','LINE','訪問','その他'];
 function todayStr(){const d=new Date();const p=n=>(n<10?'0':'')+n;return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());}
 function dtxt(v){if(!v)return'';const s=String(v).slice(0,10).split('-');return (+s[1])+'/'+(+s[2]);}
 
+let VIEW=localStorage.getItem('shinchoku_view')||(window.innerWidth>=820?'kanban':'list');
+let ALLCASES=[],FILTER='',QUERY='';
+
 async function main(){
   try{
     const {data:cases,error}=await sb.from('cl_progress').select('*');
     if(error)throw error;
     const {data:logs}=await sb.from('cl_progress_log').select('case_no,log_date');
     const last={};(logs||[]).forEach(l=>{const d=String(l.log_date).slice(0,10);if(!last[l.case_no]||d>last[l.case_no])last[l.case_no]=d;});
-    renderList(cases||[],last);
+    (cases||[]).forEach(c=>c._last=last[c.case_no]||'');
+    ALLCASES=cases||[];
+    renderBoard();
   }catch(e){root.innerHTML='';root.appendChild($('div','load','エラー: '+e.message));}
 }
 
-function renderList(cases,last){
-  cases.forEach(c=>c._last=last[c.case_no]||'');
-  let filter='',query='';
+function renderBoard(){
   root.innerHTML='';
-  const hd=$('div','hd');const t=$('div');t.appendChild($('h1',null,'📋 案件 進捗管理'));t.appendChild($('div','sub','テスト版 ・ 案件ごとに進捗とやり取りを管理'));hd.appendChild(t);root.appendChild(hd);
+  const hd=$('div','hd');const t=$('div');t.appendChild($('h1',null,'📋 案件 進捗管理'));t.appendChild($('div','sub','テスト版 ・ 案件ごとに進捗とやり取りを管理'));hd.appendChild(t);
+  const tog=$('div','tog');[['list','≣ リスト'],['kanban','▦ カンバン']].forEach(([v,lab])=>{const b=$('button','tb'+(VIEW===v?' on':''),lab);b.onclick=()=>{VIEW=v;localStorage.setItem('shinchoku_view',v);renderBoard();};tog.appendChild(b);});hd.appendChild(tog);
+  root.appendChild(hd);
   const bar=$('div','bar');
-  const chips=[];
-  const mk=(k,label,color)=>{const b=$('div','chip',label);if(color)b.dataset.color=color;b.onclick=()=>{filter=(filter===k?'':k);chips.forEach(x=>{x.classList.toggle('on',x===b&&filter);if(x===b&&filter){x.style.background=color||'var(--accent2)';}else{x.style.background='';}});draw();};bar.appendChild(b);chips.push(b);};
-  mk('','すべて','var(--accent2)');
-  STATUSES.forEach(s=>mk(s[0],s[0],s[1]));
+  const mk=(k,label,color)=>{const b=$('div','chip',label);if(FILTER===k){b.classList.add('on');b.style.background=color;}b.onclick=()=>{FILTER=(FILTER===k?'':k);renderBoard();};bar.appendChild(b);};
+  mk('','すべて','var(--accent2)');STATUSES.forEach(s=>mk(s[0],s[0],s[1]));
   root.appendChild(bar);
-  const search=$('input','search');search.type='search';search.placeholder='🔍 物件名・担当・業者で検索';search.oninput=()=>{query=search.value.trim();draw();};root.appendChild(search);
-  const list=$('div');root.appendChild(list);
-  function draw(){
-    list.innerHTML='';
-    let ms=cases.slice();
-    if(filter)ms=ms.filter(c=>c.status===filter);
-    if(query){const q=query.toLowerCase();ms=ms.filter(c=>[c.prop,c.room,c.staff,c.vendor].some(v=>String(v||'').toLowerCase().indexOf(q)>=0));}
-    ms.sort((a,b)=>STATUSES.findIndex(s=>s[0]===a.status)-STATUSES.findIndex(s=>s[0]===b.status));
-    if(!ms.length){list.appendChild($('div','load','該当なし'));return;}
-    ms.forEach(c=>{
-      const r=$('div','row');
-      const m=$('div','main');
-      const nm=$('div','nm');nm.appendChild($('span','badge '+(c.kbn||''),KBN[c.kbn]||c.kbn||'—'));nm.appendChild(document.createTextNode(' '+(c.prop||'')+(c.room?' '+c.room:'')));
-      m.appendChild(nm);
-      m.appendChild($('div','meta',[c.vendor&&('業者:'+c.vendor),c.staff&&('担当:'+c.staff),c._last&&('最終やり取り '+dtxt(c._last))].filter(Boolean).join(' ・ ')||'—'));
-      r.appendChild(m);
-      const pill=$('span','pill',c.status);pill.style.background=SCOLOR[c.status]||'#6b7280';r.appendChild(pill);
-      r.onclick=()=>openCase(c);
-      list.appendChild(r);
-    });
+  const search=$('input','search');search.type='search';search.placeholder='🔍 物件名・担当・業者で検索';search.value=QUERY;search.oninput=()=>{QUERY=search.value.trim();drawBody();};root.appendChild(search);
+  const bodyEl=$('div');root.appendChild(bodyEl);
+  function filtered(){let ms=ALLCASES.slice();if(FILTER)ms=ms.filter(c=>c.status===FILTER);if(QUERY){const q=QUERY.toLowerCase();ms=ms.filter(c=>[c.prop,c.room,c.staff,c.vendor].some(v=>String(v||'').toLowerCase().indexOf(q)>=0));}return ms;}
+  function drawBody(){bodyEl.innerHTML='';const ms=filtered();if(VIEW==='kanban')drawKanban(bodyEl,ms);else drawList(bodyEl,ms);}
+  function drawList(cont,ms){
+    ms=ms.slice().sort((a,b)=>STATUSES.findIndex(s=>s[0]===a.status)-STATUSES.findIndex(s=>s[0]===b.status));
+    if(!ms.length){cont.appendChild($('div','load','該当なし'));return;}
+    ms.forEach(c=>{const r=$('div','row');const m=$('div','main');const nm=$('div','nm');nm.appendChild($('span','badge '+(c.kbn||''),KBN[c.kbn]||c.kbn||'—'));nm.appendChild(document.createTextNode(' '+(c.prop||'')+(c.room?' '+c.room:'')));m.appendChild(nm);m.appendChild($('div','meta',[c.vendor&&('業者:'+c.vendor),c.staff&&('担当:'+c.staff),c._last&&('最終やり取り '+dtxt(c._last))].filter(Boolean).join(' ・ ')||'—'));r.appendChild(m);const pill=$('span','pill',c.status);pill.style.background=SCOLOR[c.status]||'#6b7280';r.appendChild(pill);r.onclick=()=>openCase(c);cont.appendChild(r);});
   }
-  draw();
+  function drawKanban(cont,ms){
+    const kb=$('div','kb');
+    STATUSES.forEach(s=>{
+      const col=$('div','kbcol');col.dataset.status=s[0];
+      const items=ms.filter(c=>c.status===s[0]);
+      const head=$('div','kbhead',s[0]+' ・'+items.length);head.style.background=s[1];col.appendChild(head);
+      items.forEach(c=>{const card=$('div','kbcard');card.draggable=true;card.appendChild($('div','kbnm',(c.prop||'')+(c.room?' '+c.room:'')));card.appendChild($('div','kbmeta',[KBN[c.kbn]||c.kbn,c.staff].filter(Boolean).join(' ・ ')));if(c._last)card.appendChild($('div','kblast','最終 '+dtxt(c._last)));card.onclick=()=>openCase(c);card.ondragstart=e=>{e.dataTransfer.setData('text',String(c.id));};col.appendChild(card);});
+      col.ondragover=e=>{e.preventDefault();col.classList.add('over');};
+      col.ondragleave=()=>col.classList.remove('over');
+      col.ondrop=async e=>{e.preventDefault();col.classList.remove('over');const id=+e.dataTransfer.getData('text');const cc=ALLCASES.find(x=>x.id===id);if(!cc||cc.status===s[0])return;cc.status=s[0];drawBody();await sb.from('cl_progress').update({status:s[0],updated_at:new Date().toISOString()}).eq('id',id);};
+      kb.appendChild(col);
+    });
+    cont.appendChild(kb);
+  }
+  drawBody();
 }
 
 async function openCase(c){
