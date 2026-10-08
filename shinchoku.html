@@ -80,7 +80,7 @@ textarea{min-height:60px;resize:vertical}
 <div id="root"><div class="load">読み込み中…</div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const BUILD='1791550001';
+const BUILD='1791560001';
 (function(){try{var K='shinchoku_cbv';fetch(location.pathname+'?_cb='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/const BUILD='([^']+)'/);if(m&&m[1]!==BUILD&&sessionStorage.getItem(K)!==m[1]){sessionStorage.setItem(K,m[1]);location.replace(location.pathname+(location.search?location.search+'&':'?')+'v='+m[1]);}}).catch(function(){});}catch(e){}})();
 const SB_URL='https://vfreehhenmwrbxkhcdvu.supabase.co';
 const SB_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmcmVlaGhlbm13cmJ4a2hjZHZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5NTE5NTAsImV4cCI6MjA5OTUyNzk1MH0.UQKIOeJmn0Yt6gqUC_TF0uoFiRl4poTJyv_tx6BotS8';
@@ -206,13 +206,13 @@ async function openCase(c){
     });
   }
   // 手入力項目（アプリ内・編集可／案件一覧同期で上書きされない）
-  card.appendChild($('div','label','手入力（立会確認者・各工事の日程/施工者）'));
+  card.appendChild($('div','label','手入力（完了確認担当者・各工事の日程/施工者）'));
   const man=$('div');man.style.cssText='display:flex;flex-direction:column;gap:8px';
   const mh=$('div','savehint','');
   async function saveField(key,val){const nv=val||null;if((c[key]||null)===nv)return;const o={updated_at:new Date().toISOString()};o[key]=nv;c[key]=nv;const {error}=await sb.from('cl_progress').update(o).eq('id',c.id);mh.textContent=error?('保存失敗: '+error.message):'✓ 保存しました';setTimeout(()=>{mh.textContent='';},1400);}
   // 立会確認者（1件）
   {const row=$('div');row.style.cssText='display:flex;align-items:center;gap:8px';
-   const l=$('div',null,'立会確認者');l.style.cssText='flex:0 0 72px;font-size:13px;color:var(--ink2);font-weight:800';
+   const l=$('div',null,'完了確認担当者');l.style.cssText='flex:0 0 auto;white-space:nowrap;font-size:13px;color:var(--ink2);font-weight:800';
    const inp=$('input','finput');inp.type='text';inp.style.cssText='flex:1;margin:0';inp.placeholder='（未入力）';if(c.tachiai_checker)inp.value=c.tachiai_checker;inp.onblur=()=>saveField('tachiai_checker',inp.value);
    row.appendChild(l);row.appendChild(inp);man.appendChild(row);}
   // 各工事：日程＋施工者（種別ごとに別）
