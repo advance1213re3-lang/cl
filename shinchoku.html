@@ -100,7 +100,7 @@ textarea{min-height:72px;resize:vertical}
 <div id="root"><div class="load">読み込み中…</div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const BUILD='1791740001';
+const BUILD='1791750001';
 (function(){try{var K='shinchoku_cbv';fetch(location.pathname+'?_cb='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/const BUILD='([^']+)'/);if(m&&m[1]!==BUILD&&sessionStorage.getItem(K)!==m[1]){sessionStorage.setItem(K,m[1]);location.replace(location.pathname+(location.search?location.search+'&':'?')+'v='+m[1]+location.hash);}}).catch(function(){});}catch(e){}})();
 const SB_URL='https://vfreehhenmwrbxkhcdvu.supabase.co';
 const SB_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmcmVlaGhlbm13cmJ4a2hjZHZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5NTE5NTAsImV4cCI6MjA5OTUyNzk1MH0.UQKIOeJmn0Yt6gqUC_TF0uoFiRl4poTJyv_tx6BotS8';
@@ -174,6 +174,8 @@ async function loadData(){
     }catch(e){}
     ALLEVENTS.sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
     ALLCASES=cases||[];
+    // シート更新（新規/ステータス変化）をアプリ側で検知→cl_updatesへ（GAS不要）
+    try{ const ne=await detectChanges(); if(ne&&ne.length){ ne.forEach(ev=>ALLEVENTS.push({case_no:ev.case_no,date:ev.event_date,kind:ev.kind,text:ev.detail})); ALLEVENTS.sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))); } }catch(e){}
     // 各同期の最終実行時刻（synced_atの最大）
     SYNC={};
     try{
@@ -183,6 +185,18 @@ async function loadData(){
     LASTSYNC=new Date();
 }
 let INDETAIL=false, AUTOSET=false;
+async function detectChanges(){
+  try{
+    const {data:snap}=await sb.from('cl_status_snap').select('case_no,status');
+    const prev={};(snap||[]).forEach(s=>prev[s.case_no]=s.status);
+    const seeded=(snap&&snap.length>0);
+    const events=[],changed=[],nowIso=new Date().toISOString();
+    ALLCASES.forEach(c=>{const was=prev[c.case_no];if(was===c.status)return;changed.push({case_no:c.case_no,status:c.status,updated_at:nowIso});if(!seeded)return;if(was===undefined)events.push({uid:c.case_no+'|new',case_no:c.case_no,kind:'new',detail:'新規案件',event_date:nowIso});else events.push({uid:c.case_no+'|status|'+c.status,case_no:c.case_no,kind:'status',detail:'→ '+c.status,event_date:nowIso});});
+    if(events.length)await sb.from('cl_updates').upsert(events,{onConflict:'uid'});
+    if(changed.length)await sb.from('cl_status_snap').upsert(changed,{onConflict:'case_no'});
+    return events;
+  }catch(e){return [];}
+}
 async function main(){ try{ await loadData(); renderBoard(); startAutoRefresh(); const hv=decodeURIComponent((location.hash||'').replace(/^#/,'')).trim(); if(hv){ const c=ALLCASES.find(x=>x.case_no===hv); if(c) openCase(c); } }catch(e){ root.innerHTML=''; root.appendChild($('div','load','エラー: '+e.message)); } }
 async function refresh(){ if(INDETAIL) return; var ae=document.activeElement; if(ae&&/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)) return; try{ await loadData(); if(!INDETAIL) renderBoard(); }catch(e){} }
 function startAutoRefresh(){ if(AUTOSET) return; AUTOSET=true; setInterval(refresh,15000); document.addEventListener('visibilitychange',function(){ if(!document.hidden) refresh(); }); window.addEventListener('focus',refresh); }
