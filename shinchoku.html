@@ -101,7 +101,7 @@ textarea{min-height:72px;resize:vertical}
 <div id="root"><div class="load">読み込み中…</div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const BUILD='1791760001';
+const BUILD='1791770001';
 (function(){try{var K='shinchoku_cbv';fetch(location.pathname+'?_cb='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/const BUILD='([^']+)'/);if(m&&m[1]!==BUILD&&sessionStorage.getItem(K)!==m[1]){sessionStorage.setItem(K,m[1]);location.replace(location.pathname+(location.search?location.search+'&':'?')+'v='+m[1]+location.hash);}}).catch(function(){});}catch(e){}})();
 const SB_URL='https://vfreehhenmwrbxkhcdvu.supabase.co';
 const SB_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmcmVlaGhlbm13cmJ4a2hjZHZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5NTE5NTAsImV4cCI6MjA5OTUyNzk1MH0.UQKIOeJmn0Yt6gqUC_TF0uoFiRl4poTJyv_tx6BotS8';
@@ -178,12 +178,6 @@ async function loadData(){
     ALLCASES=cases||[];
     // シート更新（新規/ステータス変化）をアプリ側で検知→cl_updatesへ（GAS不要）
     try{ const ne=await detectChanges(); if(ne&&ne.length){ ne.forEach(ev=>ALLEVENTS.push({case_no:ev.case_no,date:ev.event_date,kind:ev.kind,text:ev.detail})); ALLEVENTS.sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))); } }catch(e){}
-    // 各同期の最終実行時刻（synced_atの最大）
-    SYNC={};
-    try{
-      const g=async(t)=>{const {data}=await sb.from(t).select('synced_at').not('synced_at','is',null).order('synced_at',{ascending:false}).limit(1);return (data&&data[0])?data[0].synced_at:null;};
-      SYNC.progress=await g('cl_progress');SYNC.materials=await g('cl_materials');SYNC.emails=await g('cl_emails');
-    }catch(e){}
     LASTSYNC=new Date();
 }
 let INDETAIL=false, AUTOSET=false;
@@ -213,7 +207,6 @@ function renderBoard(){
   const rb=$('button','tb','🔄');rb.title='最新に更新';rb.onclick=async()=>{rb.textContent='…';await loadData();renderBoard();};tog.appendChild(rb);
   [['list','≣ リスト'],['kanban','▦ カンバン']].forEach(([v,lab])=>{const b=$('button','tb'+(VIEW===v?' on':''),lab);b.onclick=()=>{VIEW=v;lsSet('shinchoku_view',v);renderBoard();};tog.appendChild(b);});hd.appendChild(tog);
   root.appendChild(hd);
-  root.appendChild(renderSyncBar());
   const bar=$('div','bar');
   const mk=(k,label,color)=>{const n=k?ALLCASES.filter(c=>c.status===k).length:ALLCASES.length;const b=$('div','chip',label+' '+n);if(FILTER===k){b.classList.add('on');b.style.background=color;}b.onclick=()=>{FILTER=(FILTER===k?'':k);renderBoard();};bar.appendChild(b);};
   mk('','すべて','var(--accent2)');STATUSES.forEach(s=>mk(s[0],s[0],s[1]));
