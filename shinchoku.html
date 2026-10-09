@@ -74,13 +74,20 @@ textarea{min-height:72px;resize:vertical}
 .kbnm{font-size:15px;font-weight:700}
 .kbmeta{font-size:12.5px;color:var(--ink2);margin-top:3px}
 .kblast{font-size:12px;color:var(--accent2);margin-top:3px}
+.mailit{background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-top:8px}
+.mailhd{display:flex;gap:10px;align-items:baseline;cursor:pointer}
+.maild{font-weight:800;color:var(--accent2);font-size:13.5px;white-space:nowrap}
+.mailsub{font-size:15px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.mailfrom{font-size:12.5px;color:var(--ink2);margin-top:3px}
+.mailbody{font-size:15px;line-height:1.6;white-space:pre-wrap;margin-top:8px;padding-top:8px;border-top:1px solid var(--line)}
+.maillink{display:inline-block;margin-top:8px;color:var(--accent);font-weight:700;text-decoration:none;font-size:13.5px}
 </style>
 </head>
 <body>
 <div id="root"><div class="load">読み込み中…</div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const BUILD='1791680001';
+const BUILD='1791690001';
 (function(){try{var K='shinchoku_cbv';fetch(location.pathname+'?_cb='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/const BUILD='([^']+)'/);if(m&&m[1]!==BUILD&&sessionStorage.getItem(K)!==m[1]){sessionStorage.setItem(K,m[1]);location.replace(location.pathname+(location.search?location.search+'&':'?')+'v='+m[1]);}}).catch(function(){});}catch(e){}})();
 const SB_URL='https://vfreehhenmwrbxkhcdvu.supabase.co';
 const SB_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmcmVlaGhlbm13cmJ4a2hjZHZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5NTE5NTAsImV4cCI6MjA5OTUyNzk1MH0.UQKIOeJmn0Yt6gqUC_TF0uoFiRl4poTJyv_tx6BotS8';
@@ -102,7 +109,7 @@ function yen(n){if(n==null||n==='')return'';const v=Number(n);if(!isFinite(v)||v
 function lsGet(k){try{return localStorage.getItem(k);}catch(e){return null;}}
 function lsSet(k,v){try{localStorage.setItem(k,v);}catch(e){}}
 let VIEW=lsGet('shinchoku_view')||(window.innerWidth>=820?'kanban':'list');
-let ALLCASES=[],CASEWORK={},CASEMAT={},FILTER='',QUERY='',LASTSYNC=null;
+let ALLCASES=[],CASEWORK={},CASEMAT={},CASEMAIL={},FILTER='',QUERY='',LASTSYNC=null;
 function hhmm(d){if(!d)return'';const p=n=>(n<10?'0':'')+n;return p(d.getHours())+':'+p(d.getMinutes());}
 function shopName(u){try{const h=new URL(u).hostname.replace('www.','');if(/amazon/.test(h))return'Amazon';if(/rakuten/.test(h))return'楽天';if(/monotaro/.test(h))return'モノタロウ';if(/yahoo/.test(h))return'Yahoo';if(/askul/.test(h))return'アスクル';return h.split('.')[0];}catch(e){return'';}}
 function addrPart(a){if(!a)return'';const m=String(a).match(/(東京都|北海道|大阪府|京都府|..[都道府県])/);return m?String(a).slice(String(a).indexOf(m[0])):String(a);}
@@ -124,6 +131,12 @@ async function loadData(){
     try{
       const {data:mts}=await sb.from('cl_materials').select('case_no,prop,room,staff,order_url,ordered,order_date,delivered,delivery_date,orderer,order_no,note');
       (mts||[]).forEach(w=>{if(w.case_no)(CASEMAT[w.case_no]=CASEMAT[w.case_no]||[]).push(w);});
+    }catch(e){}
+    // cl_emails（are8kanri CCから突合）を束ねる
+    CASEMAIL={};
+    try{
+      const {data:ems}=await sb.from('cl_emails').select('case_no,subject,from_addr,mail_date,body,gmail_url').order('mail_date',{ascending:false});
+      (ems||[]).forEach(e=>{if(e.case_no)(CASEMAIL[e.case_no]=CASEMAIL[e.case_no]||[]).push(e);});
     }catch(e){}
     ALLCASES=cases||[];
     LASTSYNC=new Date();
@@ -279,6 +292,26 @@ async function openCase(c){
   memo.onblur=async()=>{if((c.memo||'')===memo.value)return;const {error}=await sb.from('cl_progress').update({memo:memo.value,updated_at:new Date().toISOString()}).eq('id',c.id);sh2.textContent=error?'保存失敗':'✓ 保存しました';c.memo=memo.value;setTimeout(()=>sh2.textContent='',1500);};
   card.appendChild(memo);card.appendChild(sh2);
   root.appendChild(card);
+  // メール（are8kanri CCから突合・クリックで本文展開）
+  const mails=(CASEMAIL[c.case_no]||[]).slice().sort((a,b)=>String(b.mail_date||'').localeCompare(String(a.mail_date||'')));
+  if(mails.length){
+    const mcard=$('div','card');
+    mcard.appendChild($('h2',null,'✉️ メール '+mails.length+'件'));
+    mails.forEach(m=>{
+      const it=$('div','mailit');
+      const hd=$('div','mailhd');
+      hd.appendChild($('span','maild',dtxt(m.mail_date)));
+      hd.appendChild($('span','mailsub',(m.subject||'(件名なし)')));
+      const bd=$('div','mailbody');bd.textContent=m.body||'';bd.style.display='none';
+      hd.onclick=()=>{bd.style.display=(bd.style.display==='none'?'block':'none');};
+      it.appendChild(hd);
+      if(m.from_addr)it.appendChild($('div','mailfrom',m.from_addr));
+      it.appendChild(bd);
+      if(m.gmail_url){const a=document.createElement('a');a.href=m.gmail_url;a.target='_blank';a.rel='noopener';a.textContent='Gmailで開く ↗';a.className='maillink';it.appendChild(a);}
+      mcard.appendChild(it);
+    });
+    root.appendChild(mcard);
+  }
   // やり取り履歴
   const lcard=$('div','card');
   lcard.appendChild($('h2',null,'やり取り履歴'));
