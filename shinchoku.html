@@ -81,16 +81,20 @@ textarea{min-height:72px;resize:vertical}
 .mailfrom{font-size:12.5px;color:var(--ink2);margin-top:3px}
 .mailbody{font-size:15px;line-height:1.6;white-space:pre-wrap;margin-top:8px;padding-top:8px;border-top:1px solid var(--line)}
 .maillink{display:inline-block;margin-top:8px;color:var(--accent);font-weight:700;text-decoration:none;font-size:13.5px}
-.syncbar{display:flex;flex-wrap:wrap;gap:14px;align-items:center;font-size:13px;color:var(--ink2);background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:9px 13px;margin-bottom:12px}
-.syncbar .si{display:flex;align-items:center;gap:6px;font-weight:700}
-.syncdot{width:10px;height:10px;border-radius:50%;display:inline-block}
+.syncbar{display:flex;flex-direction:column;gap:7px;background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:12px}
+.syncbar .hdln{display:flex;align-items:center;gap:8px;font-size:14.5px;margin-bottom:2px}
+.syncbar .hdln .t{font-weight:800;color:var(--ink)}
+.syncbar .si{display:flex;align-items:center;gap:9px;font-size:14px}
+.syncbar .si .nm{flex:1;color:var(--ink);font-weight:700}
+.syncbar .si .st{font-size:12.5px;color:var(--ink2);white-space:nowrap}
+.syncdot{width:11px;height:11px;border-radius:50%;display:inline-block;flex:0 0 11px}
 </style>
 </head>
 <body>
 <div id="root"><div class="load">読み込み中…</div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const BUILD='1791720001';
+const BUILD='1791730001';
 (function(){try{var K='shinchoku_cbv';fetch(location.pathname+'?_cb='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/const BUILD='([^']+)'/);if(m&&m[1]!==BUILD&&sessionStorage.getItem(K)!==m[1]){sessionStorage.setItem(K,m[1]);location.replace(location.pathname+(location.search?location.search+'&':'?')+'v='+m[1]+location.hash);}}).catch(function(){});}catch(e){}})();
 const SB_URL='https://vfreehhenmwrbxkhcdvu.supabase.co';
 const SB_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmcmVlaGhlbm13cmJ4a2hjZHZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5NTE5NTAsImV4cCI6MjA5OTUyNzk1MH0.UQKIOeJmn0Yt6gqUC_TF0uoFiRl4poTJyv_tx6BotS8';
@@ -117,8 +121,19 @@ function lsSet(k,v){try{localStorage.setItem(k,v);}catch(e){}}
 let VIEW=lsGet('shinchoku_view')||(window.innerWidth>=820?'kanban':'list');
 let ALLCASES=[],CASEWORK={},CASEMAT={},CASEMAIL={},FILTER='',QUERY='',LASTSYNC=null,SYNC={};
 function hhmm(d){if(!d)return'';const p=n=>(n<10?'0':'')+n;return p(d.getHours())+':'+p(d.getMinutes());}
-function syncItem(label,key,intMin){const last=SYNC[key]?new Date(SYNC[key]):null;const w=$('span','si');const dot=$('span','syncdot');let color='#6b7280';if(last){const mins=(Date.now()-last.getTime())/60000;color=mins<intMin*2.5?'#16a34a':(mins<intMin*8?'#d97706':'#dc2626');}dot.style.background=color;w.appendChild(dot);w.appendChild($('span',null,label+' '+(last?hhmm(last):'—')));return w;}
-function renderSyncBar(){const b=$('div','syncbar');b.appendChild($('span',null,'🔌 同期'));b.appendChild(syncItem('進捗','progress',1));b.appendChild(syncItem('資材','materials',10));b.appendChild(syncItem('メール','emails',10));return b;}
+function relTime(d){if(!d)return'';const m=Math.floor((Date.now()-d.getTime())/60000);if(m<1)return'たった今';if(m<60)return m+'分前';const h=Math.floor(m/60);if(h<24)return h+'時間前';return Math.floor(h/24)+'日前';}
+function syncLevel(key,intMin){const last=SYNC[key]?new Date(SYNC[key]):null;if(!last)return{lv:3,last:null};const mins=(Date.now()-last.getTime())/60000;return{lv:mins<intMin*2.5?0:(mins<intMin*8?1:2),last:last};}
+function syncRow(label,key,intMin){const s=syncLevel(key,intMin);const col=['#16a34a','#d97706','#dc2626','#6b7280'][s.lv];const word=['正常に稼働中','やや遅延','止まっているかも','データなし'][s.lv];
+  const row=$('div','si');const dot=$('span','syncdot');dot.style.background=col;row.appendChild(dot);
+  row.appendChild($('span','nm',label));
+  const st=$('span','st',word+(s.last?'・'+relTime(s.last):''));st.style.color=s.lv===0?'var(--ink2)':col;row.appendChild(st);return row;}
+function renderSyncBar(){const b=$('div','syncbar');
+  const defs=[['案件の進捗（案件一覧）','progress',1],['資材発注','materials',10],['メール取込','emails',10]];
+  const worst=Math.max.apply(null,defs.map(d=>syncLevel(d[1],d[2]).lv===3?2:syncLevel(d[1],d[2]).lv));
+  const sum=[['すべて正常','#16a34a'],['一部やや遅延','#d97706'],['要確認（止まってるかも）','#dc2626']][worst];
+  const hd=$('div','hdln');hd.appendChild($('span','t','🔌 自動同期'));const bg=$('span',null,sum[0]);bg.style.cssText='font-weight:800;color:'+sum[1];hd.appendChild(bg);b.appendChild(hd);
+  defs.forEach(d=>b.appendChild(syncRow(d[0],d[1],d[2])));
+  return b;}
 function shopName(u){try{const h=new URL(u).hostname.replace('www.','');if(/amazon/.test(h))return'Amazon';if(/rakuten/.test(h))return'楽天';if(/monotaro/.test(h))return'モノタロウ';if(/yahoo/.test(h))return'Yahoo';if(/askul/.test(h))return'アスクル';return h.split('.')[0];}catch(e){return'';}}
 function addrPart(a){if(!a)return'';const m=String(a).match(/(東京都|北海道|大阪府|京都府|..[都道府県])/);return m?String(a).slice(String(a).indexOf(m[0])):String(a);}
 
