@@ -88,13 +88,19 @@ textarea{min-height:72px;resize:vertical}
 .syncbar .si .nm{flex:1;color:var(--ink);font-weight:700}
 .syncbar .si .st{font-size:12.5px;color:var(--ink2);white-space:nowrap}
 .syncdot{width:11px;height:11px;border-radius:50%;display:inline-block;flex:0 0 11px}
+.recit{padding:9px 0;border-top:1px solid var(--line);cursor:pointer}
+.recit:active{opacity:.7}
+.recit .rtop{display:flex;gap:9px;align-items:baseline}
+.recd{color:var(--accent2);font-weight:800;font-size:13px;white-space:nowrap;flex:0 0 auto}
+.recnm{font-weight:700;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.recsub{color:var(--ink2);font-size:13px;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 </style>
 </head>
 <body>
 <div id="root"><div class="load">読み込み中…</div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const BUILD='1791730001';
+const BUILD='1791740001';
 (function(){try{var K='shinchoku_cbv';fetch(location.pathname+'?_cb='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/const BUILD='([^']+)'/);if(m&&m[1]!==BUILD&&sessionStorage.getItem(K)!==m[1]){sessionStorage.setItem(K,m[1]);location.replace(location.pathname+(location.search?location.search+'&':'?')+'v='+m[1]+location.hash);}}).catch(function(){});}catch(e){}})();
 const SB_URL='https://vfreehhenmwrbxkhcdvu.supabase.co';
 const SB_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmcmVlaGhlbm13cmJ4a2hjZHZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5NTE5NTAsImV4cCI6MjA5OTUyNzk1MH0.UQKIOeJmn0Yt6gqUC_TF0uoFiRl4poTJyv_tx6BotS8';
@@ -119,7 +125,7 @@ function byNew(a,b){const ra=recency(a),rb=recency(b);if(ra&&rb)return rb.locale
 function lsGet(k){try{return localStorage.getItem(k);}catch(e){return null;}}
 function lsSet(k,v){try{localStorage.setItem(k,v);}catch(e){}}
 let VIEW=lsGet('shinchoku_view')||(window.innerWidth>=820?'kanban':'list');
-let ALLCASES=[],CASEWORK={},CASEMAT={},CASEMAIL={},FILTER='',QUERY='',LASTSYNC=null,SYNC={};
+let ALLCASES=[],CASEWORK={},CASEMAT={},CASEMAIL={},ALLEVENTS=[],FILTER='',QUERY='',LASTSYNC=null,SYNC={};
 function hhmm(d){if(!d)return'';const p=n=>(n<10?'0':'')+n;return p(d.getHours())+':'+p(d.getMinutes());}
 function relTime(d){if(!d)return'';const m=Math.floor((Date.now()-d.getTime())/60000);if(m<1)return'たった今';if(m<60)return m+'分前';const h=Math.floor(m/60);if(h<24)return h+'時間前';return Math.floor(h/24)+'日前';}
 function syncLevel(key,intMin){const last=SYNC[key]?new Date(SYNC[key]):null;if(!last)return{lv:3,last:null};const mins=(Date.now()-last.getTime())/60000;return{lv:mins<intMin*2.5?0:(mins<intMin*8?1:2),last:last};}
@@ -155,12 +161,18 @@ async function loadData(){
       const {data:mts}=await sb.from('cl_materials').select('case_no,prop,room,staff,order_url,ordered,order_date,delivered,delivery_date,orderer,order_no,note');
       (mts||[]).forEach(w=>{if(w.case_no)(CASEMAT[w.case_no]=CASEMAT[w.case_no]||[]).push(w);});
     }catch(e){}
-    // cl_emails（are8kanri CCから突合）を束ねる
-    CASEMAIL={};
+    // cl_emails（are8kanri CCから突合）を束ねる＋最近の更新用イベント
+    CASEMAIL={};ALLEVENTS=[];
     try{
       const {data:ems}=await sb.from('cl_emails').select('case_no,subject,from_addr,mail_date,body,gmail_url').order('mail_date',{ascending:false});
-      (ems||[]).forEach(e=>{if(e.case_no)(CASEMAIL[e.case_no]=CASEMAIL[e.case_no]||[]).push(e);});
+      (ems||[]).forEach(e=>{if(e.case_no){(CASEMAIL[e.case_no]=CASEMAIL[e.case_no]||[]).push(e);ALLEVENTS.push({case_no:e.case_no,date:e.mail_date,kind:'mail',text:e.subject||'メール'});}});
     }catch(e){}
+    // cl_updates（シートの更新＝新規/ステータス変化）
+    try{
+      const {data:ups}=await sb.from('cl_updates').select('case_no,event_date,kind,detail').order('event_date',{ascending:false}).limit(50);
+      (ups||[]).forEach(u=>{if(u.case_no)ALLEVENTS.push({case_no:u.case_no,date:u.event_date,kind:u.kind||'sheet',text:u.detail||''});});
+    }catch(e){}
+    ALLEVENTS.sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
     ALLCASES=cases||[];
     // 各同期の最終実行時刻（synced_atの最大）
     SYNC={};
@@ -193,7 +205,22 @@ function renderBoard(){
   const search=$('input','search');search.type='search';search.placeholder='🔍 物件名・担当・業者で検索';search.value=QUERY;search.oninput=()=>{QUERY=search.value.trim();drawBody();};root.appendChild(search);
   const bodyEl=$('div');root.appendChild(bodyEl);
   function filtered(){let ms=ALLCASES.slice();if(FILTER)ms=ms.filter(c=>c.status===FILTER);if(QUERY){const q=QUERY.toLowerCase();ms=ms.filter(c=>[c.prop,c.staff,c.vendor,c.work_item,c.case_no].some(v=>String(v||'').toLowerCase().indexOf(q)>=0));}return ms;}
-  function drawBody(){bodyEl.innerHTML='';const ms=filtered();if(VIEW==='kanban')drawKanban(bodyEl,ms);else drawList(bodyEl,ms);}
+  function drawRecent(cont){
+    if(!ALLEVENTS.length)return;
+    const card=$('div','card');card.style.padding='12px 14px';
+    card.appendChild($('div','label','📬 最近の更新'));
+    ALLEVENTS.slice(0,5).forEach(ev=>{
+      const prop=(ALLCASES.find(x=>x.case_no===ev.case_no)||{}).prop||ev.case_no;
+      const icon=ev.kind==='mail'?'✉️':(ev.kind==='new'?'🆕':'📝');
+      const r=$('div','recit');
+      const top=$('div','rtop');top.appendChild($('span','recd',dtxt(ev.date)));top.appendChild($('span','recnm',icon+' '+prop));r.appendChild(top);
+      if(ev.text)r.appendChild($('div','recsub',ev.text));
+      r.onclick=()=>{const c=ALLCASES.find(x=>x.case_no===ev.case_no);if(c)openCase(c);};
+      card.appendChild(r);
+    });
+    cont.appendChild(card);
+  }
+  function drawBody(){bodyEl.innerHTML='';if(!FILTER&&!QUERY)drawRecent(bodyEl);const ms=filtered();if(VIEW==='kanban')drawKanban(bodyEl,ms);else drawList(bodyEl,ms);}
   function drawList(cont,ms){
     ms=ms.slice().sort(byNew);
     if(!ms.length){cont.appendChild($('div','load','該当なし'));return;}
