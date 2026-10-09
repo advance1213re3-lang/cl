@@ -80,7 +80,7 @@ textarea{min-height:60px;resize:vertical}
 <div id="root"><div class="load">読み込み中…</div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const BUILD='1791610001';
+const BUILD='1791620001';
 (function(){try{var K='shinchoku_cbv';fetch(location.pathname+'?_cb='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/const BUILD='([^']+)'/);if(m&&m[1]!==BUILD&&sessionStorage.getItem(K)!==m[1]){sessionStorage.setItem(K,m[1]);location.replace(location.pathname+(location.search?location.search+'&':'?')+'v='+m[1]);}}).catch(function(){});}catch(e){}})();
 const SB_URL='https://vfreehhenmwrbxkhcdvu.supabase.co';
 const SB_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmcmVlaGhlbm13cmJ4a2hjZHZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5NTE5NTAsImV4cCI6MjA5OTUyNzk1MH0.UQKIOeJmn0Yt6gqUC_TF0uoFiRl4poTJyv_tx6BotS8';
@@ -188,6 +188,14 @@ async function openCase(c){
     row.appendChild($('span',null,'📍 '));row.appendChild(document.createTextNode(ap));
     const a=document.createElement('a');a.href='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(ap);a.target='_blank';a.rel='noopener';a.textContent=' 地図↗';a.style.cssText='color:var(--accent);font-weight:700;margin-left:6px;text-decoration:none';row.appendChild(a);
     card.appendChild(row);}
+  // 見積書・完了写真（Driveフォルダ）
+  if(c.quote_url||c.photos_url){
+    const drow=$('div');drow.style.cssText='display:flex;gap:10px;flex-wrap:wrap;margin-top:10px';
+    const mk=(href,txt)=>{const a=document.createElement('a');a.href=href;a.target='_blank';a.rel='noopener';a.textContent=txt;a.style.cssText='background:var(--surface2);border:1px solid var(--line);border-radius:8px;padding:7px 13px;color:var(--accent);font-weight:800;text-decoration:none;font-size:13.5px';drow.appendChild(a);};
+    if(c.quote_url)mk(c.quote_url,'📄 見積書');
+    if(c.photos_url)mk(c.photos_url,'📷 完了写真');
+    card.appendChild(drow);
+  }
   // 工程ステッパー
   card.appendChild($('div','label','工程'));
   const steps=$('div','steps');
