@@ -87,7 +87,7 @@ textarea{min-height:72px;resize:vertical}
 <div id="root"><div class="load">読み込み中…</div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const BUILD='1791690001';
+const BUILD='1791700001';
 (function(){try{var K='shinchoku_cbv';fetch(location.pathname+'?_cb='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/const BUILD='([^']+)'/);if(m&&m[1]!==BUILD&&sessionStorage.getItem(K)!==m[1]){sessionStorage.setItem(K,m[1]);location.replace(location.pathname+(location.search?location.search+'&':'?')+'v='+m[1]);}}).catch(function(){});}catch(e){}})();
 const SB_URL='https://vfreehhenmwrbxkhcdvu.supabase.co';
 const SB_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmcmVlaGhlbm13cmJ4a2hjZHZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5NTE5NTAsImV4cCI6MjA5OTUyNzk1MH0.UQKIOeJmn0Yt6gqUC_TF0uoFiRl4poTJyv_tx6BotS8';
@@ -105,6 +105,9 @@ const KBNJ={setsubi:'設備',naiso:'内装',seisou:'清掃'};
 function todayStr(){const d=new Date();const p=n=>(n<10?'0':'')+n;return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());}
 function dtxt(v){if(!v)return'';const s=String(v).slice(0,10).split('-');return s[0]+'/'+(+s[1])+'/'+(+s[2]);}
 function yen(n){if(n==null||n==='')return'';const v=Number(n);if(!isFinite(v)||v===0)return'';return '¥'+v.toLocaleString('ja-JP');}
+// 新しい順の基準：立会/見積/発注/完工予定/完工 のうち一番新しい日付
+function recency(c){const ds=[c.date_tachiai,c.date_mitsumori,c.date_hacchu,c.date_kanko_yotei,c.date_kanko].filter(Boolean).map(d=>String(d).slice(0,10)).sort();return ds.length?ds[ds.length-1]:'';}
+function byNew(a,b){const ra=recency(a),rb=recency(b);if(ra&&rb)return rb.localeCompare(ra);if(ra)return -1;if(rb)return 1;return 0;}
 
 function lsGet(k){try{return localStorage.getItem(k);}catch(e){return null;}}
 function lsSet(k,v){try{localStorage.setItem(k,v);}catch(e){}}
@@ -165,7 +168,7 @@ function renderBoard(){
   function filtered(){let ms=ALLCASES.slice();if(FILTER)ms=ms.filter(c=>c.status===FILTER);if(QUERY){const q=QUERY.toLowerCase();ms=ms.filter(c=>[c.prop,c.staff,c.vendor,c.work_item,c.case_no].some(v=>String(v||'').toLowerCase().indexOf(q)>=0));}return ms;}
   function drawBody(){bodyEl.innerHTML='';const ms=filtered();if(VIEW==='kanban')drawKanban(bodyEl,ms);else drawList(bodyEl,ms);}
   function drawList(cont,ms){
-    ms=ms.slice().sort((a,b)=>statusIdx(a.status)-statusIdx(b.status)||String(a.date_tachiai||'').localeCompare(String(b.date_tachiai||'')));
+    ms=ms.slice().sort(byNew);
     if(!ms.length){cont.appendChild($('div','load','該当なし'));return;}
     ms.forEach(c=>{const r=$('div','row');const m=$('div','main');
       const nm=$('div','nm',c.prop||c.case_no||'—');m.appendChild(nm);
@@ -176,7 +179,7 @@ function renderBoard(){
   function drawKanban(cont,ms){
     const kb=$('div','kb');
     STATUSES.forEach(s=>{
-      const col=$('div','kbcol');const items=ms.filter(c=>c.status===s[0]);
+      const col=$('div','kbcol');const items=ms.filter(c=>c.status===s[0]).sort(byNew);
       const head=$('div','kbhead',s[0]+' ・'+items.length);head.style.background=s[1];col.appendChild(head);
       items.forEach(c=>{const card=$('div','kbcard');card.appendChild($('div','kbnm',c.prop||c.case_no));card.appendChild($('div','kbmeta',[c.staff,yen(c.amount)].filter(Boolean).join(' ・ ')));if(c._last)card.appendChild($('div','kblast','最終 '+dtxt(c._last)));card.onclick=()=>openCase(c);col.appendChild(card);});
       kb.appendChild(col);
