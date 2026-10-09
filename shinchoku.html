@@ -80,7 +80,7 @@ textarea{min-height:72px;resize:vertical}
 <div id="root"><div class="load">読み込み中…</div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const BUILD='1791670001';
+const BUILD='1791680001';
 (function(){try{var K='shinchoku_cbv';fetch(location.pathname+'?_cb='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/const BUILD='([^']+)'/);if(m&&m[1]!==BUILD&&sessionStorage.getItem(K)!==m[1]){sessionStorage.setItem(K,m[1]);location.replace(location.pathname+(location.search?location.search+'&':'?')+'v='+m[1]);}}).catch(function(){});}catch(e){}})();
 const SB_URL='https://vfreehhenmwrbxkhcdvu.supabase.co';
 const SB_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmcmVlaGhlbm13cmJ4a2hjZHZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5NTE5NTAsImV4cCI6MjA5OTUyNzk1MH0.UQKIOeJmn0Yt6gqUC_TF0uoFiRl4poTJyv_tx6BotS8';
@@ -102,7 +102,8 @@ function yen(n){if(n==null||n==='')return'';const v=Number(n);if(!isFinite(v)||v
 function lsGet(k){try{return localStorage.getItem(k);}catch(e){return null;}}
 function lsSet(k,v){try{localStorage.setItem(k,v);}catch(e){}}
 let VIEW=lsGet('shinchoku_view')||(window.innerWidth>=820?'kanban':'list');
-let ALLCASES=[],CASEWORK={},CASEMAT={},FILTER='',QUERY='';
+let ALLCASES=[],CASEWORK={},CASEMAT={},FILTER='',QUERY='',LASTSYNC=null;
+function hhmm(d){if(!d)return'';const p=n=>(n<10?'0':'')+n;return p(d.getHours())+':'+p(d.getMinutes());}
 function shopName(u){try{const h=new URL(u).hostname.replace('www.','');if(/amazon/.test(h))return'Amazon';if(/rakuten/.test(h))return'楽天';if(/monotaro/.test(h))return'モノタロウ';if(/yahoo/.test(h))return'Yahoo';if(/askul/.test(h))return'アスクル';return h.split('.')[0];}catch(e){return'';}}
 function addrPart(a){if(!a)return'';const m=String(a).match(/(東京都|北海道|大阪府|京都府|..[都道府県])/);return m?String(a).slice(String(a).indexOf(m[0])):String(a);}
 
@@ -125,6 +126,7 @@ async function loadData(){
       (mts||[]).forEach(w=>{if(w.case_no)(CASEMAT[w.case_no]=CASEMAT[w.case_no]||[]).push(w);});
     }catch(e){}
     ALLCASES=cases||[];
+    LASTSYNC=new Date();
 }
 let INDETAIL=false, AUTOSET=false;
 async function main(){ try{ await loadData(); renderBoard(); startAutoRefresh(); }catch(e){ root.innerHTML=''; root.appendChild($('div','load','エラー: '+e.message)); } }
@@ -136,8 +138,10 @@ function statusIdx(s){const i=STATUSES.findIndex(x=>x[0]===s);return i<0?0:i;}
 function renderBoard(){
   INDETAIL=false;
   root.innerHTML='';
-  const hd=$('div','hd');const t=$('div');t.appendChild($('h1',null,'📋 案件 進捗管理'));t.appendChild($('div','sub',ALLCASES.length+'件'));hd.appendChild(t);
-  const tog=$('div','tog');[['list','≣ リスト'],['kanban','▦ カンバン']].forEach(([v,lab])=>{const b=$('button','tb'+(VIEW===v?' on':''),lab);b.onclick=()=>{VIEW=v;lsSet('shinchoku_view',v);renderBoard();};tog.appendChild(b);});hd.appendChild(tog);
+  const hd=$('div','hd');const t=$('div');t.appendChild($('h1',null,'📋 案件 進捗管理'));t.appendChild($('div','sub',ALLCASES.length+'件'+(LASTSYNC?' ・ 更新 '+hhmm(LASTSYNC):'')));hd.appendChild(t);
+  const tog=$('div','tog');
+  const rb=$('button','tb','🔄');rb.title='最新に更新';rb.onclick=async()=>{rb.textContent='…';await loadData();renderBoard();};tog.appendChild(rb);
+  [['list','≣ リスト'],['kanban','▦ カンバン']].forEach(([v,lab])=>{const b=$('button','tb'+(VIEW===v?' on':''),lab);b.onclick=()=>{VIEW=v;lsSet('shinchoku_view',v);renderBoard();};tog.appendChild(b);});hd.appendChild(tog);
   root.appendChild(hd);
   const bar=$('div','bar');
   const mk=(k,label,color)=>{const n=k?ALLCASES.filter(c=>c.status===k).length:ALLCASES.length;const b=$('div','chip',label+' '+n);if(FILTER===k){b.classList.add('on');b.style.background=color;}b.onclick=()=>{FILTER=(FILTER===k?'':k);renderBoard();};bar.appendChild(b);};
