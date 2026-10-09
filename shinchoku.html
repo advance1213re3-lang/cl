@@ -80,7 +80,7 @@ textarea{min-height:72px;resize:vertical}
 <div id="root"><div class="load">読み込み中…</div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const BUILD='1791660001';
+const BUILD='1791670001';
 (function(){try{var K='shinchoku_cbv';fetch(location.pathname+'?_cb='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/const BUILD='([^']+)'/);if(m&&m[1]!==BUILD&&sessionStorage.getItem(K)!==m[1]){sessionStorage.setItem(K,m[1]);location.replace(location.pathname+(location.search?location.search+'&':'?')+'v='+m[1]);}}).catch(function(){});}catch(e){}})();
 const SB_URL='https://vfreehhenmwrbxkhcdvu.supabase.co';
 const SB_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmcmVlaGhlbm13cmJ4a2hjZHZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5NTE5NTAsImV4cCI6MjA5OTUyNzk1MH0.UQKIOeJmn0Yt6gqUC_TF0uoFiRl4poTJyv_tx6BotS8';
@@ -96,7 +96,7 @@ const LIFE=[['date_tachiai','立会'],['date_mitsumori','見積提出'],['date_h
 const KBN3=[['setsubi','設備'],['naiso','内装'],['seisou','清掃']];
 const KBNJ={setsubi:'設備',naiso:'内装',seisou:'清掃'};
 function todayStr(){const d=new Date();const p=n=>(n<10?'0':'')+n;return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());}
-function dtxt(v){if(!v)return'';const s=String(v).slice(0,10).split('-');return (+s[1])+'/'+(+s[2]);}
+function dtxt(v){if(!v)return'';const s=String(v).slice(0,10).split('-');return s[0]+'/'+(+s[1])+'/'+(+s[2]);}
 function yen(n){if(n==null||n==='')return'';const v=Number(n);if(!isFinite(v)||v===0)return'';return '¥'+v.toLocaleString('ja-JP');}
 
 function lsGet(k){try{return localStorage.getItem(k);}catch(e){return null;}}
