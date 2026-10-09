@@ -87,8 +87,8 @@ textarea{min-height:72px;resize:vertical}
 <div id="root"><div class="load">読み込み中…</div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const BUILD='1791700001';
-(function(){try{var K='shinchoku_cbv';fetch(location.pathname+'?_cb='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/const BUILD='([^']+)'/);if(m&&m[1]!==BUILD&&sessionStorage.getItem(K)!==m[1]){sessionStorage.setItem(K,m[1]);location.replace(location.pathname+(location.search?location.search+'&':'?')+'v='+m[1]);}}).catch(function(){});}catch(e){}})();
+const BUILD='1791710001';
+(function(){try{var K='shinchoku_cbv';fetch(location.pathname+'?_cb='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/const BUILD='([^']+)'/);if(m&&m[1]!==BUILD&&sessionStorage.getItem(K)!==m[1]){sessionStorage.setItem(K,m[1]);location.replace(location.pathname+(location.search?location.search+'&':'?')+'v='+m[1]+location.hash);}}).catch(function(){});}catch(e){}})();
 const SB_URL='https://vfreehhenmwrbxkhcdvu.supabase.co';
 const SB_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmcmVlaGhlbm13cmJ4a2hjZHZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5NTE5NTAsImV4cCI6MjA5OTUyNzk1MH0.UQKIOeJmn0Yt6gqUC_TF0uoFiRl4poTJyv_tx6BotS8';
 const sb=supabase.createClient(SB_URL,SB_ANON);
@@ -145,7 +145,7 @@ async function loadData(){
     LASTSYNC=new Date();
 }
 let INDETAIL=false, AUTOSET=false;
-async function main(){ try{ await loadData(); renderBoard(); startAutoRefresh(); }catch(e){ root.innerHTML=''; root.appendChild($('div','load','エラー: '+e.message)); } }
+async function main(){ try{ await loadData(); renderBoard(); startAutoRefresh(); const hv=decodeURIComponent((location.hash||'').replace(/^#/,'')).trim(); if(hv){ const c=ALLCASES.find(x=>x.case_no===hv); if(c) openCase(c); } }catch(e){ root.innerHTML=''; root.appendChild($('div','load','エラー: '+e.message)); } }
 async function refresh(){ if(INDETAIL) return; var ae=document.activeElement; if(ae&&/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)) return; try{ await loadData(); if(!INDETAIL) renderBoard(); }catch(e){} }
 function startAutoRefresh(){ if(AUTOSET) return; AUTOSET=true; setInterval(refresh,15000); document.addEventListener('visibilitychange',function(){ if(!document.hidden) refresh(); }); window.addEventListener('focus',refresh); }
 
@@ -192,7 +192,18 @@ function renderBoard(){
 async function openCase(c){
   INDETAIL=true;
   root.innerHTML='';
-  const back=$('button','back','‹ 一覧へ');back.onclick=main;root.appendChild(back);
+  try{history.replaceState(null,'','#'+encodeURIComponent(c.case_no));}catch(e){}
+  const bar2=$('div');bar2.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px';
+  const back=$('button','back','‹ 一覧へ');back.onclick=()=>{try{history.replaceState(null,'',location.pathname+location.search);}catch(e){}main();};
+  const share=$('button','tb','🔗 共有');
+  share.onclick=async()=>{
+    const url=location.origin+location.pathname+(location.search||'')+'#'+encodeURIComponent(c.case_no);
+    const title=(c.prop||c.case_no)+' 進捗';
+    try{ if(navigator.share){ await navigator.share({title,url}); return; } }catch(e){ if(e&&e.name==='AbortError')return; }
+    try{ await navigator.clipboard.writeText(url); share.textContent='✓ コピーしました'; setTimeout(()=>share.textContent='🔗 共有',1600); }
+    catch(_){ prompt('このURLをコピーして共有:',url); }
+  };
+  bar2.appendChild(back);bar2.appendChild(share);root.appendChild(bar2);
   const card=$('div','card');
   card.appendChild($('h2',null,c.prop||c.case_no));
   const subbits=['案件 '+(c.case_no||''),c.vendor&&('管理 '+c.vendor),c.staff&&('担当 '+c.staff),c.work_item&&('作業 '+c.work_item)].filter(Boolean);
