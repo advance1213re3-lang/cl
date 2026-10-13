@@ -101,7 +101,7 @@ textarea{min-height:72px;resize:vertical}
 <div id="root"><div class="load">読み込み中…</div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const BUILD='1791770002';
+const BUILD='1791770003';
 (function(){try{var K='shinchoku_cbv';fetch(location.pathname+'?_cb='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/const BUILD='([^']+)'/);if(m&&m[1]!==BUILD&&sessionStorage.getItem(K)!==m[1]){sessionStorage.setItem(K,m[1]);location.replace(location.pathname+(location.search?location.search+'&':'?')+'v='+m[1]+location.hash);}}).catch(function(){});}catch(e){}})();
 const SB_URL='https://vfreehhenmwrbxkhcdvu.supabase.co';
 const SB_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmcmVlaGhlbm13cmJ4a2hjZHZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5NTE5NTAsImV4cCI6MjA5OTUyNzk1MH0.UQKIOeJmn0Yt6gqUC_TF0uoFiRl4poTJyv_tx6BotS8';
@@ -110,6 +110,8 @@ const root=document.getElementById('root');
 const $=(t,c,x)=>{const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e;};
 // ライフサイクル・ステータス（案件一覧から自動判定）
 const STATUSES=[['未着手','#6b7280'],['日程調整','#3b82f6'],['見積提出','#d97706'],['発注済','#0ea5e9'],['完工','#16a34a'],['請求','#7c3aed']];
+const KANRYO_WEBAPP_URL='https://script.google.com/macros/s/AKfycbyAY14TZ27dPVPdVctdAe30I9bmQK33d_GMwhvD9lfm74zfXtz6HZKjjKOxXhjS1Bps/exec';
+const KANRYO_TOKEN='cl-kanryo-7f3a';
 const SCOLOR={};STATUSES.forEach(s=>SCOLOR[s[0]]=s[1]);
 const METHODS=['電話','メール','LINE','訪問','その他'];
 // 工程ステッパー定義
@@ -290,7 +292,19 @@ async function openCase(c){
      const {error}=await sb.from('cl_progress').update({kanryo_req_at:nv,updated_at:new Date().toISOString()}).eq('id',c.id);
      kb.disabled=false;
      if(error){khint.textContent='保存失敗: '+error.message;return;}
-     c.kanryo_req_at=nv;paintK();khint.textContent=nv?'✓ 完了確認リストに追加（5分以内にシート反映）':'✓ 取消しました';setTimeout(()=>{khint.textContent='';},2600);};
+     c.kanryo_req_at=nv;paintK();
+     if(nv){
+       const ws=CASEWORK[c.case_no]||[];
+       const addr=ws.map(w=>w.address).find(Boolean)||'';
+       const key=ws.map(w=>w.key_info).find(Boolean)||'';
+       const worker=[c.worker_seisou&&('清掃:'+c.worker_seisou),c.worker_naiso&&('内装:'+c.worker_naiso),c.worker_setsubi&&('設備:'+c.worker_setsubi)].filter(Boolean).join(' / ');
+       const reqt=new Date(nv).toLocaleString('ja-JP',{timeZone:'Asia/Tokyo'});
+       const link=location.origin+location.pathname+'#'+encodeURIComponent(c.case_no);
+       const row=[c.prop||c.case_no,addr,key,c.date_kanko?String(c.date_kanko).slice(0,10):'',worker,c.tachiai_checker||'',reqt,link];
+       fetch(KANRYO_WEBAPP_URL,{method:'POST',body:JSON.stringify({token:KANRYO_TOKEN,row:row})}).catch(()=>{});
+       khint.textContent='✓ 完了確認リストに追加しました';
+     } else { khint.textContent='✓ 取消しました（シートの行は手で消してください）'; }
+     setTimeout(()=>{khint.textContent='';},2800);};
    krow.appendChild(kb);krow.appendChild(khint);card.appendChild(krow);}
   // 住所（cl_casesから・地図リンク付き）
   const addr=(CASEWORK[c.case_no]||[]).map(w=>w.address).find(Boolean);
