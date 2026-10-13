@@ -101,7 +101,7 @@ textarea{min-height:72px;resize:vertical}
 <div id="root"><div class="load">読み込み中…</div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const BUILD='1791770003';
+const BUILD='1791770004';
 (function(){try{var K='shinchoku_cbv';fetch(location.pathname+'?_cb='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/const BUILD='([^']+)'/);if(m&&m[1]!==BUILD&&sessionStorage.getItem(K)!==m[1]){sessionStorage.setItem(K,m[1]);location.replace(location.pathname+(location.search?location.search+'&':'?')+'v='+m[1]+location.hash);}}).catch(function(){});}catch(e){}})();
 const SB_URL='https://vfreehhenmwrbxkhcdvu.supabase.co';
 const SB_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmcmVlaGhlbm13cmJ4a2hjZHZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5NTE5NTAsImV4cCI6MjA5OTUyNzk1MH0.UQKIOeJmn0Yt6gqUC_TF0uoFiRl4poTJyv_tx6BotS8';
@@ -196,7 +196,7 @@ async function detectChanges(){
   }catch(e){return [];}
 }
 async function main(){ try{ await loadData(); renderBoard(); startAutoRefresh(); const hv=decodeURIComponent((location.hash||'').replace(/^#/,'')).trim(); if(hv){ const c=ALLCASES.find(x=>x.case_no===hv); if(c) openCase(c); } }catch(e){ root.innerHTML=''; root.appendChild($('div','load','エラー: '+e.message)); } }
-async function refresh(){ if(INDETAIL) return; var ae=document.activeElement; if(ae&&/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)) return; try{ await loadData(); if(!INDETAIL) renderBoard(); }catch(e){} }
+async function refresh(){ if(INDETAIL) return; var ae=document.activeElement; if(ae&&/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)) return; var kbEl=document.querySelector('.kb'); var sx=kbEl?kbEl.scrollLeft:0; var sy=window.scrollY; try{ await loadData(); if(!INDETAIL){ renderBoard(); var k2=document.querySelector('.kb'); if(k2)k2.scrollLeft=sx; window.scrollTo(0,sy); } }catch(e){} }
 function startAutoRefresh(){ if(AUTOSET) return; AUTOSET=true; setInterval(refresh,15000); document.addEventListener('visibilitychange',function(){ if(!document.hidden) refresh(); }); window.addEventListener('focus',refresh); }
 
 function statusIdx(s){const i=STATUSES.findIndex(x=>x[0]===s);return i<0?0:i;}
