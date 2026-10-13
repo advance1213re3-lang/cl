@@ -101,7 +101,7 @@ textarea{min-height:72px;resize:vertical}
 <div id="root"><div class="load">読み込み中…</div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const BUILD='1791770005';
+const BUILD='1791770006';
 (function(){try{var K='shinchoku_cbv';fetch(location.pathname+'?_cb='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/const BUILD='([^']+)'/);if(m&&m[1]!==BUILD&&sessionStorage.getItem(K)!==m[1]){sessionStorage.setItem(K,m[1]);location.replace(location.pathname+(location.search?location.search+'&':'?')+'v='+m[1]+location.hash);}}).catch(function(){});}catch(e){}})();
 const SB_URL='https://vfreehhenmwrbxkhcdvu.supabase.co';
 const SB_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmcmVlaGhlbm13cmJ4a2hjZHZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5NTE5NTAsImV4cCI6MjA5OTUyNzk1MH0.UQKIOeJmn0Yt6gqUC_TF0uoFiRl4poTJyv_tx6BotS8';
@@ -297,7 +297,7 @@ async function openCase(c){
        const ws=CASEWORK[c.case_no]||[];
        const addr=ws.map(w=>w.address).find(Boolean)||'';
        const key=ws.map(w=>w.key_info).find(Boolean)||'';
-       const worker=[c.worker_seisou&&('清掃:'+c.worker_seisou),c.worker_naiso&&('内装:'+c.worker_naiso),c.worker_setsubi&&('設備:'+c.worker_setsubi)].filter(Boolean).join(' / ');
+       const worker=[c.worker_seisou&&('清掃:'+c.worker_seisou),c.worker_naiso&&('内装:'+c.worker_naiso),c.worker_setsubi&&('設備:'+c.worker_setsubi)].filter(Boolean).join(' / ')||(c.staff?('担当:'+c.staff):'');
        const reqt=new Date(nv).toLocaleString('ja-JP',{timeZone:'Asia/Tokyo'});
        const link=location.origin+location.pathname+'#'+encodeURIComponent(c.case_no);
        const row=[c.prop||c.case_no,addr,key,c.date_kanko?String(c.date_kanko).slice(0,10):'',worker,c.tachiai_checker||'',reqt,link];
