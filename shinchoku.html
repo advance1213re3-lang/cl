@@ -101,7 +101,7 @@ textarea{min-height:72px;resize:vertical}
 <div id="root"><div class="load">読み込み中…</div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const BUILD='1791770001';
+const BUILD='1791770002';
 (function(){try{var K='shinchoku_cbv';fetch(location.pathname+'?_cb='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/const BUILD='([^']+)'/);if(m&&m[1]!==BUILD&&sessionStorage.getItem(K)!==m[1]){sessionStorage.setItem(K,m[1]);location.replace(location.pathname+(location.search?location.search+'&':'?')+'v='+m[1]+location.hash);}}).catch(function(){});}catch(e){}})();
 const SB_URL='https://vfreehhenmwrbxkhcdvu.supabase.co';
 const SB_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmcmVlaGhlbm13cmJ4a2hjZHZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5NTE5NTAsImV4cCI6MjA5OTUyNzk1MH0.UQKIOeJmn0Yt6gqUC_TF0uoFiRl4poTJyv_tx6BotS8';
@@ -280,6 +280,18 @@ async function openCase(c){
   const pill=$('span','pill',c.status);pill.style.background=SCOLOR[c.status]||'#6b7280';stwrap.appendChild(pill);
   if(yen(c.amount)){const a=$('span','amt',yen(c.amount));a.style.marginLeft='auto';stwrap.appendChild(a);}
   card.appendChild(stwrap);
+  // 完了確認リスト登録（押すと完了確認物件一覧シートに追記）
+  {const krow=$('div');krow.style.cssText='margin-top:10px';
+   const kb=$('button');kb.style.cssText='width:100%;padding:12px;border-radius:10px;border:1px solid var(--line);font-size:16.5px;font-weight:800;cursor:pointer';
+   const khint=$('div','savehint','');khint.style.marginTop='4px';
+   function paintK(){const on=!!c.kanryo_req_at;kb.textContent=on?'✅ 完了確認リスト登録済み — 取消す':'✅ 完了確認に回す';kb.style.background=on?'#16a34a':'var(--surface2)';kb.style.color=on?'#fff':'var(--accent)';}
+   paintK();
+   kb.onclick=async()=>{const nv=c.kanryo_req_at?null:new Date().toISOString();kb.disabled=true;
+     const {error}=await sb.from('cl_progress').update({kanryo_req_at:nv,updated_at:new Date().toISOString()}).eq('id',c.id);
+     kb.disabled=false;
+     if(error){khint.textContent='保存失敗: '+error.message;return;}
+     c.kanryo_req_at=nv;paintK();khint.textContent=nv?'✓ 完了確認リストに追加（5分以内にシート反映）':'✓ 取消しました';setTimeout(()=>{khint.textContent='';},2600);};
+   krow.appendChild(kb);krow.appendChild(khint);card.appendChild(krow);}
   // 住所（cl_casesから・地図リンク付き）
   const addr=(CASEWORK[c.case_no]||[]).map(w=>w.address).find(Boolean);
   if(addr){const ap=addrPart(addr);const row=$('div');row.style.cssText='margin-top:9px;font-size:16.5px;line-height:1.5';
