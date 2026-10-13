@@ -101,7 +101,7 @@ textarea{min-height:72px;resize:vertical}
 <div id="root"><div class="load">読み込み中…</div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const BUILD='1791770008';
+const BUILD='1791770009';
 (function(){try{var K='shinchoku_cbv';fetch(location.pathname+'?_cb='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/const BUILD='([^']+)'/);if(m&&m[1]!==BUILD&&sessionStorage.getItem(K)!==m[1]){sessionStorage.setItem(K,m[1]);location.replace(location.pathname+(location.search?location.search+'&':'?')+'v='+m[1]+location.hash);}}).catch(function(){});}catch(e){}})();
 const SB_URL='https://vfreehhenmwrbxkhcdvu.supabase.co';
 const SB_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmcmVlaGhlbm13cmJ4a2hjZHZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5NTE5NTAsImV4cCI6MjA5OTUyNzk1MH0.UQKIOeJmn0Yt6gqUC_TF0uoFiRl4poTJyv_tx6BotS8';
@@ -312,6 +312,9 @@ async function openCase(c){
     row.appendChild($('span',null,'📍 '));row.appendChild(document.createTextNode(ap));
     const a=document.createElement('a');a.href='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(ap);a.target='_blank';a.rel='noopener';a.textContent=' 地図↗';a.style.cssText='color:var(--accent);font-weight:700;margin-left:6px;text-decoration:none';row.appendChild(a);
     card.appendChild(row);}
+  // 鍵の所在地（cl_cases優先・無ければcl_progress同期分）
+  {const keyloc=(CASEWORK[c.case_no]||[]).map(w=>w.key_info).find(Boolean)||c.key_info;
+   if(keyloc){const row=$('div');row.style.cssText='margin-top:6px;font-size:16.5px;line-height:1.5';row.appendChild($('span',null,'🔑 '));row.appendChild(document.createTextNode(keyloc));card.appendChild(row);}}
   // 見積書・完了写真（Driveフォルダ）
   if(c.quote_url||c.photos_url||c.folder_url||c.order_url){
     const drow=$('div');drow.style.cssText='display:flex;gap:10px;flex-wrap:wrap;margin-top:10px';
