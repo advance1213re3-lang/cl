@@ -101,7 +101,7 @@ textarea{min-height:72px;resize:vertical}
 <div id="root"><div class="load">読み込み中…</div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const BUILD='1791770009';
+const BUILD='1791770010';
 (function(){try{var K='shinchoku_cbv';fetch(location.pathname+'?_cb='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/const BUILD='([^']+)'/);if(m&&m[1]!==BUILD&&sessionStorage.getItem(K)!==m[1]){sessionStorage.setItem(K,m[1]);location.replace(location.pathname+(location.search?location.search+'&':'?')+'v='+m[1]+location.hash);}}).catch(function(){});}catch(e){}})();
 const SB_URL='https://vfreehhenmwrbxkhcdvu.supabase.co';
 const SB_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmcmVlaGhlbm13cmJ4a2hjZHZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5NTE5NTAsImV4cCI6MjA5OTUyNzk1MH0.UQKIOeJmn0Yt6gqUC_TF0uoFiRl4poTJyv_tx6BotS8';
@@ -217,11 +217,12 @@ function renderBoard(){
   const bodyEl=$('div');root.appendChild(bodyEl);
   function filtered(){let ms=ALLCASES.slice();if(FILTER)ms=ms.filter(c=>c.status===FILTER);if(QUERY){const q=QUERY.toLowerCase();ms=ms.filter(c=>[c.prop,c.staff,c.vendor,c.work_item,c.case_no].some(v=>String(v||'').toLowerCase().indexOf(q)>=0));}return ms;}
   function drawRecent(cont){
-    if(!ALLEVENTS.length)return;
+    const evs=ALLEVENTS.filter(ev=>ALLCASES.some(x=>x.case_no===ev.case_no));
+    if(!evs.length)return;
     const card=$('div','card');card.style.padding='12px 14px';
     card.appendChild($('div','label','📬 最近の更新'));
     const km={mail:['メール','#60a5fa'],status:['進捗','#f3b14b'],new:['新規','#39d3b4']};
-    ALLEVENTS.slice(0,5).forEach(ev=>{
+    evs.slice(0,5).forEach(ev=>{
       const prop=(ALLCASES.find(x=>x.case_no===ev.case_no)||{}).prop||ev.case_no;
       const k=km[ev.kind]||['更新','#9fb0cf'];
       const r=$('div','recit');
