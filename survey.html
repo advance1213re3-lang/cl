@@ -45,7 +45,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,Bl
 <div id="root"><div class="load">読み込み中…</div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const BUILD='1793343400';
+const BUILD='1793344400';
 // 最新版へ自動更新（キャッシュで古いまま、を防ぐ）
 (function(){try{var K='survey_cbv';fetch(location.pathname+'?_cb='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/const BUILD='([^']+)'/);if(m&&m[1]!==BUILD&&sessionStorage.getItem(K)!==m[1]){sessionStorage.setItem(K,m[1]);var u=location.pathname+(location.search?location.search+'&':'?')+'v='+m[1];location.replace(u);}}).catch(function(){});}catch(e){}})();
 const SB_URL='https://vfreehhenmwrbxkhcdvu.supabase.co';
@@ -128,8 +128,8 @@ async function main(){
 
 function renderList(rows){
   const map={};
-  rows.forEach(r=>{const k=r.building;if(!k)return;const m=map[k]||(map[k]={building:k,address:r.address||'',vendor:r.vendor||'',count:0,last:''});m.count++;if(r.address)m.address=r.address;if(r.vendor)m.vendor=r.vendor;const d=String(r.visit_date||r.created_at||'').slice(0,10);if(d>m.last)m.last=d;});
-  const blds=Object.values(map).sort((a,b)=>(b.last||'').localeCompare(a.last||''));
+  rows.forEach(r=>{const k=r.building;if(!k)return;const m=map[k]||(map[k]={building:k,address:r.address||'',vendor:r.vendor||'',count:0,last:'',lastTs:''});m.count++;if(r.address)m.address=r.address;if(r.vendor)m.vendor=r.vendor;const d=String(r.visit_date||r.created_at||'').slice(0,10);if(d>m.last)m.last=d;const ts=String(r.created_at||'');if(ts>m.lastTs)m.lastTs=ts;});
+  const blds=Object.values(map).sort((a,b)=>(b.lastTs||'').localeCompare(a.lastTs||'')); // アップが新しい建物が上（＝今入れたものが先頭）
   root.innerHTML='';
   const hd=$('div','hd');const t=$('div');t.appendChild(Object.assign($('h1',null,'📷 現調・立会 写真'),{}));t.appendChild($('div','sub','建物ごとに写真をためる'));hd.appendChild(t);root.appendChild(hd);
   const card=$('div','card');
