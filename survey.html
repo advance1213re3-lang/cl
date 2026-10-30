@@ -45,7 +45,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,Bl
 <div id="root"><div class="load">読み込み中…</div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const BUILD='1793341200';
+const BUILD='1793342600';
 // 最新版へ自動更新（キャッシュで古いまま、を防ぐ）
 (function(){try{var K='survey_cbv';fetch(location.pathname+'?_cb='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/const BUILD='([^']+)'/);if(m&&m[1]!==BUILD&&sessionStorage.getItem(K)!==m[1]){sessionStorage.setItem(K,m[1]);var u=location.pathname+(location.search?location.search+'&':'?')+'v='+m[1];location.replace(u);}}).catch(function(){});}catch(e){}})();
 const SB_URL='https://vfreehhenmwrbxkhcdvu.supabase.co';
@@ -113,9 +113,16 @@ async function main(){
   const shareB=new URLSearchParams(location.search).get('b');
   if(shareB){ return openBuilding(shareB,'','',false,true); } // 共有リンク＝閲覧専用
   try{
-    const {data,error}=await sb.from('cl_survey_photos').select('building,address,vendor,visit_date,created_at');
-    if(error)throw error;
-    renderList(data||[]);
+    // 全件ページング読み（Supabaseは1件selectの既定上限1000件。order無しrangeは重複/欠落するのでid順で読む）
+    let rows=[],from=0;const PAGE=1000;
+    for(;;){
+      const {data,error}=await sb.from('cl_survey_photos').select('building,address,vendor,visit_date,created_at').order('id',{ascending:true}).range(from,from+PAGE-1);
+      if(error)throw error;
+      rows=rows.concat(data||[]);
+      if(!data||data.length<PAGE)break;
+      from+=PAGE;
+    }
+    renderList(rows);
   }catch(e){root.innerHTML='';root.appendChild($('div','load','エラー: '+e.message));}
 }
 
