@@ -45,7 +45,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,Bl
 <div id="root"><div class="load">読み込み中…</div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const BUILD='1790750626';
+const BUILD='1793339400';
 // 最新版へ自動更新（キャッシュで古いまま、を防ぐ）
 (function(){try{var K='survey_cbv';fetch(location.pathname+'?_cb='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/const BUILD='([^']+)'/);if(m&&m[1]!==BUILD&&sessionStorage.getItem(K)!==m[1]){sessionStorage.setItem(K,m[1]);var u=location.pathname+(location.search?location.search+'&':'?')+'v='+m[1];location.replace(u);}}).catch(function(){});}catch(e){}})();
 const SB_URL='https://vfreehhenmwrbxkhcdvu.supabase.co';
@@ -53,7 +53,7 @@ const SB_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJl
 const BUCKET='cl-photos';
 const SYNC_URL='https://script.google.com/macros/s/AKfycbxE4U-K2y4trcPDF7cGY1vZXKTRVxUmWgp0Ke-R6obcnKEJlwo03eoVX0YHMZ-oP2D_/exec';
 const SYNC_TOKEN='sv-9Kq2Zx';
-const MAX_PX=1280, QUALITY=0.8, UP_CONC=4;
+const MAX_PX=1280, QUALITY=0.8, UP_CONC=4, VIDEO_MAX_MB=200; // VIDEO_MAX_MB:圧縮できない端末で“生のまま”送れる上限。Supabaseのファイルサイズ上限と揃える
 const sb=supabase.createClient(SB_URL,SB_ANON);
 const root=document.getElementById('root');
 const $=(t,c,x)=>{const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e;};
@@ -227,9 +227,9 @@ async function openBuilding(name,address,vendor,isNew,viewOnly){
       try{ const r=await compressVideo(f,p=>{if(onMsg)onMsg('動画を圧縮中… '+Math.round(p*100)+'%');}); blob=r.blob;ext=r.ext;type=r.type; }
       catch(err){
         console.warn('video compress fallback:',err);
-        // 圧縮不可でも45MB以内ならそのままアップ（パイプラインの上限内）
-        if(f.size<=45*1024*1024){ ext=((f.name.split('.').pop()||'mp4').toLowerCase().replace(/[^a-z0-9]/g,'')||'mp4'); blob=f; type=f.type||'video/mp4'; if(onMsg)onMsg('動画をそのまま送信…'); }
-        else { throw new Error('動画が大きすぎます（約'+Math.round(f.size/1048576)+'MB）。1分以内・短めで撮り直すか、端末の録画画質を下げてください'); }
+        // 圧縮不可（iPhone等）でも上限内ならそのまま送る
+        if(f.size<=VIDEO_MAX_MB*1024*1024){ ext=((f.name.split('.').pop()||'mp4').toLowerCase().replace(/[^a-z0-9]/g,'')||'mp4'); blob=f; type=f.type||'video/mp4'; if(onMsg)onMsg('動画をそのまま送信…'); }
+        else { throw new Error('動画が大きすぎます（約'+Math.round(f.size/1048576)+'MB／上限'+VIDEO_MAX_MB+'MB）。短く撮り直すか、端末の録画画質を下げてください'); }
       }
     }
     else { const r=await shrink(f); blob=r.blob;ext=r.ext;type=r.type; }
