@@ -45,7 +45,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,Bl
 <div id="root"><div class="load">読み込み中…</div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const BUILD='1793342600';
+const BUILD='1793343400';
 // 最新版へ自動更新（キャッシュで古いまま、を防ぐ）
 (function(){try{var K='survey_cbv';fetch(location.pathname+'?_cb='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/const BUILD='([^']+)'/);if(m&&m[1]!==BUILD&&sessionStorage.getItem(K)!==m[1]){sessionStorage.setItem(K,m[1]);var u=location.pathname+(location.search?location.search+'&':'?')+'v='+m[1];location.replace(u);}}).catch(function(){});}catch(e){}})();
 const SB_URL='https://vfreehhenmwrbxkhcdvu.supabase.co';
@@ -139,9 +139,11 @@ function renderList(rows){
   root.appendChild(card);
   function draw(){
     const q=search.value.trim().toLowerCase();list.innerHTML='';
-    const ms=blds.filter(b=>!q||b.building.toLowerCase().indexOf(q)>=0||(b.address||'').toLowerCase().indexOf(q)>=0);
+    let ms=blds.filter(b=>!q||b.building.toLowerCase().indexOf(q)>=0||(b.address||'').toLowerCase().indexOf(q)>=0);
     if(!ms.length){list.appendChild($('div','hint',q?'該当なし':'まだ建物がありません。「＋新しい建物」から追加してください。'));return;}
+    const total=ms.length;if(!q&&total>10)ms=ms.slice(0,10); // 既定は直近10件のみ（検索は全件対象）
     ms.forEach(b=>{const r=$('div','brow');r.appendChild($('div','nm',b.building));r.appendChild($('div','meta',(b.address?b.address+' ・ ':'')+'写真 '+b.count+'枚'+(b.last?' ・ 最終 '+dtxt(b.last):'')));r.onclick=()=>openBuilding(b.building,b.address,b.vendor,false);list.appendChild(r);});
+    if(!q&&total>10)list.appendChild($('div','hint','直近10件を表示中 ・ 他 '+(total-10)+' 件は上の検索から'));
   }
   search.oninput=draw;draw();
 }
