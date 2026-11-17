@@ -27,6 +27,12 @@ textarea{min-height:72px;resize:vertical}
 .notice{background:#eef6ff;border:1px solid #bcd7f5;color:#1b3a5c;border-radius:10px;padding:11px 13px;font-size:13px;margin-top:14px}
 .notice b.t{display:block;font-size:13.5px;margin-bottom:5px;color:#0f2e4d}
 .notice ul{margin:0;padding-left:18px}.notice li{margin:3px 0}
+.warn{background:#fff3cd;border:2px solid #e0a800;border-left:6px solid #e0a800;border-radius:10px;padding:13px 14px;margin-top:16px;color:#5c4400}
+.warn b{font-size:16px;line-height:1.45;color:#8a5a00}
+.warn span{display:block;font-size:13px;margin-top:5px;color:#6b5200}
+.oprow{display:flex;align-items:center;gap:6px;flex-wrap:wrap;color:#fff;font-size:12px;margin:-4px 0 12px;opacity:.95}
+.oprow select{width:auto;padding:4px 8px;border-radius:7px;font-size:13px}
+.oprow .opnote{font-size:10.5px;opacity:.85}
 .btn{display:block;width:100%;border:none;border-radius:11px;padding:14px;font-size:16px;font-weight:800;cursor:pointer}
 .btn.primary{background:var(--accent);color:#fff;margin-top:16px}
 .btn.primary:active{background:var(--accent2)}
@@ -88,10 +94,10 @@ textarea{min-height:72px;resize:vertical}
       <label>ご要望・ご連絡事項</label>
       <textarea id="f_note" placeholder="例）午前中希望、鍵の受け渡しについて 等"></textarea>
 
+      <div class="warn">⚠ <b>電気・ガス・水道は立会当日まで解約しないでください</b><span>当日の確認・ご使用に必要です。先に止めてしまうと立会ができません。</span></div>
       <div class="notice">
-        <b class="t">ご注意</b>
+        <b class="t">その他のご注意</b>
         <ul>
-          <li>電気・ガス・水道は<b>立会当日まで解約しないでください</b>（当日の確認・ご使用に必要です）。</li>
           <li>お荷物の搬出・お掃除は立会日までにお済ませください。</li>
         </ul>
       </div>
@@ -110,6 +116,7 @@ textarea{min-height:72px;resize:vertical}
     <div class="sectlabel">スタッフのLINE画面（イメージ）</div>
     <div class="linewrap">
       <div class="linehd"><span class="dot">📅</span> 立会予約bot</div>
+      <div class="oprow">操作者（デモ用）：<select id="op"><option>山本</option><option>田中</option><option>佐藤</option></select><span class="opnote">本番はLINEアカウント名を自動取得</span></div>
       <div class="flex">
         <div class="top">🆕 新規 退去立会依頼</div>
         <div class="body">
@@ -238,10 +245,13 @@ function renderLine(){
 
 function confirmSlot(which,label){
   disableActs();
+  var op=(document.getElementById('op')||{}).value||'（操作者）';
+  var now=new Date();
+  var ts=(now.getMonth()+1)+'/'+now.getDate()+' '+('0'+now.getHours()).slice(-2)+':'+('0'+now.getMinutes()).slice(-2);
   var r=document.getElementById('replyArea');
   r.innerHTML='<div class="botreply"><span class="ok">✅ カレンダーに登録しました</span><br>'+
     state.prop+(state.room?' '+state.room:'')+'（退去立会）<br>'+label+'<br>'+
-    '<span class="muted">'+which+'で確定 ／ お客様へ確定連絡をお願いします</span></div>';
+    '<span class="muted">'+which+'で確定<br>👤 確定者：<b>'+op+'</b>（'+ts+'）<br>お客様へ確定連絡をお願いします</span></div>';
 }
 function disableActs(){document.querySelectorAll('#o_acts .lbtn').forEach(function(b){b.disabled=true;});}
 
