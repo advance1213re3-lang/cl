@@ -4,13 +4,20 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>退去立会 予約（テスト）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;500;700;900&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#f4f6f8;--surface:#fff;--line:#e3e8ee;--ink:#1a2634;--ink2:#64748b;--accent:#2f6df0;--accent2:#1b53c8;--ok:#0b8043;--busy:#c0392b;--line-green:#06c755;--chat-bg:#8aabd4}
+:root{--bg:#F4F4EF;--surface:#ffffff;--line:#e4dfd2;--ink:#20232A;--ink2:#7a7161;--accent:#937A38;--accent2:#7c6630;--ok:#0b8043;--busy:#b23b2e;--line-green:#06c755;--chat-bg:#8aabd4;--serif:"Frank Ruhl Libre","FOT-UD明朝 Pro B","Yu Mincho",YuMincho,"Hiragino Mincho ProN",serif}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;line-height:1.6}
 .wrap{max-width:560px;margin:0 auto;padding:16px}
+.brandbar{background:#20232A;color:#F4F4EF;padding:15px 16px;border-bottom:3px solid var(--accent)}
+.brandbar .bi{max-width:560px;margin:0 auto;display:flex;align-items:baseline;gap:10px}
+.brandbar .co{font-family:var(--serif);font-size:16px;letter-spacing:.06em;font-weight:700}
+.brandbar .en{font-size:10px;letter-spacing:.22em;color:var(--accent);font-weight:700}
 .testbar{background:#fff7e6;border:1px solid #f0d58a;color:#8a6d1b;border-radius:10px;padding:8px 12px;font-size:12.5px;margin-bottom:14px}
-h1{font-size:19px;margin:6px 0 2px}
+h1{font-size:23px;margin:8px 0 2px;font-family:var(--serif);font-weight:700;color:var(--ink);letter-spacing:.03em}
+h1:before{content:"";display:inline-block;width:26px;height:2px;background:var(--accent);vertical-align:middle;margin-right:10px;margin-bottom:5px}
 .sub{color:var(--ink2);font-size:13px;margin:0 0 14px}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:16px}
 label{display:block;font-size:13px;font-weight:700;margin:12px 0 5px}
@@ -34,8 +41,8 @@ textarea{min-height:72px;resize:vertical}
 .oprow select{width:auto;padding:4px 8px;border-radius:7px;font-size:13px}
 .oprow .opnote{font-size:10.5px;opacity:.85}
 .btn{display:block;width:100%;border:none;border-radius:11px;padding:14px;font-size:16px;font-weight:800;cursor:pointer}
-.btn.primary{background:var(--accent);color:#fff;margin-top:16px}
-.btn.primary:active{background:var(--accent2)}
+.btn.primary{background:var(--accent);color:#fff;margin-top:16px;font-family:var(--serif);letter-spacing:.12em;box-shadow:0 2px 0 var(--accent2)}
+.btn.primary:active{background:var(--accent2);box-shadow:none}
 .slotfull{color:var(--busy)}
 /* LINE preview */
 .linewrap{background:var(--chat-bg);border-radius:14px;padding:14px 12px 18px}
@@ -67,6 +74,7 @@ textarea{min-height:72px;resize:vertical}
 </style>
 </head>
 <body>
+<div class="brandbar"><div class="bi"><span class="co">株式会社アドバンスR.E.</span><span class="en">ADVANCE R.E.</span></div></div>
 <div class="wrap">
   <div class="testbar">🧪 テスト版デモ — 本番のGoogleカレンダー・LINEには一切書き込みません。画面上の動きだけの確認用です。</div>
 
