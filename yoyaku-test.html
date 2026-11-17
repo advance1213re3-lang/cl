@@ -24,6 +24,9 @@ textarea{min-height:72px;resize:vertical}
 .hint{font-size:12px;color:var(--ink2);margin-top:6px}
 .callnote{background:#fdecea;border:1px solid #f5b7b1;color:#922;border-radius:10px;padding:10px 12px;font-size:13px;margin-top:12px}
 .callnote b{font-size:14px}
+.notice{background:#eef6ff;border:1px solid #bcd7f5;color:#1b3a5c;border-radius:10px;padding:11px 13px;font-size:13px;margin-top:14px}
+.notice b.t{display:block;font-size:13.5px;margin-bottom:5px;color:#0f2e4d}
+.notice ul{margin:0;padding-left:18px}.notice li{margin:3px 0}
 .btn{display:block;width:100%;border:none;border-radius:11px;padding:14px;font-size:16px;font-weight:800;cursor:pointer}
 .btn.primary{background:var(--accent);color:#fff;margin-top:16px}
 .btn.primary:active{background:var(--accent2)}
@@ -64,7 +67,7 @@ textarea{min-height:72px;resize:vertical}
   <!-- ① 顧客フォーム -->
   <div id="formView">
     <h1>退去立会 ご予約</h1>
-    <p class="sub">ご希望の日時を第3希望までお選びください。確定のご連絡はこちらから差し上げます。</p>
+    <p class="sub">ご希望の日時を<b>第2希望まで必須</b>（任意で第3希望も）でお選びください。確定のご連絡はこちらから差し上げます。</p>
     <div class="card">
       <label>メールアドレス<span class="req">*</span></label>
       <input id="f_email" type="email" placeholder="example@mail.com">
@@ -85,11 +88,19 @@ textarea{min-height:72px;resize:vertical}
       <label>ご要望・ご連絡事項</label>
       <textarea id="f_note" placeholder="例）午前中希望、鍵の受け渡しについて 等"></textarea>
 
+      <div class="notice">
+        <b class="t">ご注意</b>
+        <ul>
+          <li>電気・ガス・水道は<b>立会当日まで解約しないでください</b>（当日の確認・ご使用に必要です）。</li>
+          <li>お荷物の搬出・お掃除は立会日までにお済ませください。</li>
+        </ul>
+      </div>
+
       <div class="callnote">ご希望の時間が<b class="slotfull">満</b>（埋まっている）場合は、お手数ですが <b>お電話（03-0000-0000）</b> までお問い合わせください。</div>
 
       <button class="btn primary" id="submitBtn">この内容で依頼する</button>
     </div>
-    <p class="muted" style="text-align:center">受付時間 9:00〜19:00 ／ 1枠3時間</p>
+    <p class="muted" style="text-align:center">受付時間 9:00〜19:00</p>
   </div>
 
   <!-- ② LINE通知プレビュー（スタッフ側） -->
@@ -147,10 +158,10 @@ function blockedHours(dateKey){
 var hopesBox=document.getElementById('hopes');
 for(var i=1;i<=3;i++){
   var wrap=document.createElement('div');wrap.className='hope';
-  wrap.innerHTML='<h3>第'+i+'希望'+(i===1?'<span class="req"> *</span>':'')+'</h3>'+
+  wrap.innerHTML='<h3>第'+i+'希望'+(i<=2?'<span class="req"> *</span>':'<span class="muted" style="font-weight:600"> （任意）</span>')+'</h3>'+
     '<div class="row2" style="margin-top:6px">'+
       '<div><label style="margin:0 0 5px">日付</label><input type="date" class="h_date" data-i="'+i+'"></div>'+
-      '<div><label style="margin:0 0 5px">時間（3h）</label><select class="h_time" data-i="'+i+'"><option value="">日付を選択</option></select></div>'+
+      '<div><label style="margin:0 0 5px">時間</label><select class="h_time" data-i="'+i+'"><option value="">日付を選択</option></select></div>'+
     '</div>'+
     '<div class="hint h_hint" data-i="'+i+'">※ 埋まっている時間は選べません</div>';
   hopesBox.appendChild(wrap);
@@ -161,7 +172,7 @@ function fillTimes(sel,dateKey){
   var ph=document.createElement('option');ph.value='';ph.textContent='時間を選択';sel.appendChild(ph);
   START_HOURS.forEach(function(h){
     var o=document.createElement('option');
-    var label=('0'+h).slice(-2)+':00〜'+('0'+endH(h)).slice(-2)+':00';
+    var label=('0'+h).slice(-2)+':00';
     if(blocked[h]){o.textContent=label+'（満）';o.disabled=true;o.value='';o.className='slotfull';}
     else {o.textContent=label;o.value=h;}
     sel.appendChild(o);
@@ -189,9 +200,10 @@ document.getElementById('submitBtn').addEventListener('click',function(){
   for(var i=1;i<=3;i++){
     var d=document.querySelector('.h_date[data-i="'+i+'"]').value;
     var t=document.querySelector('.h_time[data-i="'+i+'"]').value;
-    if(d&&t) hopes.push({date:d,hour:+t});
+    if(d&&t){ hopes.push({date:d,hour:+t}); }
+    else if(d||t){ alert('第'+i+'希望は「日付」と「時間」の両方を選んでください'); return; }
+    else if(i<=2){ alert('第2希望までは必須です（第'+i+'希望の日付と時間を選んでください）'); return; }
   }
-  if(!hopes.length){alert('第1希望の日時を選択してください');return;}
   state={email:email,name:name,tel:tel,prop:prop,room:val('f_room'),taikyo:val('f_taikyo'),note:val('f_note'),hopes:hopes};
   renderLine();
   document.getElementById('formView').classList.add('hidden');
@@ -238,7 +250,7 @@ function showAdjust(){
   var r=document.getElementById('replyArea');
   r.innerHTML='<div class="adjust"><h4>📅 日時を調整して確定</h4>'+
     '<label style="margin:0 0 5px">日付</label><input type="date" id="adj_date">'+
-    '<label style="margin:10px 0 5px">時間（3h）</label><select id="adj_time"><option value="">日付を選択</option></select>'+
+    '<label style="margin:10px 0 5px">時間</label><select id="adj_time"><option value="">日付を選択</option></select>'+
     '<div class="hint" id="adj_hint">※ 埋まっている時間は選べません</div>'+
     '<button class="lbtn done" id="adj_ok" style="margin-top:10px">この日時で確定</button></div>';
   document.getElementById('adj_date').addEventListener('change',function(){
