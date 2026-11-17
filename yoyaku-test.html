@@ -162,7 +162,7 @@ function fillTimes(sel,dateKey){
   START_HOURS.forEach(function(h){
     var o=document.createElement('option');
     var label=('0'+h).slice(-2)+':00〜'+('0'+endH(h)).slice(-2)+':00';
-    if(blocked[h]){o.textContent=label+'（満）';o.disabled=true;o.className='slotfull';}
+    if(blocked[h]){o.textContent=label+'（満）';o.disabled=true;o.value='';o.className='slotfull';}
     else {o.textContent=label;o.value=h;}
     sel.appendChild(o);
   });
