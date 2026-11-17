@@ -50,6 +50,8 @@ textarea{min-height:72px;resize:vertical}
 .btn{display:block;width:100%;border:none;border-radius:11px;padding:14px;font-size:16px;font-weight:800;cursor:pointer}
 .btn.primary{background:var(--accent);color:#fff;margin-top:16px;font-family:var(--serif);letter-spacing:.12em;box-shadow:0 2px 0 var(--accent2)}
 .btn.primary:active{background:var(--accent2);box-shadow:none}
+.btn.ghost{background:#fff;color:var(--accent);border:1.5px solid var(--accent);font-family:var(--serif);letter-spacing:.05em;font-size:15px}
+.btn.ghost:active{background:#faf7ef}
 .slotfull{color:var(--busy)}
 /* LINE preview */
 .linewrap{background:var(--chat-bg);border-radius:14px;padding:14px 12px 18px}
@@ -119,6 +121,7 @@ textarea{min-height:72px;resize:vertical}
   <div id="formView">
     <h1>退去立会 ご予約</h1>
     <p class="sub">ご希望の日時を<b>第2希望まで必須</b>（任意で第3希望も）でお選びください。確定のご連絡はこちらから差し上げます。</p>
+    <button class="btn ghost" id="sampleLineBtn" style="margin:0 0 14px">📱 スタッフのLINE通知の見え方を見る（サンプル）</button>
     <div class="card">
       <div class="fgrid">
         <div class="fld"><label>メールアドレス<span class="req">*</span></label><input id="f_email" type="email" placeholder="example@mail.com"></div>
@@ -153,7 +156,7 @@ textarea{min-height:72px;resize:vertical}
   <!-- ② LINE通知プレビュー（スタッフ側） -->
   <div id="lineView" class="hidden">
     <h1>依頼を送信しました ✅</h1>
-    <p class="sub">お客様には「確定のご連絡をお待ちください」と表示されます。<br>↓ スタッフのLINEには、こう通知が届きます（タップして動かせます）。</p>
+    <p class="sub">お客様には「確定のご連絡をお待ちください」と表示されます。<br>↓ <b>スタッフのLINEグループ（全員）</b>には、こう通知が届きます（ボタンはタップして動かせます）。</p>
     <div class="sectlabel">スタッフのLINE画面（イメージ）</div>
     <div class="linewrap">
       <div class="linehd"><span class="dot">📅</span> 立会予約bot</div>
@@ -334,6 +337,20 @@ document.getElementById('againBtn').addEventListener('click',function(){
   document.getElementById('formView').classList.remove('hidden');
   window.scrollTo(0,0);
 });
+
+// ---- スタッフLINE表示をサンプルで見せる ----
+function sampleState(){
+  var base=new Date();
+  function wk(n){var c=0;for(var i=3;i<=40;i++){var t=new Date(base.getFullYear(),base.getMonth(),base.getDate()+i);var d=t.getDay();if(d===0||d===6)continue;c++;if(c===n)return t;}return base;}
+  function ymd(x){return x.getFullYear()+'-'+('0'+(x.getMonth()+1)).slice(-2)+'-'+('0'+x.getDate()).slice(-2);}
+  return {email:'tenant@example.com',name:'山田 花子',tel:'090-1234-5678',prop:'サンプルマンション',room:'302',taikyo:ymd(wk(12)),note:'当日は代理の者が立ち会います',
+    hopes:[{date:ymd(wk(2)),hour:13},{date:ymd(wk(3)),hour:10},{date:ymd(wk(4)),hour:15}]};
+}
+function showLineSample(){ state=sampleState(); renderLine();
+  document.getElementById('formView').classList.add('hidden');
+  document.getElementById('lineView').classList.remove('hidden'); window.scrollTo(0,0); }
+var _slb=document.getElementById('sampleLineBtn'); if(_slb) _slb.addEventListener('click',showLineSample);
+if(/[?&]line=1/.test(location.search)) showLineSample();
 </script>
 </body>
 </html>
