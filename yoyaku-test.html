@@ -247,7 +247,7 @@ function fillTimes(sel,dateKey){
 
 // ---- 空き状況カレンダー（入力前に空き/満が一目で分かる） ----
 var TODAY=(function(){var d=new Date();return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);})();
-var selected=[]; var AVAIL_MAXDAYS=28;
+var selected=[]; var AVAIL_MAXDAYS=35;
 var _tkEl=document.getElementById('f_taikyo');
 if(_tkEl){ _tkEl.min=TODAY; _tkEl.addEventListener('change',function(){ selected=selected.filter(function(x){return x.date<=_tkEl.value;}); renderAvail(); }); }
 function selIndex(date,hour){for(var i=0;i<selected.length;i++){if(selected[i].date===date&&selected[i].hour===hour)return i;}return -1;}
@@ -266,11 +266,11 @@ function renderSelSummary(){
 }
 function renderAvail(){
   var cont=document.getElementById('availcal'); if(!cont) return;
-  var taikyo=val('f_taikyo');
-  if(!taikyo){ cont.innerHTML='<div class="muted" style="padding:8px 2px">↑ まず「退去予定日」を選ぶと、空き状況が表示されます。</div>'; renderSelSummary(); return; }
   cont.innerHTML='';
-  var today=new Date(TODAY+'T00:00:00'); var end=new Date(taikyo+'T00:00:00');
-  var cap=new Date(today.getTime()+AVAIL_MAXDAYS*86400000); if(end>cap) end=cap;
+  var taikyo=val('f_taikyo');
+  var today=new Date(TODAY+'T00:00:00');
+  var end=new Date(today.getTime()+AVAIL_MAXDAYS*86400000);
+  if(taikyo){ var tk=new Date(taikyo+'T00:00:00'); if(tk<end) end=tk; } // 退去日より後は出さない
   for(var d=new Date(today); d<=end; d.setDate(d.getDate()+1)){
     var key=ymd(d); var blocked=blockedHours(key);
     var dow=d.getDay(); var wd=['日','月','火','水','木','金','土'][dow];
