@@ -76,6 +76,29 @@ textarea{min-height:72px;resize:vertical}
 .adjust h4{margin:0 0 8px;font-size:13.5px}
 .muted{color:var(--ink2);font-size:12px}
 .hidden{display:none}
+.fgrid{display:grid;grid-template-columns:1fr;gap:0 24px}
+/* PC（横に広く・大きく） */
+@media(min-width:760px){
+  .wrap{max-width:920px;padding:26px 20px}
+  .brandbar .bi,.sitefoot .fi{max-width:920px}
+  body{font-size:15.5px}
+  h1{font-size:30px}
+  .sub{font-size:14.5px;margin-bottom:18px}
+  .card{padding:30px 36px}
+  label{font-size:13.5px}
+  input,select,textarea{font-size:16px;padding:12px 14px}
+  .fgrid{grid-template-columns:1fr 1fr}
+  #hopes{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .sectlabel{font-size:13px}
+  .warn b{font-size:17px}
+  .btn.primary{max-width:460px;margin-left:auto;margin-right:auto;font-size:18px;padding:17px}
+  .brandbar .co{font-size:18px}
+}
+@media(min-width:1080px){
+  .wrap{max-width:1040px}
+  .brandbar .bi,.sitefoot .fi{max-width:1040px}
+  #hopes{grid-template-columns:1fr 1fr 1fr}
+}
 .stamp{font-size:11px;color:#eef;opacity:.8;margin:4px 2px 0}
 .sectlabel{font-size:12px;font-weight:800;color:var(--ink2);letter-spacing:.04em;margin:2px 0 8px}
 </style>
@@ -90,18 +113,14 @@ textarea{min-height:72px;resize:vertical}
     <h1>退去立会 ご予約</h1>
     <p class="sub">ご希望の日時を<b>第2希望まで必須</b>（任意で第3希望も）でお選びください。確定のご連絡はこちらから差し上げます。</p>
     <div class="card">
-      <label>メールアドレス<span class="req">*</span></label>
-      <input id="f_email" type="email" placeholder="example@mail.com">
-      <label>ご契約者様氏名<span class="req">*</span></label>
-      <input id="f_name" type="text" placeholder="山田 太郎">
-      <label>ご連絡先電話番号<span class="req">*</span></label>
-      <input id="f_tel" type="tel" placeholder="090-0000-0000">
-      <div class="row2">
-        <div><label>物件名<span class="req">*</span></label><input id="f_prop" type="text" placeholder="〇〇マンション"></div>
-        <div><label>号室</label><input id="f_room" type="text" placeholder="101"></div>
+      <div class="fgrid">
+        <div class="fld"><label>メールアドレス<span class="req">*</span></label><input id="f_email" type="email" placeholder="example@mail.com"></div>
+        <div class="fld"><label>ご契約者様氏名<span class="req">*</span></label><input id="f_name" type="text" placeholder="山田 太郎"></div>
+        <div class="fld"><label>ご連絡先電話番号<span class="req">*</span></label><input id="f_tel" type="tel" placeholder="090-0000-0000"></div>
+        <div class="fld"><label>退去予定日</label><input id="f_taikyo" type="date"></div>
+        <div class="fld"><label>物件名<span class="req">*</span></label><input id="f_prop" type="text" placeholder="〇〇マンション"></div>
+        <div class="fld"><label>号室</label><input id="f_room" type="text" placeholder="101"></div>
       </div>
-      <label>退去予定日</label>
-      <input id="f_taikyo" type="date">
 
       <div class="sectlabel" style="margin-top:16px">立会のご希望（第3希望まで）</div>
       <div id="hopes"></div>
