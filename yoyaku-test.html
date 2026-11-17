@@ -88,7 +88,9 @@ textarea{min-height:72px;resize:vertical}
 .daycard .dh .sun{color:#c0392b}.daycard .dh .sat{color:#2f6df0}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
 .chip{border:1px solid var(--line);background:#fff;border-radius:9px;padding:9px 12px;font-size:14px;cursor:pointer;min-width:66px;text-align:center;font-family:var(--serif)}
-.chip.full{background:#f1f1f1;color:#bbb;border-color:#ececec;cursor:default;text-decoration:line-through}
+.chip.full{background:repeating-linear-gradient(45deg,#f4f4f4,#f4f4f4 6px,#eaeaea 6px,#eaeaea 12px);color:#aaa;border-color:#e2e2e2;cursor:not-allowed;display:inline-flex;flex-direction:column;align-items:center;gap:1px;line-height:1.15;padding:6px 10px}
+.chip.full .ft{text-decoration:line-through;font-size:13px}
+.chip.full .fb{font-size:10px;color:var(--busy);font-family:system-ui,sans-serif;font-weight:700;letter-spacing:.03em}
 .chip.open:hover{border-color:var(--accent);background:#faf7ef}
 .chip.sel{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:700}
 .selsummary{margin-top:14px}
@@ -152,7 +154,7 @@ textarea{min-height:72px;resize:vertical}
       <div class="sectlabel" style="margin-top:18px">📅 ご希望の日程を選んでください（第2希望まで必須・最大3つ）</div>
       <label>ご希望の日付</label>
       <input type="date" id="pickdate">
-      <div class="availlegend" style="margin-top:12px"><span class="lg">○ 空き（タップで選択）</span><span class="lg full">× 予約済</span><span class="lg selx">①②③ 選択中</span></div>
+      <div class="availlegend" style="margin-top:12px"><span class="lg">○ 空き（タップで選択）</span><span class="lg full">✕ 予約済（押せません）</span><span class="lg selx">①②③ 選択中</span></div>
       <div id="slotchips" class="chips"></div>
       <div id="selsummary" class="selsummary"></div>
 
@@ -284,7 +286,7 @@ function renderSlots(){
   START_HOURS.forEach(function(h){
     var c=document.createElement('button');c.type='button';
     var lab=('0'+h).slice(-2)+':00';
-    if(blocked[h]){ c.className='chip full'; c.textContent=lab; }
+    if(blocked[h]){ c.className='chip full'; c.disabled=true; c.title='予約済み（選べません）'; c.innerHTML='<span class="ft">'+lab+'</span><span class="fb">予約済</span>'; }
     else {
       var idx=selIndex(key,h);
       if(idx>=0){ c.className='chip sel'; c.textContent='①②③'.charAt(idx)+lab; }
