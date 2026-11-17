@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>退去立会 ご予約｜株式会社アドバンスR.E.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F4F4EF;--surface:#ffffff;--line:#e4dfd2;--ink:#20232A;--ink2:#7a7161;--accent:#937A38;--accent2:#7c6630;--ok:#0b8043;--busy:#b23b2e;--line-green:#06c755;--chat-bg:#8aabd4;--serif:"Frank Ruhl Libre","FOT-UD明朝 Pro B","Yu Mincho",YuMincho,"Hiragino Mincho ProN",serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--serif);line-height:1.75}
+.linewrap,.linewrap *{font-family:system-ui,-apple-system,"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif}
+.wrap{max-width:560px;margin:0 auto;padding:16px}
+.brandbar{background:#20232A;color:#F4F4EF;padding:15px 16px;border-bottom:3px solid var(--accent)}
+.brandbar .bi{max-width:560px;margin:0 auto;display:flex;align-items:baseline;gap:10px}
+.brandbar .co{font-family:var(--serif);font-size:16px;letter-spacing:.06em;font-weight:700}
+.brandbar .en{font-size:10px;letter-spacing:.22em;color:var(--accent);font-weight:700}
+.sitefoot{background:#20232A;color:#F4F4EF;margin-top:10px;padding:24px 16px 28px;border-top:3px solid var(--accent)}
+.sitefoot .fi{max-width:560px;margin:0 auto;font-size:12.5px;line-height:1.9}
+.sitefoot .fco{font-family:var(--serif);font-size:16px;letter-spacing:.05em;margin-bottom:6px}
+.sitefoot .flead{color:var(--accent);font-size:10.5px;letter-spacing:.2em;margin-bottom:2px}
+.sitefoot .fmisc{color:#b9b3a4;font-size:11.5px;margin-top:5px;line-height:1.75}
+.sitefoot .fcopy{color:var(--accent);font-size:10.5px;letter-spacing:.1em;margin-top:12px}
+.testbar{background:#fff7e6;border:1px solid #f0d58a;color:#8a6d1b;border-radius:10px;padding:8px 12px;font-size:12.5px;margin-bottom:14px}
+h1{font-size:23px;margin:8px 0 2px;font-family:var(--serif);font-weight:700;color:var(--ink);letter-spacing:.03em}
+h1:before{content:"";display:inline-block;width:26px;height:2px;background:var(--accent);vertical-align:middle;margin-right:10px;margin-bottom:5px}
+.sub{color:var(--ink2);font-size:13px;margin:0 0 14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:16px}
+label{display:block;font-size:13px;font-weight:700;margin:12px 0 5px}
+label .req{color:var(--busy);font-weight:700;margin-left:4px}
+input,select,textarea{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;font-size:15px;background:#fff;color:var(--ink);font-family:inherit}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);border-color:var(--accent)}
+textarea{min-height:72px;resize:vertical}
+.hope{border:1px solid var(--line);border-radius:12px;padding:10px 12px 14px;margin-top:8px;background:#fafbfc}
+.hope h3{font-size:13.5px;margin:2px 0 0;color:var(--accent2)}
+.row2{display:flex;gap:10px}.row2>div{flex:1}
+.hint{font-size:12px;color:var(--ink2);margin-top:6px}
+.callnote{background:#fdecea;border:1px solid #f5b7b1;color:#922;border-radius:10px;padding:10px 12px;font-size:13px;margin-top:12px}
+.callnote b{font-size:14px}
+.notice{background:#eef6ff;border:1px solid #bcd7f5;color:#1b3a5c;border-radius:10px;padding:11px 13px;font-size:13px;margin-top:14px}
+.notice b.t{display:block;font-size:13.5px;margin-bottom:5px;color:#0f2e4d}
+.notice ul{margin:0;padding-left:18px}.notice li{margin:3px 0}
+.warn{background:#fff3cd;border:2px solid #e0a800;border-left:6px solid #e0a800;border-radius:10px;padding:13px 14px;margin-top:16px;color:#5c4400}
+.warn b{font-size:16px;line-height:1.45;color:#8a5a00}
+.warn span{display:block;font-size:13px;margin-top:5px;color:#6b5200}
+.oprow{display:flex;align-items:center;gap:6px;flex-wrap:wrap;color:#fff;font-size:12px;margin:-4px 0 12px;opacity:.95}
+.oprow select{width:auto;padding:4px 8px;border-radius:7px;font-size:13px}
+.oprow .opnote{font-size:10.5px;opacity:.85}
+.btn{display:block;width:100%;border:none;border-radius:11px;padding:14px;font-size:16px;font-weight:800;cursor:pointer}
+.btn.primary{background:var(--accent);color:#fff;margin-top:16px;font-family:var(--serif);letter-spacing:.12em;box-shadow:0 2px 0 var(--accent2)}
+.btn.primary:active{background:var(--accent2);box-shadow:none}
+.btn.ghost{background:#fff;color:var(--accent);border:1.5px solid var(--accent);font-family:var(--serif);letter-spacing:.05em;font-size:15px}
+.btn.ghost:active{background:#faf7ef}
+.slotfull{color:var(--busy)}
+/* LINE preview */
+.linewrap{background:var(--chat-bg);border-radius:14px;padding:14px 12px 18px}
+.linehd{display:flex;align-items:center;gap:8px;color:#fff;font-weight:800;font-size:13px;margin-bottom:12px;opacity:.95}
+.linehd .dot{width:22px;height:22px;border-radius:50%;background:var(--line-green);display:flex;align-items:center;justify-content:center;font-size:13px}
+.flex{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.15);max-width:300px}
+.flex .top{background:#2a3442;color:#fff;padding:10px 14px;font-weight:800;font-size:13.5px}
+.flex .body{padding:12px 14px}
+.kv{display:flex;font-size:13px;margin:3px 0}
+.kv .k{color:var(--ink2);min-width:62px}
+.kv .v{flex:1;font-weight:600}
+.hopes{margin:9px 0 2px;border-top:1px dashed var(--line);padding-top:8px}
+.hoperow{font-size:13px;margin:3px 0}
+.hoperow b{color:var(--accent2)}
+.flex .acts{padding:6px 12px 12px;display:flex;flex-direction:column;gap:7px}
+.lbtn{border:1px solid var(--accent);background:#fff;color:var(--accent);border-radius:9px;padding:10px;font-size:14px;font-weight:800;cursor:pointer;text-align:center}
+.lbtn:active{background:#eef3ff}
+.lbtn.sub{border-color:#c9a227;color:#8a6d1b}
+.lbtn.done{border-color:var(--ok);color:var(--ok);background:#eafaf0}
+.lbtn:disabled{opacity:.45;cursor:default}
+.botreply{background:#fff;border-radius:14px;padding:11px 14px;font-size:13.5px;max-width:300px;margin-top:10px;box-shadow:0 1px 2px rgba(0,0,0,.15)}
+.botreply .ok{color:var(--ok);font-weight:800}
+.adjust{background:#fff;border-radius:14px;padding:12px 14px;margin-top:10px;max-width:300px;box-shadow:0 1px 2px rgba(0,0,0,.15)}
+.adjust h4{margin:0 0 8px;font-size:13.5px}
+.muted{color:var(--ink2);font-size:12px}
+.hidden{display:none}
+.fgrid{display:grid;grid-template-columns:1fr;gap:0 24px}
+/* 空き状況カレンダー */
+.availlegend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--ink2);margin:6px 0 12px}
+.availlegend .full{color:var(--busy)}.availlegend .selx{color:var(--accent);font-weight:700}
+.availcal{display:flex;flex-direction:column;gap:10px}
+.daycard{border:1px solid var(--line);border-radius:12px;padding:11px 13px;background:#fcfbf7}
+.daycard .dh{font-family:var(--serif);font-weight:700;font-size:14px;margin-bottom:9px}
+.daycard .dh .sun{color:#c0392b}.daycard .dh .sat{color:#2f6df0}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);background:#fff;border-radius:9px;padding:9px 12px;font-size:14px;cursor:pointer;min-width:66px;text-align:center;font-family:var(--serif)}
+.chip.full{background:repeating-linear-gradient(45deg,#f4f4f4,#f4f4f4 6px,#eaeaea 6px,#eaeaea 12px);color:#aaa;border-color:#e2e2e2;cursor:not-allowed;display:inline-flex;flex-direction:column;align-items:center;gap:1px;line-height:1.15;padding:6px 10px}
+.chip.full .ft{text-decoration:line-through;font-size:13px}
+.chip.full .fb{font-size:10px;color:var(--busy);font-family:system-ui,sans-serif;font-weight:700;letter-spacing:.03em}
+.chip.open:hover{border-color:var(--accent);background:#faf7ef}
+.chip.sel{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:700}
+.selsummary{margin-top:14px}
+.selsummary .si{display:flex;align-items:center;gap:9px;padding:5px 0;font-size:14px}
+.selsummary .badge2{background:var(--accent);color:#fff;border-radius:6px;padding:2px 9px;font-size:12px;font-weight:700;font-family:system-ui,sans-serif}
+.selsummary .delx{border:none;background:none;color:var(--busy);font-weight:700;cursor:pointer;font-size:16px;margin-left:auto;line-height:1}
+@media(min-width:760px){ .availcal{display:grid;grid-template-columns:1fr 1fr;gap:12px} }
+/* PC（横に広く・大きく） */
+@media(min-width:760px){
+  .wrap{max-width:920px;padding:26px 20px}
+  .brandbar .bi,.sitefoot .fi{max-width:920px}
+  body{font-size:15.5px}
+  h1{font-size:30px}
+  .sub{font-size:14.5px;margin-bottom:18px}
+  .card{padding:30px 36px}
+  label{font-size:13.5px}
+  input,select,textarea{font-size:16px;padding:12px 14px}
+  .fgrid{grid-template-columns:1fr 1fr}
+  #hopes{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .sectlabel{font-size:13px}
+  .warn b{font-size:17px}
+  .btn.primary{max-width:460px;margin-left:auto;margin-right:auto;font-size:18px;padding:17px}
+  .brandbar .co{font-size:18px}
+}
+@media(min-width:1080px){
+  .wrap{max-width:1160px}
+  .brandbar .bi,.sitefoot .fi{max-width:1160px}
+  #hopes{grid-template-columns:1fr 1fr 1fr}
+  h1{font-size:33px}
+}
+@media(min-width:1500px){
+  .wrap{max-width:1320px;padding:30px 24px}
+  .brandbar .bi,.sitefoot .fi{max-width:1320px}
+  body{font-size:16px}
+  .card{padding:36px 46px}
+}
+.stamp{font-size:11px;color:#eef;opacity:.8;margin:4px 2px 0}
+.sectlabel{font-size:12px;font-weight:800;color:var(--ink2);letter-spacing:.04em;margin:2px 0 8px}
+</style>
+</head>
+<body>
+<div class="brandbar"><div class="bi"><span class="co">株式会社アドバンスR.E.</span><span class="en">ADVANCE R.E.</span></div></div>
+<div class="wrap">
+
+  <!-- 顧客フォーム -->
+  <div id="formView">
+    <h1>退去立会 ご予約</h1>
+    <p class="sub">ご希望の日時を<b>第2希望まで必須</b>（任意で第3希望も）でお選びください。確定のご連絡はこちらから差し上げます。</p>
+    <div class="card">
+      <div class="fgrid">
+        <div class="fld"><label>メールアドレス<span class="req">*</span></label><input id="f_email" type="email" placeholder="example@mail.com"></div>
+        <div class="fld"><label>ご契約者様氏名<span class="req">*</span></label><input id="f_name" type="text" placeholder="山田 太郎"></div>
+        <div class="fld"><label>ご連絡先電話番号<span class="req">*</span></label><input id="f_tel" type="tel" placeholder="090-0000-0000"></div>
+        <div class="fld"><label>退去予定日<span class="req">*</span></label><input id="f_taikyo" type="date"></div>
+        <div class="fld"><label>物件名<span class="req">*</span></label><input id="f_prop" type="text" placeholder="〇〇マンション"></div>
+        <div class="fld"><label>号室</label><input id="f_room" type="text" placeholder="101"></div>
+      </div>
+
+      <div class="sectlabel" style="margin-top:18px">📅 ご希望の日程を選んでください（第2希望まで必須・最大3つ）</div>
+      <label>ご希望の日付</label>
+      <input type="date" id="pickdate">
+      <div class="availlegend" style="margin-top:12px"><span class="lg">○ 空き（タップで選択）</span><span class="lg full">✕ 予約済（押せません）</span><span class="lg selx">①②③ 選択中</span></div>
+      <div id="slotchips" class="chips"></div>
+      <div id="selsummary" class="selsummary"></div>
+
+      <label>ご要望・ご連絡事項</label>
+      <textarea id="f_note" placeholder="例）ご連絡は夕方以降が希望です／当日は代理の者が立ち会います 等"></textarea>
+
+      <div class="warn">⚠ <b>電気・ガス・水道は立会当日まで解約しないでください</b><span>当日の確認・ご使用に必要です。先に止めてしまうと立会ができません。</span></div>
+      <div class="notice">
+        <b class="t">その他のご注意</b>
+        <ul>
+          <li>お荷物の搬出・お掃除は立会日までにお済ませください。</li>
+        </ul>
+      </div>
+
+      <div class="callnote">ご希望の時間が<b class="slotfull">満</b>（埋まっている）場合は、お手数ですが <b>お電話（03-5875-8727）</b> までお問い合わせください。</div>
+
+      <button class="btn primary" id="submitBtn">この内容で依頼する</button>
+    </div>
+    <p class="muted" style="text-align:center">受付時間 9:00〜19:00</p>
+  </div>
+
+  <!-- 受付完了（お客様向け） -->
+  <div id="doneView" class="hidden">
+    <h1>ご依頼を受け付けました</h1>
+    <div class="card">
+      <p style="font-size:15.5px;margin:0 0 10px">この度はご予約のご依頼、誠にありがとうございます。</p>
+      <p style="margin:0 0 4px">担当者が内容を確認のうえ、<b>確定のご連絡を差し上げます</b>。今しばらくお待ちください。</p>
+      <div id="doneSummary" class="selsummary" style="margin-top:16px"></div>
+      <div class="warn" style="margin-top:16px">⚠ <b>電気・ガス・水道は立会当日まで解約しないでください</b><span>当日の確認・ご使用に必要です。</span></div>
+      <p class="muted" style="margin-top:14px">確認事項がある場合は、お電話（03-5875-8727）でご連絡する場合がございます。</p>
+    </div>
+  </div>
+</div>
+
+<footer class="sitefoot">
+  <div class="fi">
+    <div class="flead">ADVANCE R.E.</div>
+    <div class="fco">株式会社アドバンスR.E.</div>
+    <div>〒135-0034 東京都江東区永代1-14-28</div>
+    <div>TEL 03-5875-8727 ／ FAX 03-5875-8726</div>
+    <div class="fmisc">代表取締役 前田優太 ／ 設立 2019年6月3日 ／ 資本金 300万円<br>宅地建物取引業 ／ 全日本不動産協会・不動産保証協会・全国不動産協会</div>
+    <div class="fcopy">Copyright ADVANCE R.E. All Rights Reserved.</div>
+  </div>
+</footer>
+
+<script>
+// ---- 設定（本番ではGoogleカレンダーから算出） ----
+var START_HOURS=[9,10,11,12,13,14,15,16,17,18,19]; // 開始 9:00〜19:00（19時まで予約可）
+// デモ用の「埋まっている」予定（日付→開始時刻）。本番はカレンダーの実イベント。
+// デモ用の「Googleカレンダーに既に入っている立会予定」（本番は実カレンダーを読む）
+var BUSY={};
+(function(){
+  var base=new Date();
+  var pattern=[[1,[10]],[2,[13,16]],[3,[9]],[4,[15]],[5,[11]],[7,[14]],[8,[10,17]],[9,[13]],[10,[9,16]],[11,[12]],[14,[10]]];
+  pattern.forEach(function(p){ var t=new Date(base.getFullYear(),base.getMonth(),base.getDate()+p[0]); BUSY[ymd(t)]=p[1]; });
+})();
+function ymd(d){var m=('0'+(d.getMonth()+1)).slice(-2),dd=('0'+d.getDate()).slice(-2);return d.getFullYear()+'-'+m+'-'+dd;}
+function jdate(s){if(!s)return'';var p=s.split('-');return (+p[1])+'/'+(+p[2]);}
+function endH(h){return h+3;}
+// 3時間枠の重なり：開始hが、埋まっている開始bと3時間未満の差なら不可
+function blockedHours(dateKey){
+  var busy=BUSY[dateKey]||[]; var set={};
+  busy.forEach(function(b){ START_HOURS.forEach(function(h){ if(Math.abs(h-b)<3) set[h]=1; }); });
+  return set;
+}
+
+// ---- fillTimes（スタッフの「電話で調整」で使用） ----
+function fillTimes(sel,dateKey){
+  var blocked=blockedHours(dateKey);
+  sel.innerHTML='';
+  var ph=document.createElement('option');ph.value='';ph.textContent='時間を選択';sel.appendChild(ph);
+  START_HOURS.forEach(function(h){
+    var o=document.createElement('option');
+    var label=('0'+h).slice(-2)+':00';
+    if(blocked[h]){o.textContent=label+'（満）';o.disabled=true;o.value='';o.className='slotfull';}
+    else {o.textContent=label;o.value=h;}
+    sel.appendChild(o);
+  });
+}
+
+// ---- 日付を選ぶ → その日の空き時間（チップ）を表示 ----
+var TODAY=(function(){var d=new Date();return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);})();
+var selected=[];
+var _tkEl=document.getElementById('f_taikyo');
+var _pd=document.getElementById('pickdate');
+if(_pd) _pd.min=TODAY;
+if(_tkEl){ _tkEl.min=TODAY; _tkEl.addEventListener('change',function(){
+  var mx=_tkEl.value||'';
+  if(_pd){ if(mx){ _pd.max=mx; if(_pd.value && _pd.value>mx){ _pd.value=''; } } else { _pd.removeAttribute('max'); } }
+  if(mx) selected=selected.filter(function(x){return x.date<=mx;});
+  renderSlots();
+}); }
+if(_pd) _pd.addEventListener('change',renderSlots);
+function selIndex(date,hour){for(var i=0;i<selected.length;i++){if(selected[i].date===date&&selected[i].hour===hour)return i;}return -1;}
+function toggleSel(date,hour){
+  var idx=selIndex(date,hour);
+  if(idx>=0){ selected.splice(idx,1); }
+  else { if(selected.length>=3){ alert('ご希望は最大3つまでです'); return; } selected.push({date:date,hour:hour}); }
+  renderSlots();
+}
+function renderSelSummary(){
+  var s=document.getElementById('selsummary'); if(!s) return;
+  if(!selected.length){ s.innerHTML='<span class="muted">日付と時間を選ぶと、ここに第1・第2希望が入ります</span>'; return; }
+  s.innerHTML='<div class="sectlabel">選択中のご希望</div>'+selected.map(function(x,i){
+    return '<div class="si"><span class="badge2">第'+(i+1)+'希望</span> '+jdate(x.date)+' '+('0'+x.hour).slice(-2)+':00〜 <button type="button" class="delx" data-d="'+x.date+'" data-h="'+x.hour+'">×</button></div>';
+  }).join('');
+  [].forEach.call(s.querySelectorAll('.delx'),function(b){ b.onclick=function(){ toggleSel(b.getAttribute('data-d'), +b.getAttribute('data-h')); }; });
+}
+function renderSlots(){
+  var cont=document.getElementById('slotchips'); if(!cont){ renderSelSummary(); return; }
+  cont.innerHTML='';
+  var key=_pd?_pd.value:'';
+  if(!key){ cont.innerHTML='<div class="muted" style="padding:6px 2px">↑ 日付を選ぶと、その日の空き時間が表示されます</div>'; renderSelSummary(); return; }
+  var blocked=blockedHours(key);
+  START_HOURS.forEach(function(h){
+    var c=document.createElement('button');c.type='button';
+    var lab=('0'+h).slice(-2)+':00';
+    if(blocked[h]){ c.className='chip full'; c.disabled=true; c.title='予約済み（選べません）'; c.innerHTML='<span class="ft">'+lab+'</span><span class="fb">予約済</span>'; }
+    else {
+      var idx=selIndex(key,h);
+      if(idx>=0){ c.className='chip sel'; c.textContent='①②③'.charAt(idx)+lab; }
+      else { c.className='chip open'; c.textContent=lab; }
+      (function(k,hh){ c.onclick=function(){ toggleSel(k,hh); }; })(key,h);
+    }
+    cont.appendChild(c);
+  });
+  renderSelSummary();
+}
+renderSlots();
+
+// ---- 送信 → LINEプレビュー生成 ----
+var state={};
+document.getElementById('submitBtn').addEventListener('click',function(){
+  var email=val('f_email'),name=val('f_name'),tel=val('f_tel'),prop=val('f_prop');
+  if(!email||!name||!tel||!prop){alert('必須項目（メール・氏名・電話・物件名）を入力してください');return;}
+  var taikyo=val('f_taikyo');
+  if(!taikyo){alert('退去予定日を入力してください');return;}
+  if(selected.length<2){ alert('空き状況から第2希望まで（2つ以上）お選びください'); return; }
+  var hopes=selected.map(function(x){return {date:x.date,hour:x.hour};});
+  state={email:email,name:name,tel:tel,prop:prop,room:val('f_room'),taikyo:val('f_taikyo'),note:val('f_note'),hopes:hopes};
+  // 本番ではここでGAS(doPost)へ送信 → Supabase保存＋スタッフLINE通知
+  showDone();
+});
+function val(id){return (document.getElementById(id).value||'').trim();}
+
+function renderLine(){
+  document.getElementById('o_prop').textContent=state.prop+(state.room?' '+state.room:'');
+  document.getElementById('o_name').textContent=state.name+' 様';
+  document.getElementById('o_tel').textContent=state.tel;
+  document.getElementById('o_taikyo').textContent=state.taikyo?jdate(state.taikyo):'—';
+  document.getElementById('o_note').textContent=state.note||'—';
+  var hb=document.getElementById('o_hopes');hb.innerHTML='';
+  state.hopes.forEach(function(h,idx){
+    var r=document.createElement('div');r.className='hoperow';
+    r.innerHTML='<b>第'+(idx+1)+'希望</b> '+jdate(h.date)+' '+('0'+h.hour).slice(-2)+':00〜'+('0'+endH(h.hour)).slice(-2)+':00';
+    hb.appendChild(r);
+  });
+  var acts=document.getElementById('o_acts');acts.innerHTML='';
+  state.hopes.forEach(function(h,idx){
+    var b=document.createElement('button');b.className='lbtn';
+    b.textContent='第'+(idx+1)+'希望で確定';
+    b.onclick=function(){confirmSlot('第'+(idx+1)+'希望', jdate(h.date)+' '+('0'+h.hour).slice(-2)+':00〜'+('0'+endH(h.hour)).slice(-2)+':00');};
+    acts.appendChild(b);
+  });
+  var adj=document.createElement('button');adj.className='lbtn sub';adj.textContent='📞 電話で調整';
+  adj.onclick=showAdjust;acts.appendChild(adj);
+  document.getElementById('replyArea').innerHTML='';
+}
+
+function confirmSlot(which,label){
+  disableActs();
+  var op=(document.getElementById('op')||{}).value||'（操作者）';
+  var now=new Date();
+  var ts=(now.getMonth()+1)+'/'+now.getDate()+' '+('0'+now.getHours()).slice(-2)+':'+('0'+now.getMinutes()).slice(-2);
+  var r=document.getElementById('replyArea');
+  r.innerHTML='<div class="botreply"><span class="ok">✅ カレンダーに登録しました</span><br>'+
+    state.prop+(state.room?' '+state.room:'')+'（退去立会）<br>'+label+'<br>'+
+    '<span class="muted">'+which+'で確定<br>👤 確定者：<b>'+op+'</b>（'+ts+'）<br>お客様へ確定連絡をお願いします</span></div>';
+}
+function disableActs(){document.querySelectorAll('#o_acts .lbtn').forEach(function(b){b.disabled=true;});}
+
+// 電話で調整 → カレンダーUI（日時ピッカー）
+function showAdjust(){
+  var r=document.getElementById('replyArea');
+  r.innerHTML='<div class="adjust"><h4>📅 日時を調整して確定</h4>'+
+    '<label style="margin:0 0 5px">日付</label><input type="date" id="adj_date">'+
+    '<label style="margin:10px 0 5px">時間</label><select id="adj_time"><option value="">日付を選択</option></select>'+
+    '<div class="hint" id="adj_hint">※ 埋まっている時間は選べません</div>'+
+    '<button class="lbtn done" id="adj_ok" style="margin-top:10px">この日時で確定</button></div>';
+  (function(){var a=document.getElementById('adj_date');a.min=TODAY;if(state.taikyo)a.max=state.taikyo;})();
+  document.getElementById('adj_date').addEventListener('change',function(){
+    var v=this.value; var sel=document.getElementById('adj_time');
+    if(!v){sel.innerHTML='<option value="">日付を選択</option>';return;}
+    fillTimes(sel,v);
+  });
+  document.getElementById('adj_ok').addEventListener('click',function(){
+    var d=document.getElementById('adj_date').value,t=document.getElementById('adj_time').value;
+    if(!d||!t){alert('調整後の日時を選んでください');return;}
+    if(state.taikyo && d>state.taikyo){alert('立会日は退去予定日（'+jdate(state.taikyo)+'）より後にはできません');return;}
+    var label=jdate(d)+' '+('0'+t).slice(-2)+':00〜'+('0'+endH(+t)).slice(-2)+':00';
+    disableActs();
+    confirmSlot('電話調整',label);
+  });
+}
+
+function showDone(){
+  var ds=document.getElementById('doneSummary');
+  if(ds){ ds.innerHTML='<div class="sectlabel">ご依頼内容</div>'+
+    '<div class="si"><span class="badge2">物件</span> '+state.prop+(state.room?' '+state.room:'')+'</div>'+
+    '<div class="si"><span class="badge2">退去予定</span> '+jdate(state.taikyo)+'</div>'+
+    state.hopes.map(function(x,i){return '<div class="si"><span class="badge2">第'+(i+1)+'希望</span> '+jdate(x.date)+' '+('0'+x.hour).slice(-2)+':00〜</div>';}).join('');
+  }
+  document.getElementById('formView').classList.add('hidden');
+  document.getElementById('doneView').classList.remove('hidden');
+  window.scrollTo(0,0);
+}
+</script>
+</body>
+</html>
