@@ -9,12 +9,19 @@
 <style>
 :root{--bg:#F4F4EF;--surface:#ffffff;--line:#e4dfd2;--ink:#20232A;--ink2:#7a7161;--accent:#937A38;--accent2:#7c6630;--ok:#0b8043;--busy:#b23b2e;--line-green:#06c755;--chat-bg:#8aabd4;--serif:"Frank Ruhl Libre","FOT-UD明朝 Pro B","Yu Mincho",YuMincho,"Hiragino Mincho ProN",serif}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;line-height:1.6}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--serif);line-height:1.75}
+.linewrap,.linewrap *{font-family:system-ui,-apple-system,"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif}
 .wrap{max-width:560px;margin:0 auto;padding:16px}
 .brandbar{background:#20232A;color:#F4F4EF;padding:15px 16px;border-bottom:3px solid var(--accent)}
 .brandbar .bi{max-width:560px;margin:0 auto;display:flex;align-items:baseline;gap:10px}
 .brandbar .co{font-family:var(--serif);font-size:16px;letter-spacing:.06em;font-weight:700}
 .brandbar .en{font-size:10px;letter-spacing:.22em;color:var(--accent);font-weight:700}
+.sitefoot{background:#20232A;color:#F4F4EF;margin-top:10px;padding:24px 16px 28px;border-top:3px solid var(--accent)}
+.sitefoot .fi{max-width:560px;margin:0 auto;font-size:12.5px;line-height:1.9}
+.sitefoot .fco{font-family:var(--serif);font-size:16px;letter-spacing:.05em;margin-bottom:6px}
+.sitefoot .flead{color:var(--accent);font-size:10.5px;letter-spacing:.2em;margin-bottom:2px}
+.sitefoot .fmisc{color:#b9b3a4;font-size:11.5px;margin-top:5px;line-height:1.75}
+.sitefoot .fcopy{color:var(--accent);font-size:10.5px;letter-spacing:.1em;margin-top:12px}
 .testbar{background:#fff7e6;border:1px solid #f0d58a;color:#8a6d1b;border-radius:10px;padding:8px 12px;font-size:12.5px;margin-bottom:14px}
 h1{font-size:23px;margin:8px 0 2px;font-family:var(--serif);font-weight:700;color:var(--ink);letter-spacing:.03em}
 h1:before{content:"";display:inline-block;width:26px;height:2px;background:var(--accent);vertical-align:middle;margin-right:10px;margin-bottom:5px}
@@ -143,6 +150,17 @@ textarea{min-height:72px;resize:vertical}
     <button class="btn primary" id="againBtn" style="margin-top:18px">もう一度テストする</button>
   </div>
 </div>
+
+<footer class="sitefoot">
+  <div class="fi">
+    <div class="flead">ADVANCE R.E.</div>
+    <div class="fco">株式会社アドバンスR.E.</div>
+    <div>〒135-0034 東京都江東区永代1-14-28</div>
+    <div>TEL 03-5875-8727 ／ FAX 03-5875-8726</div>
+    <div class="fmisc">代表取締役 前田優太 ／ 設立 2019年6月3日 ／ 資本金 300万円<br>宅地建物取引業 ／ 全日本不動産協会・不動産保証協会・全国不動産協会</div>
+    <div class="fcopy">Copyright ADVANCE R.E. All Rights Reserved.</div>
+  </div>
+</footer>
 
 <script>
 // ---- 設定（本番ではGoogleカレンダーから算出） ----
