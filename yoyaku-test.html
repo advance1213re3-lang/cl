@@ -79,6 +79,22 @@ textarea{min-height:72px;resize:vertical}
 .muted{color:var(--ink2);font-size:12px}
 .hidden{display:none}
 .fgrid{display:grid;grid-template-columns:1fr;gap:0 24px}
+/* 空き状況カレンダー */
+.availlegend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--ink2);margin:6px 0 12px}
+.availlegend .full{color:var(--busy)}.availlegend .selx{color:var(--accent);font-weight:700}
+.availcal{display:flex;flex-direction:column;gap:10px}
+.daycard{border:1px solid var(--line);border-radius:12px;padding:11px 13px;background:#fcfbf7}
+.daycard .dh{font-family:var(--serif);font-weight:700;font-size:14px;margin-bottom:9px}
+.daycard .dh .sun{color:#c0392b}.daycard .dh .sat{color:#2f6df0}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);background:#fff;border-radius:9px;padding:9px 12px;font-size:14px;cursor:pointer;min-width:66px;text-align:center;font-family:var(--serif)}
+.chip.full{background:#f1f1f1;color:#bbb;border-color:#ececec;cursor:default;text-decoration:line-through}
+.chip.open:hover{border-color:var(--accent);background:#faf7ef}
+.chip.sel{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:700}
+.selsummary{margin-top:14px}
+.selsummary .si{display:flex;align-items:center;gap:9px;padding:5px 0;font-size:14px}
+.selsummary .badge2{background:var(--accent);color:#fff;border-radius:6px;padding:2px 9px;font-size:12px;font-weight:700;font-family:system-ui,sans-serif}
+@media(min-width:760px){ .availcal{display:grid;grid-template-columns:1fr 1fr;gap:12px} }
 /* PC（横に広く・大きく） */
 @media(min-width:760px){
   .wrap{max-width:920px;padding:26px 20px}
@@ -132,8 +148,11 @@ textarea{min-height:72px;resize:vertical}
         <div class="fld"><label>号室</label><input id="f_room" type="text" placeholder="101"></div>
       </div>
 
-      <div class="sectlabel" style="margin-top:16px">立会のご希望（第3希望まで）</div>
-      <div id="hopes"></div>
+      <div class="sectlabel" style="margin-top:18px">📅 空き状況からご希望をお選びください（第2希望まで必須・最大3つ）</div>
+      <p class="hint" style="margin:0 0 8px">Googleカレンダーで予約済みの時間（前後3時間を含む）は自動で「×」になり、二重予約になりません。</p>
+      <div class="availlegend"><span class="lg">○ 空き（タップで選択）</span><span class="lg full">× 予約済</span><span class="lg selx">①②③ 選択中</span></div>
+      <div id="availcal" class="availcal"></div>
+      <div id="selsummary" class="selsummary"></div>
 
       <label>ご要望・ご連絡事項</label>
       <textarea id="f_note" placeholder="例）ご連絡は夕方以降が希望です／当日は代理の者が立ち会います 等"></textarea>
@@ -195,16 +214,12 @@ textarea{min-height:72px;resize:vertical}
 // ---- 設定（本番ではGoogleカレンダーから算出） ----
 var START_HOURS=[9,10,11,12,13,14,15,16,17,18,19]; // 開始 9:00〜19:00（19時まで予約可）
 // デモ用の「埋まっている」予定（日付→開始時刻）。本番はカレンダーの実イベント。
-var BUSY={}; // 例: 直近の平日に2件埋める
+// デモ用の「Googleカレンダーに既に入っている立会予定」（本番は実カレンダーを読む）
+var BUSY={};
 (function(){
-  var d=new Date(); var cnt=0;
-  for(var i=1;i<=10 && cnt<2;i++){
-    var t=new Date(d.getFullYear(),d.getMonth(),d.getDate()+i);
-    var day=t.getDay(); if(day===0||day===6) continue;
-    var key=ymd(t);
-    BUSY[key]= cnt===0 ? [13] : [10];
-    cnt++;
-  }
+  var base=new Date();
+  var pattern=[[1,[10]],[2,[13,16]],[3,[9]],[4,[15]],[5,[11]],[7,[14]],[8,[10,17]],[9,[13]],[10,[9,16]],[11,[12]],[14,[10]]];
+  pattern.forEach(function(p){ var t=new Date(base.getFullYear(),base.getMonth(),base.getDate()+p[0]); BUSY[ymd(t)]=p[1]; });
 })();
 function ymd(d){var m=('0'+(d.getMonth()+1)).slice(-2),dd=('0'+d.getDate()).slice(-2);return d.getFullYear()+'-'+m+'-'+dd;}
 function jdate(s){if(!s)return'';var p=s.split('-');return (+p[1])+'/'+(+p[2]);}
@@ -216,18 +231,7 @@ function blockedHours(dateKey){
   return set;
 }
 
-// ---- 希望①〜③のUI生成 ----
-var hopesBox=document.getElementById('hopes');
-for(var i=1;i<=3;i++){
-  var wrap=document.createElement('div');wrap.className='hope';
-  wrap.innerHTML='<h3>第'+i+'希望'+(i<=2?'<span class="req"> *</span>':'<span class="muted" style="font-weight:600"> （任意）</span>')+'</h3>'+
-    '<div class="row2" style="margin-top:6px">'+
-      '<div><label style="margin:0 0 5px">日付</label><input type="date" class="h_date" data-i="'+i+'"></div>'+
-      '<div><label style="margin:0 0 5px">時間</label><select class="h_time" data-i="'+i+'"><option value="">日付を選択</option></select></div>'+
-    '</div>'+
-    '<div class="hint h_hint" data-i="'+i+'">※ 埋まっている時間は選べません</div>';
-  hopesBox.appendChild(wrap);
-}
+// ---- fillTimes（スタッフの「電話で調整」で使用） ----
 function fillTimes(sel,dateKey){
   var blocked=blockedHours(dateKey);
   sel.innerHTML='';
@@ -240,30 +244,58 @@ function fillTimes(sel,dateKey){
     sel.appendChild(o);
   });
 }
-document.querySelectorAll('.h_date').forEach(function(inp){
-  inp.addEventListener('change',function(){
-    var i=inp.getAttribute('data-i');
-    var sel=document.querySelector('.h_time[data-i="'+i+'"]');
-    if(!inp.value){sel.innerHTML='<option value="">日付を選択</option>';return;}
-    fillTimes(sel,inp.value);
-    var blocked=blockedHours(inp.value);
-    var hint=document.querySelector('.h_hint[data-i="'+i+'"]');
-    var full=Object.keys(blocked).length;
-    hint.innerHTML= full? '※ この日は満の枠があります（電話でお問い合わせも可）':'※ 埋まっている時間は選べません';
-  });
-});
 
-// --- 日付の整合性（過去不可・退去予定日より後の立会は不可） ---
+// ---- 空き状況カレンダー（入力前に空き/満が一目で分かる） ----
 var TODAY=(function(){var d=new Date();return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);})();
-var _tkEl=document.getElementById('f_taikyo'); if(_tkEl) _tkEl.min=TODAY;
-document.querySelectorAll('.h_date').forEach(function(e){ e.min=TODAY; });
-if(_tkEl){ _tkEl.addEventListener('change',function(){
-  var mx=_tkEl.value||'';
-  document.querySelectorAll('.h_date').forEach(function(e){
-    if(mx){ e.max=mx; if(e.value && e.value>mx){ e.value=''; e.dispatchEvent(new Event('change')); } }
-    else { e.removeAttribute('max'); }
-  });
-});}
+var selected=[]; var AVAIL_MAXDAYS=28;
+var _tkEl=document.getElementById('f_taikyo');
+if(_tkEl){ _tkEl.min=TODAY; _tkEl.addEventListener('change',function(){ selected=selected.filter(function(x){return x.date<=_tkEl.value;}); renderAvail(); }); }
+function selIndex(date,hour){for(var i=0;i<selected.length;i++){if(selected[i].date===date&&selected[i].hour===hour)return i;}return -1;}
+function toggleSel(date,hour){
+  var idx=selIndex(date,hour);
+  if(idx>=0){ selected.splice(idx,1); }
+  else { if(selected.length>=3){ alert('ご希望は最大3つまでです'); return; } selected.push({date:date,hour:hour}); }
+  renderAvail();
+}
+function renderSelSummary(){
+  var s=document.getElementById('selsummary'); if(!s) return;
+  if(!selected.length){ s.innerHTML='<span class="muted">上の空き枠から第1・第2希望（必須）を選んでください</span>'; return; }
+  s.innerHTML='<div class="sectlabel">選択中のご希望</div>'+selected.map(function(x,i){
+    return '<div class="si"><span class="badge2">第'+(i+1)+'希望</span> '+jdate(x.date)+' '+('0'+x.hour).slice(-2)+':00〜</div>';
+  }).join('');
+}
+function renderAvail(){
+  var cont=document.getElementById('availcal'); if(!cont) return;
+  var taikyo=val('f_taikyo');
+  if(!taikyo){ cont.innerHTML='<div class="muted" style="padding:8px 2px">↑ まず「退去予定日」を選ぶと、空き状況が表示されます。</div>'; renderSelSummary(); return; }
+  cont.innerHTML='';
+  var today=new Date(TODAY+'T00:00:00'); var end=new Date(taikyo+'T00:00:00');
+  var cap=new Date(today.getTime()+AVAIL_MAXDAYS*86400000); if(end>cap) end=cap;
+  for(var d=new Date(today); d<=end; d.setDate(d.getDate()+1)){
+    var key=ymd(d); var blocked=blockedHours(key);
+    var dow=d.getDay(); var wd=['日','月','火','水','木','金','土'][dow];
+    var card=document.createElement('div');card.className='daycard';
+    var dh=document.createElement('div');dh.className='dh';
+    dh.innerHTML=(d.getMonth()+1)+'/'+d.getDate()+' <span class="'+(dow===0?'sun':dow===6?'sat':'')+'">('+wd+')</span>';
+    card.appendChild(dh);
+    var chips=document.createElement('div');chips.className='chips';
+    START_HOURS.forEach(function(h){
+      var c=document.createElement('button');c.type='button';
+      var lab=('0'+h).slice(-2)+':00';
+      if(blocked[h]){ c.className='chip full'; c.textContent=lab; }
+      else {
+        var idx=selIndex(key,h);
+        if(idx>=0){ c.className='chip sel'; c.textContent='①②③'.charAt(idx)+lab; }
+        else { c.className='chip open'; c.textContent=lab; }
+        (function(k,hh){ c.onclick=function(){ toggleSel(k,hh); }; })(key,h);
+      }
+      chips.appendChild(c);
+    });
+    card.appendChild(chips); cont.appendChild(card);
+  }
+  renderSelSummary();
+}
+renderAvail();
 
 // ---- 送信 → LINEプレビュー生成 ----
 var state={};
@@ -272,17 +304,8 @@ document.getElementById('submitBtn').addEventListener('click',function(){
   if(!email||!name||!tel||!prop){alert('必須項目（メール・氏名・電話・物件名）を入力してください');return;}
   var taikyo=val('f_taikyo');
   if(!taikyo){alert('退去予定日を入力してください');return;}
-  var hopes=[];
-  for(var i=1;i<=3;i++){
-    var d=document.querySelector('.h_date[data-i="'+i+'"]').value;
-    var t=document.querySelector('.h_time[data-i="'+i+'"]').value;
-    if(d&&t){
-      if(d>taikyo){ alert('第'+i+'希望：立会日は退去予定日（'+jdate(taikyo)+'）より後にはできません'); return; }
-      hopes.push({date:d,hour:+t});
-    }
-    else if(d||t){ alert('第'+i+'希望は「日付」と「時間」の両方を選んでください'); return; }
-    else if(i<=2){ alert('第2希望までは必須です（第'+i+'希望の日付と時間を選んでください）'); return; }
-  }
+  if(selected.length<2){ alert('空き状況から第2希望まで（2つ以上）お選びください'); return; }
+  var hopes=selected.map(function(x){return {date:x.date,hour:x.hour};});
   state={email:email,name:name,tel:tel,prop:prop,room:val('f_room'),taikyo:val('f_taikyo'),note:val('f_note'),hopes:hopes};
   renderLine();
   document.getElementById('formView').classList.add('hidden');
