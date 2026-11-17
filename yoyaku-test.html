@@ -127,7 +127,7 @@ textarea{min-height:72px;resize:vertical}
         <div class="fld"><label>メールアドレス<span class="req">*</span></label><input id="f_email" type="email" placeholder="example@mail.com"></div>
         <div class="fld"><label>ご契約者様氏名<span class="req">*</span></label><input id="f_name" type="text" placeholder="山田 太郎"></div>
         <div class="fld"><label>ご連絡先電話番号<span class="req">*</span></label><input id="f_tel" type="tel" placeholder="090-0000-0000"></div>
-        <div class="fld"><label>退去予定日</label><input id="f_taikyo" type="date"></div>
+        <div class="fld"><label>退去予定日<span class="req">*</span></label><input id="f_taikyo" type="date"></div>
         <div class="fld"><label>物件名<span class="req">*</span></label><input id="f_prop" type="text" placeholder="〇〇マンション"></div>
         <div class="fld"><label>号室</label><input id="f_room" type="text" placeholder="101"></div>
       </div>
@@ -253,16 +253,33 @@ document.querySelectorAll('.h_date').forEach(function(inp){
   });
 });
 
+// --- 日付の整合性（過去不可・退去予定日より後の立会は不可） ---
+var TODAY=(function(){var d=new Date();return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);})();
+var _tkEl=document.getElementById('f_taikyo'); if(_tkEl) _tkEl.min=TODAY;
+document.querySelectorAll('.h_date').forEach(function(e){ e.min=TODAY; });
+if(_tkEl){ _tkEl.addEventListener('change',function(){
+  var mx=_tkEl.value||'';
+  document.querySelectorAll('.h_date').forEach(function(e){
+    if(mx){ e.max=mx; if(e.value && e.value>mx){ e.value=''; e.dispatchEvent(new Event('change')); } }
+    else { e.removeAttribute('max'); }
+  });
+});}
+
 // ---- 送信 → LINEプレビュー生成 ----
 var state={};
 document.getElementById('submitBtn').addEventListener('click',function(){
   var email=val('f_email'),name=val('f_name'),tel=val('f_tel'),prop=val('f_prop');
   if(!email||!name||!tel||!prop){alert('必須項目（メール・氏名・電話・物件名）を入力してください');return;}
+  var taikyo=val('f_taikyo');
+  if(!taikyo){alert('退去予定日を入力してください');return;}
   var hopes=[];
   for(var i=1;i<=3;i++){
     var d=document.querySelector('.h_date[data-i="'+i+'"]').value;
     var t=document.querySelector('.h_time[data-i="'+i+'"]').value;
-    if(d&&t){ hopes.push({date:d,hour:+t}); }
+    if(d&&t){
+      if(d>taikyo){ alert('第'+i+'希望：立会日は退去予定日（'+jdate(taikyo)+'）より後にはできません'); return; }
+      hopes.push({date:d,hour:+t});
+    }
     else if(d||t){ alert('第'+i+'希望は「日付」と「時間」の両方を選んでください'); return; }
     else if(i<=2){ alert('第2希望までは必須です（第'+i+'希望の日付と時間を選んでください）'); return; }
   }
@@ -318,6 +335,7 @@ function showAdjust(){
     '<label style="margin:10px 0 5px">時間</label><select id="adj_time"><option value="">日付を選択</option></select>'+
     '<div class="hint" id="adj_hint">※ 埋まっている時間は選べません</div>'+
     '<button class="lbtn done" id="adj_ok" style="margin-top:10px">この日時で確定</button></div>';
+  (function(){var a=document.getElementById('adj_date');a.min=TODAY;if(state.taikyo)a.max=state.taikyo;})();
   document.getElementById('adj_date').addEventListener('change',function(){
     var v=this.value; var sel=document.getElementById('adj_time');
     if(!v){sel.innerHTML='<option value="">日付を選択</option>';return;}
@@ -326,6 +344,7 @@ function showAdjust(){
   document.getElementById('adj_ok').addEventListener('click',function(){
     var d=document.getElementById('adj_date').value,t=document.getElementById('adj_time').value;
     if(!d||!t){alert('調整後の日時を選んでください');return;}
+    if(state.taikyo && d>state.taikyo){alert('立会日は退去予定日（'+jdate(state.taikyo)+'）より後にはできません');return;}
     var label=jdate(d)+' '+('0'+t).slice(-2)+':00〜'+('0'+endH(+t)).slice(-2)+':00';
     disableActs();
     confirmSlot('電話調整',label);
